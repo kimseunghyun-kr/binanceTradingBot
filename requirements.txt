@@ -3,4 +3,6 @@ numpy
 matplotlib
 python-binance
 mplfinance
-python-dotenv 
+python-dotenv
+pyyaml
+questionary

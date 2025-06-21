@@ -2,7 +2,7 @@ import pandas as pd
 
 def compute_ema_series(prices: pd.Series, period: int) -> pd.Series:
     """
-    Compute EMA with period. If not enough data => 
+    Compute EMA with period. If not enough marketDataApi =>
     fill the earliest row with None until we can start the EMA.
     """
     if len(prices) < period:

@@ -1,10 +1,11 @@
 
 import logging
 from typing import Tuple
-from config import ANALYSIS_SYMBOLS
-from decision import kwon_strategy_decision
+from marketDataApi.apiconfig.config import ANALYSIS_SYMBOLS
+from deprecated.decision import kwon_strategy_decision
+from marketDataApi.binance import fetch_candles
 
-from symbols import fetch_candles
+from utils.plot import plot_and_save_chart
 
 
 ###############################################################################

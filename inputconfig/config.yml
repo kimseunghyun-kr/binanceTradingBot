@@ -1,0 +1,31 @@
+strategy:
+  name: peak_ema_reversal
+  params:
+    tp_ratio: 0.1
+    sl_ratio: 0.05
+
+ensemble:
+  use: false
+  strategies:
+    - name: peak_ema_reversal
+      weight: 0.6
+    - name: momentum
+      weight: 0.4
+
+backtest:
+  timeframe: 1w
+  save_charts: true
+  add_buy_pcts: [5.0]
+  tp_ratios: [0.1]
+  sl_ratios: [0.05]
+  grid_search: false
+  use_cache: true
+  start_date: '2021-01-01'
+
+symbols:
+  mode: filter_cmc    # or 'load_file'
+  min_cap: 150000000
+  max_cap: 20000000000
+  max_pages: 5
+  filename: filtered_coins.txt   # used if mode is 'load_file'
+
