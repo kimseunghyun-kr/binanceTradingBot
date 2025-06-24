@@ -2,8 +2,8 @@
 import logging
 from typing import Tuple
 from marketDataApi.apiconfig.config import ANALYSIS_SYMBOLS
-from deprecated.decision import kwon_strategy_decision
 from marketDataApi.binance import fetch_candles
+from strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
 from utils.plot import plot_and_save_chart
 
@@ -15,7 +15,8 @@ def fetch_and_analyze(symbol: str, interval: str) -> Tuple[str, str]:
     df = fetch_candles(symbol, interval, limit=100)
     if df.empty:
         return symbol, "NO DATA"
-    final_decision = kwon_strategy_decision(df, interval)
+    peakEMAReversalStrategy = PeakEMAReversalStrategy()
+    final_decision = peakEMAReversalStrategy.decide(df, interval)
     decision_str = final_decision.get('decision', 'NO')
     if decision_str.startswith("YES"):
         plot_and_save_chart(df, symbol, interval)

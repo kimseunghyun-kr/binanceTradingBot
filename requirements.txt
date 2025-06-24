@@ -6,3 +6,4 @@ mplfinance
 python-dotenv
 pyyaml
 questionary
+schedule

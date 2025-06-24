@@ -36,9 +36,9 @@ def fetch_coinmarketcap_coins_multi_pages(
             break
 
         data = resp.json()
-        page_coins = data.get("marketDataApi", [])
+        page_coins = data.get("data", [])
         if not page_coins:
-            logging.info("Empty marketDataApi returned — no more coins, sir.")
+            logging.info("Empty data returned — no more coins, sir.")
             break
         all_coins.extend(page_coins)
 

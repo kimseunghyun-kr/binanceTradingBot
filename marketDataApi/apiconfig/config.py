@@ -8,6 +8,7 @@ load_dotenv()
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 CMC_API_KEY = os.getenv("COINMARKETCAP_API_KEY")  # <-- In .env
+print(CMC_API_KEY)
 
 BASE_URL = "https://api.binance.com"
 CMC_BASE_URL = "https://pro-api.coinmarketcap.com"
