@@ -1,0 +1,5 @@
+*.log
+*.env
+.env
+YES_charts
+*.png

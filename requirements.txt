@@ -1,0 +1,48 @@
+# Core API framework
+fastapi
+uvicorn[standard]           # For running FastAPI
+
+# Async database (SQL)
+sqlalchemy[asyncio]
+asyncpg                     # PostgreSQL driver
+
+# Database migration (SQL)
+alembic
+
+# NoSQL (MongoDB)
+pymongo                     # Synchronous MongoDB client
+motor                       # Async MongoDB client
+
+# Caching, task queue
+redis
+celery[redis]               # Celery with Redis broker
+
+# Config & validation
+python-dotenv
+pydantic
+
+# Data handling
+pandas
+numpy
+
+# Plotting
+matplotlib
+mplfinance
+
+# HTTP requests
+requests
+
+# CLI tools (optional, legacy support)
+questionary
+pyyaml
+schedule
+
+# Pretty CLI/log output (optional)
+rich
+
+# Testing
+pytest
+httpx                       # Async HTTP client for API testing
+
+# Exchange API
+python-binance
