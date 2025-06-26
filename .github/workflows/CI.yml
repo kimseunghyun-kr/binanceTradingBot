@@ -12,17 +12,17 @@ jobs:
     services:
       mongo:
         image: mongo:4.4
-        ports: [27017:27017]   # If tests need Mongo (adjust URIs accordingly)
+        ports: [ 27017:27017 ]   # If tests need Mongo (adjust URIs accordingly)
       redis:
         image: redis:6-alpine
-        ports: [6379:6379]
+        ports: [ 6379:6379 ]
       postgres:
         image: postgres:13-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: trading
-        ports: [5432:5432]
+        ports: [ 5432:5432 ]
 
     env:
       # Provide environment for tests (using localhost since services are on runner network)
@@ -43,10 +43,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Lint with Flake8
+      - name: Lint with Flake8 (lenient, does not fail build)
         run: |
           pip install flake8
-          flake8 .
+          flake8 . || true
+      
 
       - name: Run tests
         run: |

@@ -9,13 +9,13 @@ from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMARev
 
 class CoordinatorService:
     def __init__(
-        self,
-        symbol_config: Optional[Dict[str, Any]] = None,
-        strategy_params: Optional[Dict[str, Any]] = None,
-        backtest_params: Optional[Dict[str, Any]] = None,
+            self,
+            symbol_config: Optional[Dict[str, Any]] = None,
+            strategy_params: Optional[Dict[str, Any]] = None,
+            backtest_params: Optional[Dict[str, Any]] = None,
     ):
         self.symbol_config = symbol_config or {
-            "mode": "filter_cmc",        # or "load_file"
+            "mode": "filter_cmc",  # or "load_file"
             "min_cap": 150_000_000,
             "max_cap": 20_000_000_000,
             "max_pages": 5,

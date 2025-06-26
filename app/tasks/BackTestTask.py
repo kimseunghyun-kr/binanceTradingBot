@@ -1,17 +1,20 @@
 # app/tasks/BackTestTask.py
 from datetime import datetime
+
 from pymongo import MongoClient
+
 from app.core.celery_app import celery
-from app.pydanticConfig.settings import settings
-from app.services.StrategyService import StrategyService
-from app.services.BackTestService import BacktestService
 from app.marketDataApi.binance import fetch_candles  # Import data fetcher
+from app.pydanticConfig.settings import settings
+from app.services.BackTestService import BacktestService
+from app.services.StrategyService import StrategyService
 
 # Initialize synchronous Mongo client for task context (Celery tasks run in separate process)
 mongo_sync_client = None
 if settings.MONGO_URI:
     mongo_sync_client = MongoClient(settings.MONGO_URI)
     mongo_sync_db = mongo_sync_client[settings.MONGO_DATABASE]
+
 
 @celery.task(name="app.tasks.backtest.run_backtest_task")
 def run_backtest_task(config: dict):

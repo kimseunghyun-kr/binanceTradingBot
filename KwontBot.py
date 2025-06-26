@@ -1,5 +1,8 @@
-import os, logging
+import logging
+import os
+
 from fastapi import FastAPI
+
 from app.controller import (SymbolController as symbols,
                             BacktestController as backtest,
                             StrategyController as strategies,
@@ -51,6 +54,7 @@ async def on_startup():
             logging.info("MongoDB connection verified.")
         except Exception as e:
             logging.error(f"Failed to connect to MongoDB: {e}")
+
 
 @app.on_event("shutdown")
 async def on_shutdown():

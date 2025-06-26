@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query
 from typing import List
+
+from fastapi import APIRouter, HTTPException, Query
+
 from app.services.SymbolService import SymbolService
 
 router = APIRouter(prefix="/symbols", tags=["Symbols"])
+
 
 @router.get("/binance", response_model=List[str])
 def get_binance_symbols():
@@ -13,6 +16,7 @@ def get_binance_symbols():
     if not symbols:
         raise HTTPException(status_code=502, detail="Failed to fetch symbols from Binance.")
     return symbols
+
 
 @router.get("/cmc", response_model=List[str])
 def filter_symbols_by_cap(min_cap: float = Query(150_000_000, description="Minimum market cap (USD)"),

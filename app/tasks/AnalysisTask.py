@@ -1,7 +1,7 @@
-from app.core.celery_app import celery
 import logging
 from datetime import datetime
 
+from app.core.celery_app import celery
 from app.core.db import mongo_sync_db
 from app.services.AnalysisService import AnalysisService
 

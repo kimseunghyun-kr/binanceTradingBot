@@ -1,5 +1,8 @@
-import hashlib, json, logging
+import hashlib
+import json
+import logging
 from typing import Dict, Any
+
 
 class BacktestService:
     _cache: Dict[str, Dict[str, Any]] = {}
@@ -49,7 +52,8 @@ class BacktestService:
                 tp_price = decision.get('tp_price')
                 sl_price = decision.get('sl_price')
                 entry_time = int(df['open_time'].iloc[i])
-                outcome = cls._simulate_trade(sym, entry_time, entry_price, tp_price, sl_price, interval, fetch_candles_func, save_charts, add_buy_pct)
+                outcome = cls._simulate_trade(sym, entry_time, entry_price, tp_price, sl_price, interval,
+                                              fetch_candles_func, save_charts, add_buy_pct)
                 if outcome.get('error'):
                     results['error_count'] += 1
                     continue
@@ -121,7 +125,8 @@ class BacktestService:
         return results
 
     @staticmethod
-    def _simulate_trade(symbol, entry_time, entry_price, tp_price, sl_price, main_interval, fetch_candles_func, save_charts=False, add_buy_pct=5.0):
+    def _simulate_trade(symbol, entry_time, entry_price, tp_price, sl_price, main_interval, fetch_candles_func,
+                        save_charts=False, add_buy_pct=5.0):
         detail_interval = "1h"
         num_candles = 48 if main_interval == "1d" else 336 if main_interval == "1w" else 48
         scan_df = fetch_candles_func(symbol, detail_interval, limit=300, start_time=entry_time)
@@ -139,7 +144,8 @@ class BacktestService:
         tp_price = real_entry_price * (1 + (tp_price - entry_price) / entry_price)
         sl_price = real_entry_price * (1 - (entry_price - sl_price) / entry_price)
         trades = []
-        trades.append({'entry_time': int(detailed_df.iloc[0]['open_time']), 'entry_price': real_entry_price, 'trade_num': 1})
+        trades.append(
+            {'entry_time': int(detailed_df.iloc[0]['open_time']), 'entry_price': real_entry_price, 'trade_num': 1})
         additional_buy_done = False
         avg_entry_price = real_entry_price
         for idx, candle in detailed_df.iterrows():

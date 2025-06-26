@@ -1,6 +1,8 @@
 import os
-import plotly.graph_objects as go
+
 import numpy as np
+import plotly.graph_objects as go
+
 
 def plot_grid_search_3d(results, plot_dir):
     param_names = list(results[0][0].keys())
@@ -14,7 +16,7 @@ def plot_grid_search_3d(results, plot_dir):
         x=x * 100, y=y * 100, z=z,
         mode='markers',
         marker=dict(size=6, color=z, colorscale='RdBu', colorbar=dict(title='Return (%)')),
-        text=[f"TP={tpv*100:.2f}%, SL={slv*100:.2f}%, Return={ret:.2f}%" for tpv, slv, ret in zip(x, y, z)],
+        text=[f"TP={tpv * 100:.2f}%, SL={slv * 100:.2f}%, Return={ret:.2f}%" for tpv, slv, ret in zip(x, y, z)],
         hoverinfo='text'
     )])
     fig.update_layout(

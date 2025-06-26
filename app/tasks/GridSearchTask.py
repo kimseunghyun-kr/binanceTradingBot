@@ -1,7 +1,8 @@
 # app/tasks/GridSearchTask.py
 
-from app.services.GridSearchService import GridSearchService
 from app.core.celery_app import celery
+from app.services.GridSearchService import GridSearchService
+
 
 @celery.task(bind=True)
 def run_grid_search_task(self, params):

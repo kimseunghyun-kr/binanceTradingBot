@@ -1,15 +1,19 @@
+from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
-from app.core import SymbolInitialize as symbol_utils
+
 from app.controller.BacktestController import TaskSubmitResponse
+from app.core import SymbolInitialize as symbol_utils
 from app.tasks.AnalysisTask import run_analysis_task
 
 router = APIRouter(prefix="", tags=["Analysis"])
 
+
 class AnalyzeRequest(BaseModel):
     interval: str = "1d"  # '1d' for daily or '1w' for weekly analysis
     symbols: Optional[List[str]] = None
+
 
 @router.post("/analyze", response_model=TaskSubmitResponse)
 def start_analysis(request: AnalyzeRequest):

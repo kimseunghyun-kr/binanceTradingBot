@@ -5,6 +5,7 @@ import itertools
 from app.services.BackTestService import BacktestService
 from app.utils.plot_results import plot_grid_search_3d
 
+
 class GridPlotService:
     @staticmethod
     def run_grid_search(strategy, symbols, fetch_candles_func, param_grid, fixed_params, plot_dir):

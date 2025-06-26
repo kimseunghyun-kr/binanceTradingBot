@@ -1,7 +1,9 @@
 import logging
+
+from databases import Database
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
-from databases import Database
+
 from app.pydanticConfig.settings import settings
 
 # Async Mongo client

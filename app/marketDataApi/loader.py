@@ -1,6 +1,6 @@
 import logging
-from typing import List
 import sys
+from typing import List
 
 from app.marketDataApi.apiconfig.config import load_filtered_symbols_from_file, save_filtered_symbols_to_file
 from app.marketDataApi.binance import get_valid_binance_symbols
@@ -52,6 +52,7 @@ def initialize_symbols() -> List[str]:
     else:
         logging.info("Invalid choice, sir. Exiting.")
         return []
+
 
 def initialize_symbols_from_config(cfg: dict) -> List[str]:
     mode = cfg.get("mode", "filter_cmc")

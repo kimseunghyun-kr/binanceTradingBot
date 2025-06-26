@@ -3,17 +3,18 @@ from typing import Dict, Any, Optional, List, Tuple
 
 from app.marketDataApi.binance import fetch_candles
 from app.marketDataApi.loader import initialize_symbols_from_config
-from app.services.BackTestService import BacktestService
 from app.services.AnalysisService import AnalysisService  # Assuming you have this
+from app.services.BackTestService import BacktestService
 from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
+
 
 class BacktestAnalysisCoordinator:
     def __init__(
-        self,
-        symbol_config: Optional[Dict[str, Any]] = None,
-        strategy_params: Optional[Dict[str, Any]] = None,
-        backtest_params: Optional[Dict[str, Any]] = None,
-        analysis_params: Optional[Dict[str, Any]] = None,
+            self,
+            symbol_config: Optional[Dict[str, Any]] = None,
+            strategy_params: Optional[Dict[str, Any]] = None,
+            backtest_params: Optional[Dict[str, Any]] = None,
+            analysis_params: Optional[Dict[str, Any]] = None,
     ):
         self.symbol_config = symbol_config or {
             "mode": "filter_cmc",

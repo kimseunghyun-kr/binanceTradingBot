@@ -1,10 +1,12 @@
 from app.strategies.BaseStrategy import BaseStrategy
 
+
 class ParametrizedStrategy(BaseStrategy):
     """
     Optional adapter/intermediate class that manages parameters,
     and provides hooks for more complex strategies.
     """
+
     def __init__(self, **params):
         super().__init__()
         self.set_params(**params)

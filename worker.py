@@ -1,9 +1,9 @@
-import logging, os
+import logging
+import os
+
 from app.core.celery_app import celery
 
 # Import tasks to ensure they are registered with Celery
-import app.tasks.BackTestTask
-import app.tasks.AnalysisTask
 
 # Configure logging for the worker (separate log file)
 os.makedirs("logs", exist_ok=True)

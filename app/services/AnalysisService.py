@@ -1,5 +1,6 @@
 import logging
 from typing import List, Tuple
+
 from app.marketDataApi.binance import fetch_candles
 from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 

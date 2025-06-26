@@ -1,8 +1,9 @@
 # app/services/GridSearchService.py
 
 from itertools import product
-from app.services.BackTestService import BacktestService
+
 from app.marketDataApi.binance import fetch_candles
+from app.services.BackTestService import BacktestService
 from app.services.StrategyService import StrategyService
 
 

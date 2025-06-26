@@ -1,7 +1,8 @@
-import os
 import logging
-from dotenv import load_dotenv
+import os
 from typing import List
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -27,8 +28,10 @@ def load_filtered_symbols_from_file(filename: str = "data/filtered_coins.txt") -
     except Exception as e:
         logging.error(f"Error loading symbols from {filename}: {e}")
         return []
-    
+
+
 ANALYSIS_SYMBOLS: List[str] = load_filtered_symbols_from_file()
+
 
 ###############################################################################
 # SAVE FILTERED SYMBOLS TO FILE

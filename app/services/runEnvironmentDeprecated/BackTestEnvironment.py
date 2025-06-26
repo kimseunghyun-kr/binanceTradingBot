@@ -1,8 +1,10 @@
-import logging
-from typing import List, Dict
-import pandas as pd
 import hashlib
 import json
+import logging
+from typing import List, Dict
+
+import pandas as pd
+
 from app.analysis.analyzeData import plot_and_save_chart
 from app.marketDataApi.binance import fetch_candles
 

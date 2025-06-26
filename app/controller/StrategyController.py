@@ -1,17 +1,20 @@
 import logging
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional
-from app.services.StrategyService import StrategyService
+
 from app.core.db import database
+from app.services.StrategyService import StrategyService
 
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
+
 
 class StrategyInfo(BaseModel):
     id: Optional[int] = None
     name: str
     description: str
+
 
 @router.get("", response_model=List[StrategyInfo])
 async def list_strategies():
@@ -25,10 +28,12 @@ async def list_strategies():
         query = "SELECT id, name, description FROM strategies"
         try:
             rows = await database.fetch_all(query)
-            custom_strats = [StrategyInfo(id=row["id"], name=row["name"], description=row["description"]) for row in rows]
+            custom_strats = [StrategyInfo(id=row["id"], name=row["name"], description=row["description"]) for row in
+                             rows]
         except Exception as e:
             logging.error(f"Database error fetching strategies: {e}")
     return built_ins + custom_strats
+
 
 @router.post("/upload", response_model=StrategyInfo)
 async def upload_strategy(strategy: StrategyInfo):

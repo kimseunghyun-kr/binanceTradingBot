@@ -1,4 +1,3 @@
-
 import logging
 from typing import Tuple
 
@@ -22,6 +21,7 @@ def fetch_and_analyze(symbol: str, interval: str) -> Tuple[str, str]:
         plot_and_save_chart(df, symbol, interval)
     return symbol, decision_str
 
+
 def run_analysis_for_interval(interval: str, label: str):
     logging.info(f"\n=== {label} Analysis Start (Filtered Symbols) ===")
     symbols = ANALYSIS_SYMBOLS
@@ -44,8 +44,10 @@ def run_analysis_for_interval(interval: str, label: str):
     logging.info(f"Total symbols reviewed: {len(symbols)}, Buy signals: {len(yes_list)}, No signals: {no_count}")
     logging.info(f"=== {label} Analysis End ===\n")
 
+
 def run_weekly_analysis():
     run_analysis_for_interval("1w", "Weekly")
+
 
 def run_daily_analysis():
     run_analysis_for_interval("1d", "Daily")

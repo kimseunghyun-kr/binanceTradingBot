@@ -1,8 +1,10 @@
 import logging
+from typing import Optional
+
+import pandas as pd
+
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
-import pandas as pd
-from typing import Optional
 
 
 ###############################################################################

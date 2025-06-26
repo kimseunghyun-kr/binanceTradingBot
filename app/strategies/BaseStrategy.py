@@ -1,10 +1,13 @@
-import pandas as pd
 from typing import Any, Dict, Optional
+
+import pandas as pd
+
 
 class BaseStrategy:
     """
     Abstract base class for all strategies.
     """
+
     def decide(self, df: pd.DataFrame, interval: str, **kwargs) -> Dict[str, Any]:
         """
         Args:

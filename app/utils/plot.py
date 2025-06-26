@@ -1,8 +1,11 @@
-import os
 import logging
-import pandas as pd
+import os
+
 import mplfinance as mpf
+import pandas as pd
+
 from app.indicators.ema_series import compute_ema_series
+
 
 ###############################################################################
 # PLOTTING CHARTS

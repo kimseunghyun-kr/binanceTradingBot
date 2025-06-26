@@ -1,13 +1,14 @@
 import logging
+from typing import List
 
 import requests
-from typing import List
 
 from app.pydanticConfig.settings import settings
 
 BINANCE_BASE_URL = "https://api.binance.com"
 CMC_BASE_URL = "https://pro-api.coinmarketcap.com"
 CMC_PAGE_SIZE = 5000
+
 
 class SymbolService:
     @staticmethod
@@ -34,7 +35,8 @@ class SymbolService:
         for page_index in range(max_pages):
             start = page_index * CMC_PAGE_SIZE + 1
             params = {"start": str(start), "limit": str(CMC_PAGE_SIZE), "convert": "USD"}
-            resp = requests.get(f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest", params=params, headers=headers, timeout=30)
+            resp = requests.get(f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest", params=params, headers=headers,
+                                timeout=30)
             data = resp.json()
             page_coins = data.get("data", [])
             if not page_coins:
