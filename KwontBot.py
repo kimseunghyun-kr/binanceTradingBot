@@ -1,6 +1,11 @@
 import os, logging
 from fastapi import FastAPI
-from app.controller import SymbolController as symbols, BacktestController as backtest, StrategyController as strategies, AnalyzeController as analyze
+from app.controller import (SymbolController as symbols,
+                            BacktestController as backtest,
+                            StrategyController as strategies,
+                            AnalyzeController as analyze,
+                            GridSearchController as gridSearch
+                            )
 from app.core import db
 
 # Create FastAPI app
@@ -21,6 +26,9 @@ app.include_router(backtest.router)
 app.include_router(analyze.router)
 app.include_router(strategies.router)
 app.include_router(symbols.router)
+
+app.include_router(gridSearch.router)
+
 
 # Startup and shutdown events for DB connections
 @app.on_event("startup")
