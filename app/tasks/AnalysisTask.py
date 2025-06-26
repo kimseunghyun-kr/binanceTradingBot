@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 
 from app.core.db import mongo_sync_db
-from app.services.analysisService import AnalysisService
+from app.services.AnalysisService import AnalysisService
 
 
 @celery.task(name="app.tasks.analysis.run_analysis_task")

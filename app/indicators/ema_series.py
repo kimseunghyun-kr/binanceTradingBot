@@ -1,19 +1,29 @@
+from typing import Optional, Union
 import pandas as pd
 
-def compute_ema_series(prices: pd.Series, period: int) -> pd.Series:
-    """
-    Compute EMA with period. If not enough marketDataApi =>
-    fill the earliest row with None until we can start the EMA.
-    """
-    if len(prices) < period:
-        return pd.Series([None]*len(prices), index=prices.index)
-    alpha = 2.0 / (period + 1)
-    ema_values = [None]*(period-1)
-    initial_sma = prices.iloc[:period].mean()
-    ema_values.append(initial_sma)
-    for i in range(period, len(prices)):
-        prev_ema = ema_values[-1]
-        curr_val = prices.iloc[i]
-        curr_ema = curr_val * alpha + prev_ema * (1 - alpha)
-        ema_values.append(curr_ema)
-    return pd.Series(ema_values, index=prices.index)
+def compute_ema_series(
+    df: pd.DataFrame,
+    column: str = 'close',
+    period: int = 33,
+    start: Optional[Union[int, str, pd.Timestamp]] = None,
+    end: Optional[Union[int, str, pd.Timestamp]] = None,
+    adjust: bool = False,
+    min_periods: Optional[int] = None,
+    pad_invalid: bool = True,
+    inplace: bool = False,
+    out_col: Optional[str] = None
+) -> pd.Series:
+    data = df[column]
+    if start is not None or end is not None:
+        data = data.loc[start:end]
+    ema = data.ewm(
+        span=period,
+        adjust=adjust,
+        min_periods=min_periods if min_periods is not None else period
+    ).mean()
+    if pad_invalid:
+        ema = ema.reindex(df.index)
+    if inplace:
+        col_name = out_col or f"{column}_ema{period}"
+        df[col_name] = ema
+    return ema
