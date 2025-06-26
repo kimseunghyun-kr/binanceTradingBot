@@ -1,14 +1,14 @@
 import pandas as pd
 from typing import Optional, Dict, Any
-from app.services.indicators.indicators import compute_ema_series
-from app.services.strategies.ParameterisedStrategy import ParametrizedStrategy
+from app.indicators.ema_series import compute_ema_series
+from app.strategies.ParameterisedStrategy import ParametrizedStrategy
 
 
 class PeakEMAReversalStrategy(ParametrizedStrategy):
     """
-    Strategy detects single-peak followed by bearish structure and EMA pullback.
+    Strategy that detects a single price peak followed by a bearish pattern and EMA pullback.
+    If conditions meet, it signals 'BUY' with an entry at the weekly EMA value.
     """
-
     def decide(self, df: pd.DataFrame, interval: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05, **kwargs) -> Dict[str, Any]:
         initial_signal = self.check_upper_section(df, interval)
         trade = self.generate_trade_signal(df, initial_signal, tp_ratio, sl_ratio)

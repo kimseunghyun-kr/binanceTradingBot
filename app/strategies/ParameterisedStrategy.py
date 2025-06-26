@@ -1,4 +1,4 @@
-from app.services.strategies.BaseStrategy import BaseStrategy
+from app.strategies.BaseStrategy import BaseStrategy
 
 class ParametrizedStrategy(BaseStrategy):
     """

@@ -2,7 +2,7 @@ import os
 import logging
 import pandas as pd
 import mplfinance as mpf
-from app.services.indicators.indicators import compute_ema_series
+from app.indicators.ema_series import compute_ema_series
 
 ###############################################################################
 # PLOTTING CHARTS

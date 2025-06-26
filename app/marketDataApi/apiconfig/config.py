@@ -18,7 +18,7 @@ CMC_PAGE_SIZE = 5000
 ###############################################################################
 # LOAD FILTERED SYMBOLS TO FILE
 ###############################################################################
-def load_filtered_symbols_from_file(filename: str = "filtered_coins.txt") -> List[str]:
+def load_filtered_symbols_from_file(filename: str = "data/filtered_coins.txt") -> List[str]:
     try:
         with open(filename, "r") as f:
             lines = f.read().splitlines()
@@ -33,7 +33,7 @@ ANALYSIS_SYMBOLS: List[str] = load_filtered_symbols_from_file()
 ###############################################################################
 # SAVE FILTERED SYMBOLS TO FILE
 ###############################################################################
-def save_filtered_symbols_to_file(symbols: List[str], filename: str = "filtered_coins.txt"):
+def save_filtered_symbols_to_file(symbols: List[str], filename: str = "data/filtered_coins.txt"):
     try:
         with open(filename, "w") as f:
             for sym in symbols:
