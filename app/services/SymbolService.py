@@ -1,5 +1,9 @@
+import logging
+
 import requests
 from typing import List
+
+from app.pydanticConfig.settings import settings
 
 BINANCE_BASE_URL = "https://api.binance.com"
 CMC_BASE_URL = "https://pro-api.coinmarketcap.com"
@@ -18,6 +22,13 @@ class SymbolService:
 
     @staticmethod
     def filter_symbols_by_market_cap(min_cap: float, max_cap: float, max_pages: int, api_key: str) -> List[str]:
+        # Ensure API key is available
+        api_key = api_key or settings.COINMARKETCAP_API_KEY
+        if not api_key:
+            # No API key provided; cannot fetch data
+            logging.error("CoinMarketCap API key is missing.")
+            return []
+
         all_coins = []
         headers = {"Accepts": "application/json", "X-CMC_PRO_API_KEY": api_key}
         for page_index in range(max_pages):

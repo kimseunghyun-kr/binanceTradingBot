@@ -1,7 +1,5 @@
 # app/services/plotresultsservice.py
 
-from app.utils.plot import plot_and_save_chart
-
 class PlotResultsService:
     @staticmethod
     def plot_equity_curve(equity_curve, symbol, out_dir):

@@ -18,15 +18,20 @@ class BacktestService:
 
     @classmethod
     def run_backtest(cls, strategy, symbols, fetch_candles_func, interval,
-                     num_iterations=100, tp_ratio=0.1, sl_ratio=0.05, save_charts=False, add_buy_pct=5.0, start_date=None) -> Dict[str, Any]:
+                     num_iterations=100, tp_ratio=0.1, sl_ratio=0.05, save_charts=False,
+                     add_buy_pct=5.0, start_date=None,
+                     use_cache: bool = True) -> Dict[str, Any]:
+        """Run backtest on given symbols and return aggregated results."""
         cache_key = cls.generate_cache_key(symbols, interval, num_iterations, start_date, strategy.__class__.__name__)
-        if cache_key in cls._cache:
-            logging.info(f"Using cached results for {strategy.__class__.__name__} {interval} on {len(symbols)} symbols.")
+        if use_cache and cache_key in cls._cache:
+            logging.info(
+                f"Using cached results for {strategy.__class__.__name__} {interval} on {len(symbols)} symbols.")
             return cls._cache[cache_key]
+        # Initialize results structure
         results = {
-            'trades': [], 'win_count': 0, 'loss_count': 0, 'error_count': 0, 'total_return_pct': 0.0,
-            'max_drawdown_pct': 0.0, 'win_rate': 0.0, 'avg_win_pct': 0.0, 'avg_loss_pct': 0.0,
-            'profit_factor': 0.0, 'equity_curve': []
+            'trades': [], 'win_count': 0, 'loss_count': 0, 'error_count': 0,
+            'total_return_pct': 0.0, 'max_drawdown_pct': 0.0, 'win_rate': 0.0,
+            'avg_win_pct': 0.0, 'avg_loss_pct': 0.0, 'profit_factor': 0.0, 'equity_curve': []
         }
         all_trades = []
         for sym in symbols:

@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:4.4
+        ports: [27017:27017]   # If tests need Mongo (adjust URIs accordingly)
+      redis:
+        image: redis:6-alpine
+        ports: [6379:6379]
+      postgres:
+        image: postgres:13-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trading
+        ports: [5432:5432]
+
+    env:
+      # Provide environment for tests (using localhost since services are on runner network)
+      MONGO_URI: "mongodb://localhost:27017/trading"
+      POSTGRES_DSN: "postgresql://postgres:postgres@localhost:5432/trading"
+      REDIS_BROKER_URL: "redis://localhost:6379/0"
+      CELERY_RESULT_BACKEND: "redis://localhost:6379/0"
+      # (Provide API keys if needed for integration tests, or use dummy values/mocks)
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with Flake8
+        run: |
+          pip install flake8
+          flake8 .
+
+      - name: Run tests
+        run: |
+          pip install pytest pytest-cov
+          pytest --maxfail=1 --disable-warnings -q --cov=app --cov-report=term-missing
+
+      # Optionally, upload coverage report to Codecov (if token is set as secret)
+      - name: Upload coverage to Codecov
+        if: ${{ secrets.CODECOV_TOKEN }}
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          flags: unittests
+          name: codecov-coverage
