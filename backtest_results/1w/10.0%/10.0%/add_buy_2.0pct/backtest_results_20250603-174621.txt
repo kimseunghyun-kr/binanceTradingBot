@@ -1,0 +1,14 @@
+Backtest Results at 20250603-174621
+===================================
+Backtest Period: From 2021-01-01
+
+Performance Metrics for Weekly (1w) with TP=10.0% SL=10.0% Add.Buy=2.0%:
+Total Return: 16900.63%
+Total Trades: 362
+Win Trades: 211
+Loss Trades: 151
+Win Rate: 58.29%
+Average Win: 10.69%
+Average Loss: -8.77%
+Profit Factor: 1.70
+Maximum Drawdown: 64.87%

@@ -1,0 +1,18 @@
+2025-06-02 02:31:52,113 - INFO - backtest_analysis.py:803 - 
+Analyzing file: backtest_results\1w\11.0%_12.5%\add_buy_3.0pct\backtest_transactions_20250602-021529.txt
+2025-06-02 02:31:52,328 - INFO - backtest_analysis.py:810 - Successfully parsed 343 transactions
+2025-06-02 02:31:52,328 - INFO - backtest_analysis.py:812 - Additional buy trigger from file: 3.0% drop
+
+2025-06-02 02:31:52,574 - INFO - backtest_analysis.py:817 - Identified 202 potential positions
+2025-06-02 02:31:52,574 - INFO - backtest_analysis.py:819 - 
+Simulating portfolio with position-based strategy...
+2025-06-02 02:31:52,575 - INFO - backtest_analysis.py:820 - - Initial buy: 25% of initial capital (fixed)
+2025-06-02 02:31:52,576 - INFO - backtest_analysis.py:821 - - Additional buy: 25% of initial capital (fixed)
+2025-06-02 02:31:52,577 - INFO - backtest_analysis.py:822 - - Maximum allocation: 100% of portfolio
+
+2025-06-02 02:31:52,586 - INFO - backtest_analysis.py:830 - === PORTFOLIO PERFORMANCE ===
+2025-06-02 02:31:52,586 - INFO - backtest_analysis.py:831 - Positions taken: 120 / 202 potential
+2025-06-02 02:31:52,586 - INFO - backtest_analysis.py:832 - Annualized Return (CAGR): 30.42%
+2025-06-02 02:31:52,587 - INFO - backtest_analysis.py:833 - Annualized Sharpe Ratio: 1.60
+2025-06-02 02:31:52,587 - INFO - backtest_analysis.py:834 - Maximum Drawdown: -10.86%
+2025-06-02 02:31:52,587 - INFO - backtest_analysis.py:835 - Turnover (positions/year): 21.00

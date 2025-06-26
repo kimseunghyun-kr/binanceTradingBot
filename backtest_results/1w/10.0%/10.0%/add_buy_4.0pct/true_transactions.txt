@@ -1,0 +1,2490 @@
+=== True Transactions (Actually Taken Trades) ===
+
+Position #1
+Symbol: ETCUSDT
+Number of trades in position: 1
+Exit Time: 2021-01-12 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-12 01:00:00
+Entry Price: 6.49343773
+Exit Price: 7.14278151
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #2
+Symbol: HOTUSDT
+Number of trades in position: 2
+Exit Time: 2021-01-24 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-21 20:00:00
+Entry Price: 0.00064624
+Exit Price: 0.00071086
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-01-22 01:00:00
+Entry Price: 0.00062039
+Exit Price: 0.00071086
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #3
+Symbol: DASHUSDT
+Number of trades in position: 2
+Exit Time: 2021-01-25 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-22 07:00:00
+Entry Price: 100.89933383
+Exit Price: 110.98926722
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-01-22 09:00:00
+Entry Price: 96.86336048
+Exit Price: 110.98926722
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #4
+Symbol: DASHUSDT
+Number of trades in position: 2
+Exit Time: 2021-02-03 09:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-26 23:00:00
+Entry Price: 101.11143702
+Exit Price: 111.22258073
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-01-27 22:00:00
+Entry Price: 97.06697954
+Exit Price: 111.22258073
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #5
+Symbol: HOTUSDT
+Number of trades in position: 1
+Exit Time: 2021-01-28 14:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-27 22:00:00
+Entry Price: 0.00062933
+Exit Price: 0.00069226
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #6
+Symbol: BCHUSDT
+Number of trades in position: 1
+Exit Time: 2021-01-29 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-01-27 23:00:00
+Entry Price: 370.21025318
+Exit Price: 407.23127849
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #7
+Symbol: XTZUSDT
+Number of trades in position: 1
+Exit Time: 2021-02-23 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-02-23 17:00:00
+Entry Price: 3.18211702
+Exit Price: 3.50032872
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #8
+Symbol: BCHUSDT
+Number of trades in position: 2
+Exit Time: 2021-02-23 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-02-23 18:00:00
+Entry Price: 458.49604903
+Exit Price: 412.64644413
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-02-23 18:00:00
+Entry Price: 440.15620707
+Exit Price: 412.64644413
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #9
+Symbol: ETCUSDT
+Number of trades in position: 1
+Exit Time: 2021-02-23 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-02-23 18:00:00
+Entry Price: 9.20374164
+Exit Price: 10.12411581
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #10
+Symbol: LINKUSDT
+Number of trades in position: 2
+Exit Time: 2021-02-23 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-02-23 18:00:00
+Entry Price: 21.71714024
+Exit Price: 23.88885427
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-02-23 18:00:00
+Entry Price: 20.84845463
+Exit Price: 23.88885427
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #11
+Symbol: FETUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-20 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-20 15:00:00
+Entry Price: 0.42983455
+Exit Price: 0.47281801
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-04-20 15:00:00
+Entry Price: 0.41264117
+Exit Price: 0.47281801
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #12
+Symbol: SANDUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-23 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 07:00:00
+Entry Price: 0.43236059
+Exit Price: 0.38912453
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-04-23 10:00:00
+Entry Price: 0.41506617
+Exit Price: 0.38912453
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #13
+Symbol: ONEUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-23 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 10:00:00
+Entry Price: 0.09022892
+Exit Price: 0.09925181
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-04-23 10:00:00
+Entry Price: 0.08661976
+Exit Price: 0.09925181
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #14
+Symbol: ZRXUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-26 19:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 10:00:00
+Entry Price: 1.37607974
+Exit Price: 1.51368771
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 1.32103655
+Exit Price: 1.51368771
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #15
+Symbol: BATUSDT
+Number of trades in position: 1
+Exit Time: 2021-04-23 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 0.86967467
+Exit Price: 0.95664213
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #16
+Symbol: HOTUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-23 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 0.00976529
+Exit Price: 0.01074182
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 0.00937468
+Exit Price: 0.01074182
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #17
+Symbol: XTZUSDT
+Number of trades in position: 2
+Exit Time: 2021-04-23 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 4.36878175
+Exit Price: 4.80565993
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-04-23 11:00:00
+Entry Price: 4.19403048
+Exit Price: 4.80565993
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #18
+Symbol: IOTXUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-18 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-18 07:00:00
+Entry Price: 0.03872126
+Exit Price: 0.04259339
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #19
+Symbol: ATOMUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-19 13:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 13:00:00
+Entry Price: 18.93838841
+Exit Price: 20.83222725
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #20
+Symbol: LINKUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-19 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 20:00:00
+Entry Price: 31.83095309
+Exit Price: 35.01404839
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #21
+Symbol: LTCUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-19 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 20:00:00
+Entry Price: 223.77754385
+Exit Price: 246.15529823
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #22
+Symbol: UNIUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 20:00:00
+Entry Price: 28.33627050
+Exit Price: 25.50264345
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 20:00:00
+Entry Price: 27.20281968
+Exit Price: 25.50264345
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #23
+Symbol: ZECUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-19 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 20:00:00
+Entry Price: 186.00623286
+Exit Price: 204.60685615
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #24
+Symbol: BCHUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 763.92384949
+Exit Price: 687.53146454
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 733.36689551
+Exit Price: 687.53146454
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #25
+Symbol: ETCUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 41.68144667
+Exit Price: 45.84959134
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 40.01418881
+Exit Price: 45.84959134
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #26
+Symbol: FTTUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 39.39846265
+Exit Price: 35.45861638
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 37.82252414
+Exit Price: 35.45861638
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #27
+Symbol: QTUMUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 12.22885448
+Exit Price: 11.00596903
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 11.73970030
+Exit Price: 11.00596903
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #28
+Symbol: XLMUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 0.46559125
+Exit Price: 0.41903212
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 0.44696760
+Exit Price: 0.41903212
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #29
+Symbol: YFIUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 42308.43657817
+Exit Price: 38077.59292036
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 40616.09911505
+Exit Price: 38077.59292036
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #30
+Symbol: ZENUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-19 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 83.11574521
+Exit Price: 74.80417069
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-05-19 21:00:00
+Entry Price: 79.79111540
+Exit Price: 74.80417069
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #31
+Symbol: ATOMUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-24 16:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-24 09:00:00
+Entry Price: 11.64900000
+Exit Price: 12.81390000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #32
+Symbol: IOTXUSDT
+Number of trades in position: 2
+Exit Time: 2021-05-24 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-24 09:00:00
+Entry Price: 0.03246000
+Exit Price: 0.03570600
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-05-24 09:00:00
+Entry Price: 0.03116160
+Exit Price: 0.03570600
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #33
+Symbol: LINKUSDT
+Number of trades in position: 1
+Exit Time: 2021-05-24 12:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-05-24 09:00:00
+Entry Price: 19.84900000
+Exit Price: 21.83390000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #34
+Symbol: ZECUSDT
+Number of trades in position: 2
+Exit Time: 2021-06-10 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-06-08 11:00:00
+Entry Price: 128.93977771
+Exit Price: 141.83375548
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-06-09 00:00:00
+Entry Price: 123.78218660
+Exit Price: 141.83375548
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #35
+Symbol: BCHUSDT
+Number of trades in position: 1
+Exit Time: 2021-06-09 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-06-09 00:00:00
+Entry Price: 546.14316661
+Exit Price: 600.75748328
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #36
+Symbol: SANDUSDT
+Number of trades in position: 2
+Exit Time: 2021-09-08 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-09-08 00:00:00
+Entry Price: 0.64279960
+Exit Price: 0.70707956
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-09-08 00:00:00
+Entry Price: 0.61708762
+Exit Price: 0.70707956
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #37
+Symbol: SANDUSDT
+Number of trades in position: 2
+Exit Time: 2021-09-21 09:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-09-20 20:00:00
+Entry Price: 0.65711242
+Exit Price: 0.59140118
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-09-20 21:00:00
+Entry Price: 0.63082792
+Exit Price: 0.59140118
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #38
+Symbol: FTTUSDT
+Number of trades in position: 1
+Exit Time: 2021-09-22 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-09-22 06:00:00
+Entry Price: 48.78586909
+Exit Price: 53.66445600
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #39
+Symbol: DOTUSDT
+Number of trades in position: 1
+Exit Time: 2021-11-19 23:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-11-19 02:00:00
+Entry Price: 37.69502411
+Exit Price: 41.46452652
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #40
+Symbol: DOTUSDT
+Number of trades in position: 2
+Exit Time: 2021-11-26 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-11-26 16:00:00
+Entry Price: 37.49599462
+Exit Price: 33.74639516
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-11-26 17:00:00
+Entry Price: 35.99615484
+Exit Price: 33.74639516
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #41
+Symbol: DOTUSDT
+Number of trades in position: 1
+Exit Time: 2021-12-01 02:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-11-29 09:00:00
+Entry Price: 35.75000000
+Exit Price: 39.32500000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #42
+Symbol: BATUSDT
+Number of trades in position: 2
+Exit Time: 2021-12-04 14:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-12-04 14:00:00
+Entry Price: 1.00228132
+Exit Price: 0.90205319
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-12-04 14:00:00
+Entry Price: 0.96219007
+Exit Price: 0.90205319
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #43
+Symbol: EGLDUSDT
+Number of trades in position: 2
+Exit Time: 2021-12-04 14:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-12-04 14:00:00
+Entry Price: 280.34125699
+Exit Price: 252.30713129
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2021-12-04 14:00:00
+Entry Price: 269.12760671
+Exit Price: 252.30713129
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #44
+Symbol: IOTXUSDT
+Number of trades in position: 1
+Exit Time: 2021-12-04 14:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-12-04 14:00:00
+Entry Price: 0.11064258
+Exit Price: 0.12170684
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #45
+Symbol: EGLDUSDT
+Number of trades in position: 2
+Exit Time: 2021-12-07 14:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2021-12-06 09:00:00
+Entry Price: 277.76039708
+Exit Price: 305.53643679
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2021-12-06 16:00:00
+Entry Price: 266.64998120
+Exit Price: 305.53643679
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #46
+Symbol: NEARUSDT
+Number of trades in position: 2
+Exit Time: 2022-01-22 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-01-22 15:00:00
+Entry Price: 11.67675561
+Exit Price: 10.50908005
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2022-01-22 16:00:00
+Entry Price: 11.20968539
+Exit Price: 10.50908005
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #47
+Symbol: ROSEUSDT
+Number of trades in position: 2
+Exit Time: 2022-01-22 19:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-01-22 16:00:00
+Entry Price: 0.31543602
+Exit Price: 0.28389241
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2022-01-22 18:00:00
+Entry Price: 0.30281857
+Exit Price: 0.28389241
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #48
+Symbol: NEARUSDT
+Number of trades in position: 2
+Exit Time: 2022-01-24 16:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-01-24 09:00:00
+Entry Price: 11.48908730
+Exit Price: 10.34017857
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2022-01-24 11:00:00
+Entry Price: 11.02952381
+Exit Price: 10.34017857
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #49
+Symbol: ROSEUSDT
+Number of trades in position: 2
+Exit Time: 2022-01-25 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-01-24 16:00:00
+Entry Price: 0.31461908
+Exit Price: 0.34608098
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2022-01-24 19:00:00
+Entry Price: 0.30203431
+Exit Price: 0.34608098
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #50
+Symbol: ZILUSDT
+Number of trades in position: 2
+Exit Time: 2022-05-01 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-04-30 04:00:00
+Entry Price: 0.08198885
+Exit Price: 0.07378996
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2022-05-01 02:00:00
+Entry Price: 0.07870929
+Exit Price: 0.07378996
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #51
+Symbol: QNTUSDT
+Number of trades in position: 2
+Exit Time: 2022-11-09 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-11-09 04:00:00
+Entry Price: 132.22008322
+Exit Price: 145.44209155
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2022-11-09 04:00:00
+Entry Price: 126.93127989
+Exit Price: 145.44209155
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #52
+Symbol: QNTUSDT
+Number of trades in position: 2
+Exit Time: 2022-11-14 22:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2022-11-14 09:00:00
+Entry Price: 101.90000000
+Exit Price: 112.09000000
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2022-11-14 10:00:00
+Entry Price: 97.82400000
+Exit Price: 112.09000000
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #53
+Symbol: HBARUSDT
+Number of trades in position: 2
+Exit Time: 2023-03-10 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2023-03-08 00:00:00
+Entry Price: 0.06123982
+Exit Price: 0.05511584
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2023-03-09 07:00:00
+Entry Price: 0.05879023
+Exit Price: 0.05511584
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #54
+Symbol: MINAUSDT
+Number of trades in position: 2
+Exit Time: 2023-03-10 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2023-03-08 22:00:00
+Entry Price: 0.73755811
+Exit Price: 0.66380230
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2023-03-09 07:00:00
+Entry Price: 0.70805579
+Exit Price: 0.66380230
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #55
+Symbol: MINAUSDT
+Number of trades in position: 1
+Exit Time: 2023-03-14 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2023-03-13 18:00:00
+Entry Price: 0.67674782
+Exit Price: 0.74442261
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #56
+Symbol: RUNEUSDT
+Number of trades in position: 2
+Exit Time: 2023-10-13 16:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2023-10-12 11:00:00
+Entry Price: 1.54531693
+Exit Price: 1.69984862
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2023-10-13 01:00:00
+Entry Price: 1.48350425
+Exit Price: 1.69984862
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #57
+Symbol: ANKRUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.02558847
+Exit Price: 0.02302962
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.02456493
+Exit Price: 0.02302962
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #58
+Symbol: DGBUSDT
+Number of trades in position: 1
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.00812782
+Exit Price: 0.00894060
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #59
+Symbol: FLOWUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.71137852
+Exit Price: 0.78251637
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.68292338
+Exit Price: 0.78251637
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #60
+Symbol: LUNCUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.00011828
+Exit Price: 0.00010646
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.00011355
+Exit Price: 0.00010646
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #61
+Symbol: QTUMUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 3.01817399
+Exit Price: 3.31999139
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 2.89744703
+Exit Price: 3.31999139
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #62
+Symbol: SFPUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.67648655
+Exit Price: 0.74413521
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.64942709
+Exit Price: 0.74413521
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #63
+Symbol: ZILUSDT
+Number of trades in position: 1
+Exit Time: 2024-01-03 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-03 21:00:00
+Entry Price: 0.02185565
+Exit Price: 0.02404122
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #64
+Symbol: ANKRUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-11 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-08 09:00:00
+Entry Price: 0.02364234
+Exit Price: 0.02600658
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-01-08 11:00:00
+Entry Price: 0.02269665
+Exit Price: 0.02600658
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #65
+Symbol: ZILUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-11 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-08 10:00:00
+Entry Price: 0.02033762
+Exit Price: 0.02237138
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-01-08 11:00:00
+Entry Price: 0.01952411
+Exit Price: 0.02237138
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #66
+Symbol: ONEUSDT
+Number of trades in position: 2
+Exit Time: 2024-01-23 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-19 03:00:00
+Entry Price: 0.01479223
+Exit Price: 0.01331301
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-01-20 01:00:00
+Entry Price: 0.01420054
+Exit Price: 0.01331301
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #67
+Symbol: DGBUSDT
+Number of trades in position: 1
+Exit Time: 2024-01-23 04:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-20 01:00:00
+Entry Price: 0.00757983
+Exit Price: 0.00833781
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #68
+Symbol: RSRUSDT
+Number of trades in position: 1
+Exit Time: 2024-02-03 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-20 01:00:00
+Entry Price: 0.00230953
+Exit Price: 0.00222400
+Return: -3.70%
+Outcome: LOSS
+
+==================================================
+
+Position #69
+Symbol: RSRUSDT
+Number of trades in position: 2
+Exit Time: 2024-02-06 03:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-23 04:00:00
+Entry Price: 0.00228188
+Exit Price: 0.00217800
+Return: -4.55%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-01-23 18:00:00
+Entry Price: 0.00219060
+Exit Price: 0.00217800
+Return: -0.58%
+Outcome: LOSS
+
+==================================================
+
+Position #70
+Symbol: QTUMUSDT
+Number of trades in position: 1
+Exit Time: 2024-02-06 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-01-23 18:00:00
+Entry Price: 2.70860994
+Exit Price: 2.85800000
+Return: 5.52%
+Outcome: WIN
+
+==================================================
+
+Position #71
+Symbol: SUIUSDT
+Number of trades in position: 2
+Exit Time: 2024-03-06 04:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-03-06 04:00:00
+Entry Price: 1.26378357
+Exit Price: 1.39016193
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-03-06 04:00:00
+Entry Price: 1.21323223
+Exit Price: 1.39016193
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #72
+Symbol: CRVUSDT
+Number of trades in position: 2
+Exit Time: 2024-03-21 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-03-19 10:00:00
+Entry Price: 0.61323789
+Exit Price: 0.67456168
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-03-19 16:00:00
+Entry Price: 0.58870838
+Exit Price: 0.67456168
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #73
+Symbol: CVXUSDT
+Number of trades in position: 2
+Exit Time: 2024-03-19 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-03-19 10:00:00
+Entry Price: 3.92321555
+Exit Price: 3.53089400
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-03-19 12:00:00
+Entry Price: 3.76628693
+Exit Price: 3.53089400
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #74
+Symbol: JSTUSDT
+Number of trades in position: 1
+Exit Time: 2024-03-25 08:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-03-19 18:00:00
+Entry Price: 0.03411077
+Exit Price: 0.03752185
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #75
+Symbol: ETCUSDT
+Number of trades in position: 1
+Exit Time: 2024-03-21 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-03-20 08:00:00
+Entry Price: 27.29347403
+Exit Price: 30.02282143
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #76
+Symbol: APTUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-13 02:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-10 21:00:00
+Entry Price: 11.53774204
+Exit Price: 10.38396784
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-13 01:00:00
+Entry Price: 11.07623236
+Exit Price: 10.38396784
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #77
+Symbol: AVAXUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-13 03:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-13 02:00:00
+Entry Price: 42.07676422
+Exit Price: 37.86908780
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-13 02:00:00
+Entry Price: 40.39369365
+Exit Price: 37.86908780
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #78
+Symbol: CFXUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-13 03:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-13 02:00:00
+Entry Price: 0.30352248
+Exit Price: 0.27317023
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-13 02:00:00
+Entry Price: 0.29138158
+Exit Price: 0.27317023
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #79
+Symbol: DOTUSDT
+Number of trades in position: 1
+Exit Time: 2024-04-13 03:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-13 03:00:00
+Entry Price: 6.52495575
+Exit Price: 7.17745133
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #80
+Symbol: ICPUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-14 04:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-13 03:00:00
+Entry Price: 13.21431034
+Exit Price: 11.89287930
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-13 03:00:00
+Entry Price: 12.68573792
+Exit Price: 11.89287930
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #81
+Symbol: ALGOUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-14 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 04:00:00
+Entry Price: 0.16776330
+Exit Price: 0.15098697
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-14 04:00:00
+Entry Price: 0.16105277
+Exit Price: 0.15098697
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #82
+Symbol: AMPUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-14 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 04:00:00
+Entry Price: 0.00668978
+Exit Price: 0.00602080
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-14 05:00:00
+Entry Price: 0.00642219
+Exit Price: 0.00602080
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #83
+Symbol: ANKRUSDT
+Number of trades in position: 1
+Exit Time: 2024-04-14 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 04:00:00
+Entry Price: 0.04129780
+Exit Price: 0.03716802
+Return: -10.00%
+Outcome: LOSS
+
+==================================================
+
+Position #84
+Symbol: FLOWUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-14 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 05:00:00
+Entry Price: 0.79746556
+Exit Price: 0.87721211
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-04-14 05:00:00
+Entry Price: 0.76556693
+Exit Price: 0.87721211
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #85
+Symbol: RVNUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-15 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 05:00:00
+Entry Price: 0.02868553
+Exit Price: 0.03155408
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-04-14 05:00:00
+Entry Price: 0.02753811
+Exit Price: 0.03155408
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #86
+Symbol: CAKEUSDT
+Number of trades in position: 1
+Exit Time: 2024-04-14 08:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-14 06:00:00
+Entry Price: 2.48287921
+Exit Price: 2.73116713
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #87
+Symbol: AVAXUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-16 22:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-15 09:00:00
+Entry Price: 37.27000000
+Exit Price: 33.54300000
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-15 11:00:00
+Entry Price: 35.77920000
+Exit Price: 33.54300000
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #88
+Symbol: CFXUSDT
+Number of trades in position: 1
+Exit Time: 2024-04-15 15:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-15 09:00:00
+Entry Price: 0.24990000
+Exit Price: 0.27489000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #89
+Symbol: MASKUSDT
+Number of trades in position: 2
+Exit Time: 2024-04-19 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-15 09:00:00
+Entry Price: 3.46900000
+Exit Price: 3.12210000
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-04-16 02:00:00
+Entry Price: 3.33024000
+Exit Price: 3.12210000
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #90
+Symbol: CKBUSDT
+Number of trades in position: 1
+Exit Time: 2024-04-29 01:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-27 10:00:00
+Entry Price: 0.01676533
+Exit Price: 0.01844187
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #91
+Symbol: PENDLEUSDT
+Number of trades in position: 2
+Exit Time: 2024-05-03 19:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-30 14:00:00
+Entry Price: 4.32900422
+Exit Price: 4.76190465
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-05-01 01:00:00
+Entry Price: 4.15584406
+Exit Price: 4.76190465
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #92
+Symbol: BCHUSDT
+Number of trades in position: 2
+Exit Time: 2024-05-08 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-04-30 20:00:00
+Entry Price: 443.62904881
+Exit Price: 487.99195369
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-05-01 01:00:00
+Entry Price: 425.88388686
+Exit Price: 487.99195369
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #93
+Symbol: NEOUSDT
+Number of trades in position: 2
+Exit Time: 2024-05-21 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-05-07 12:00:00
+Entry Price: 15.76181179
+Exit Price: 16.24000000
+Return: 3.03%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-05-09 05:00:00
+Entry Price: 15.13133932
+Exit Price: 16.24000000
+Return: 7.33%
+Outcome: WIN
+
+==================================================
+
+Position #94
+Symbol: PENDLEUSDT
+Number of trades in position: 2
+Exit Time: 2024-05-13 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-05-11 06:00:00
+Entry Price: 4.31400391
+Exit Price: 3.88260352
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-05-13 10:00:00
+Entry Price: 4.14144375
+Exit Price: 3.88260352
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #95
+Symbol: JASMYUSDT
+Number of trades in position: 2
+Exit Time: 2024-07-04 22:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-07-03 23:00:00
+Entry Price: 0.02544047
+Exit Price: 0.02289643
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-07-04 10:00:00
+Entry Price: 0.02442285
+Exit Price: 0.02289643
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #96
+Symbol: ZECUSDT
+Number of trades in position: 2
+Exit Time: 2024-09-04 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-09-02 02:00:00
+Entry Price: 30.98950074
+Exit Price: 27.89055066
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-09-02 07:00:00
+Entry Price: 29.74992071
+Exit Price: 27.89055066
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #97
+Symbol: ZECUSDT
+Number of trades in position: 2
+Exit Time: 2024-09-07 00:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-09-02 09:00:00
+Entry Price: 29.38000000
+Exit Price: 26.44200000
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-09-04 10:00:00
+Entry Price: 28.20480000
+Exit Price: 26.44200000
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #98
+Symbol: APEUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 1.23014942
+Exit Price: 1.35316436
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #99
+Symbol: APTUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 10.83431539
+Exit Price: 11.91774693
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #100
+Symbol: BONKUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 0.00003281
+Exit Price: 0.00003609
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #101
+Symbol: CELOUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 0.74913458
+Exit Price: 0.82404804
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 0.71916920
+Exit Price: 0.82404804
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #102
+Symbol: DYDXUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 1.52766024
+Exit Price: 1.68042626
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #103
+Symbol: INJUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 25.01993471
+Exit Price: 27.52192818
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 24.01913732
+Exit Price: 27.52192818
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #104
+Symbol: JUPUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 1.06145717
+Exit Price: 0.95531146
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 1.01899889
+Exit Price: 0.95531146
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #105
+Symbol: LUNCUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 0.00011169
+Exit Price: 0.00012285
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #106
+Symbol: SEIUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 0.50975253
+Exit Price: 0.56072778
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #107
+Symbol: TAOUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-10 06:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 529.37259331
+Exit Price: 476.43533398
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-10 06:00:00
+Entry Price: 508.19768958
+Exit Price: 476.43533398
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #108
+Symbol: RUNEUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-11 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-11 03:00:00
+Entry Price: 5.58775834
+Exit Price: 6.14653417
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #109
+Symbol: JUPUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-19 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-18 00:00:00
+Entry Price: 1.03035135
+Exit Price: 0.92731621
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-18 15:00:00
+Entry Price: 0.98913729
+Exit Price: 0.92731621
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #110
+Symbol: TAOUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-19 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-18 00:00:00
+Entry Price: 519.45715976
+Exit Price: 467.51144379
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-19 05:00:00
+Entry Price: 498.67887337
+Exit Price: 467.51144379
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #111
+Symbol: CELOUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-19 11:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-19 04:00:00
+Entry Price: 0.73756848
+Exit Price: 0.66381163
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-19 05:00:00
+Entry Price: 0.70806574
+Exit Price: 0.66381163
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #112
+Symbol: FLOWUSDT
+Number of trades in position: 2
+Exit Time: 2024-12-20 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-19 11:00:00
+Entry Price: 0.76509476
+Exit Price: 0.68858528
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2024-12-20 02:00:00
+Entry Price: 0.73449097
+Exit Price: 0.68858528
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #113
+Symbol: SHIBUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-20 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-19 11:00:00
+Entry Price: 0.00002309
+Exit Price: 0.00002078
+Return: -10.00%
+Outcome: LOSS
+
+==================================================
+
+Position #114
+Symbol: RUNEUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-20 17:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 00:00:00
+Entry Price: 5.51286962
+Exit Price: 4.96158266
+Return: -10.00%
+Outcome: LOSS
+
+==================================================
+
+Position #115
+Symbol: APTUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-22 02:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 17:00:00
+Entry Price: 10.63498153
+Exit Price: 9.57148338
+Return: -10.00%
+Outcome: LOSS
+
+==================================================
+
+Position #116
+Symbol: AVAXUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-21 13:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 17:00:00
+Entry Price: 36.66122059
+Exit Price: 40.32734265
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #117
+Symbol: DGBUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-21 03:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 17:00:00
+Entry Price: 0.01069486
+Exit Price: 0.01176434
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #118
+Symbol: SUPERUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-20 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 17:00:00
+Entry Price: 1.41383036
+Exit Price: 1.27244733
+Return: -10.00%
+Outcome: LOSS
+
+==================================================
+
+Position #119
+Symbol: COMPUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-20 21:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-20 20:00:00
+Entry Price: 68.27942660
+Exit Price: 75.10736926
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #120
+Symbol: ACHUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-24 22:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-23 09:00:00
+Entry Price: 0.02305000
+Exit Price: 0.02535500
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #121
+Symbol: APTUSDT
+Number of trades in position: 2
+Exit Time: 2025-01-06 07:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-23 09:00:00
+Entry Price: 9.23000000
+Exit Price: 10.15300000
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2024-12-26 22:00:00
+Entry Price: 8.86080000
+Exit Price: 10.15300000
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #122
+Symbol: AVAXUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-24 22:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-23 09:00:00
+Entry Price: 36.57000000
+Exit Price: 40.22700000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #123
+Symbol: AXSUSDT
+Number of trades in position: 1
+Exit Time: 2024-12-24 05:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-23 09:00:00
+Entry Price: 6.00800000
+Exit Price: 6.60880000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #124
+Symbol: SCUSDT
+Number of trades in position: 1
+Exit Time: 2025-01-06 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-26 17:00:00
+Entry Price: 0.00540400
+Exit Price: 0.00594441
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #125
+Symbol: INJUSDT
+Number of trades in position: 1
+Exit Time: 2025-01-03 20:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2024-12-30 09:00:00
+Entry Price: 20.31000000
+Exit Price: 22.34100000
+Return: 10.00%
+Outcome: WIN
+
+==================================================
+
+Position #126
+Symbol: SUIUSDT
+Number of trades in position: 2
+Exit Time: 2025-01-30 13:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2025-01-27 14:00:00
+Entry Price: 3.66370878
+Exit Price: 4.03007965
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2025-01-27 16:00:00
+Entry Price: 3.51716042
+Exit Price: 4.03007965
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+
+Position #127
+Symbol: SUIUSDT
+Number of trades in position: 2
+Exit Time: 2025-02-03 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2025-02-03 09:00:00
+Entry Price: 3.30730000
+Exit Price: 2.97657000
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2025-02-03 09:00:00
+Entry Price: 3.17500800
+Exit Price: 2.97657000
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #128
+Symbol: RAYUSDT
+Number of trades in position: 2
+Exit Time: 2025-02-03 10:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2025-02-03 10:00:00
+Entry Price: 5.00793577
+Exit Price: 4.50714219
+Return: -10.00%
+Outcome: LOSS
+
+Additional Buy #1:
+Entry Time: 2025-02-03 10:00:00
+Entry Price: 4.80761834
+Exit Price: 4.50714219
+Return: -6.25%
+Outcome: LOSS
+
+==================================================
+
+Position #129
+Symbol: ACHUSDT
+Number of trades in position: 2
+Exit Time: 2025-02-16 18:00:00
+--------------------------------------------------
+
+Initial Buy:
+Entry Time: 2025-02-12 09:00:00
+Entry Price: 0.02646825
+Exit Price: 0.02911508
+Return: 10.00%
+Outcome: WIN
+
+Additional Buy #1:
+Entry Time: 2025-02-12 23:00:00
+Entry Price: 0.02540952
+Exit Price: 0.02911508
+Return: 14.58%
+Outcome: WIN
+
+==================================================
+

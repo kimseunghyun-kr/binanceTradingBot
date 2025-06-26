@@ -1,0 +1,2640 @@
+=== BACKTEST PERIOD ===
+Start Date: 2021-01-01
+End Date: 2025-06-03
+Analysis Generated: 20250603-175104
+Processing: Cached signals used
+========================
+
+=== Weekly (1w) with Add.Buy=4.0% ===
+Symbol: SUIUSDT
+Entry Time: 2024-03-06 04:00:00
+Exit Time: 2024-03-06 04:00:00
+Entry Price: 1.26378357
+Exit Price: 1.39016193
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SUIUSDT
+Entry Time: 2024-03-06 04:00:00
+Exit Time: 2024-03-06 04:00:00
+Entry Price: 1.21323223
+Exit Price: 1.39016193
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SUIUSDT
+Entry Time: 2025-01-27 14:00:00
+Exit Time: 2025-01-30 13:00:00
+Entry Price: 3.66370878
+Exit Price: 4.03007965
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SUIUSDT
+Entry Time: 2025-01-27 16:00:00
+Exit Time: 2025-01-30 13:00:00
+Entry Price: 3.51716042
+Exit Price: 4.03007965
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SUIUSDT
+Entry Time: 2025-02-03 09:00:00
+Exit Time: 2025-02-03 10:00:00
+Entry Price: 3.30730000
+Exit Price: 2.94349700
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SUIUSDT
+Entry Time: 2025-02-03 09:00:00
+Exit Time: 2025-02-03 10:00:00
+Entry Price: 3.17500800
+Exit Price: 2.94349700
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: LINKUSDT
+Entry Time: 2021-02-23 18:00:00
+Exit Time: 2021-02-23 18:00:00
+Entry Price: 21.71714024
+Exit Price: 23.88885427
+Return: 10.00%
+Outcome: WIN
+
+Symbol: LINKUSDT
+Entry Time: 2021-02-23 18:00:00
+Exit Time: 2021-02-23 18:00:00
+Entry Price: 20.84845463
+Exit Price: 23.88885427
+Return: 14.58%
+Outcome: WIN
+
+Symbol: LINKUSDT
+Entry Time: 2021-05-19 20:00:00
+Exit Time: 2021-05-19 20:00:00
+Entry Price: 31.83095309
+Exit Price: 35.01404839
+Return: 10.00%
+Outcome: WIN
+
+Symbol: LINKUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 12:00:00
+Entry Price: 19.84900000
+Exit Price: 21.83390000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: AVAXUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 42.07676422
+Exit Price: 37.44832016
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: AVAXUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 40.39369365
+Exit Price: 37.44832016
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: AVAXUSDT
+Entry Time: 2024-04-15 09:00:00
+Exit Time: 2024-04-17 00:00:00
+Entry Price: 37.27000000
+Exit Price: 33.17030000
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: AVAXUSDT
+Entry Time: 2024-04-15 11:00:00
+Exit Time: 2024-04-17 00:00:00
+Entry Price: 35.77920000
+Exit Price: 33.17030000
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: AVAXUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-21 13:00:00
+Entry Price: 36.66122059
+Exit Price: 40.32734265
+Return: 10.00%
+Outcome: WIN
+
+Symbol: AVAXUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-21 13:00:00
+Entry Price: 35.19477177
+Exit Price: 40.32734265
+Return: 14.58%
+Outcome: WIN
+
+Symbol: AVAXUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 22:00:00
+Entry Price: 36.57000000
+Exit Price: 40.22700000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: XLMUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 0.46559125
+Exit Price: 0.41437621
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: XLMUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 0.44696760
+Exit Price: 0.41437621
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: BCHUSDT
+Entry Time: 2021-01-27 23:00:00
+Exit Time: 2021-01-29 07:00:00
+Entry Price: 370.21025318
+Exit Price: 407.23127849
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BCHUSDT
+Entry Time: 2021-02-23 18:00:00
+Exit Time: 2021-02-23 18:00:00
+Entry Price: 458.49604903
+Exit Price: 408.06148364
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: BCHUSDT
+Entry Time: 2021-02-23 18:00:00
+Exit Time: 2021-02-23 18:00:00
+Entry Price: 440.15620707
+Exit Price: 408.06148364
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: BCHUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 763.92384949
+Exit Price: 679.89222605
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: BCHUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 733.36689551
+Exit Price: 679.89222605
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: BCHUSDT
+Entry Time: 2021-06-09 00:00:00
+Exit Time: 2021-06-09 05:00:00
+Entry Price: 546.14316661
+Exit Price: 600.75748328
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BCHUSDT
+Entry Time: 2024-04-30 20:00:00
+Exit Time: 2024-05-08 00:00:00
+Entry Price: 443.62904881
+Exit Price: 487.99195369
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BCHUSDT
+Entry Time: 2024-05-01 01:00:00
+Exit Time: 2024-05-08 00:00:00
+Entry Price: 425.88388686
+Exit Price: 487.99195369
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SHIBUSDT
+Entry Time: 2024-12-19 11:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.00002309
+Exit Price: 0.00002055
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SHIBUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.00002217
+Exit Price: 0.00002055
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SHIBUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-25 09:00:00
+Entry Price: 0.00002153
+Exit Price: 0.00002368
+Return: 10.00%
+Outcome: WIN
+
+Symbol: HBARUSDT
+Entry Time: 2023-03-08 00:00:00
+Exit Time: 2023-03-10 05:00:00
+Entry Price: 0.06123982
+Exit Price: 0.05450344
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: HBARUSDT
+Entry Time: 2023-03-09 07:00:00
+Exit Time: 2023-03-10 05:00:00
+Entry Price: 0.05879023
+Exit Price: 0.05450344
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: HBARUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.07590114
+Exit Price: 0.06755202
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: HBARUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.07286510
+Exit Price: 0.06755202
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: LTCUSDT
+Entry Time: 2021-05-19 20:00:00
+Exit Time: 2021-05-19 20:00:00
+Entry Price: 223.77754385
+Exit Price: 246.15529823
+Return: 10.00%
+Outcome: WIN
+
+Symbol: LTCUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 16:00:00
+Entry Price: 142.52000000
+Exit Price: 156.77200000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DOTUSDT
+Entry Time: 2021-11-19 02:00:00
+Exit Time: 2021-11-19 23:00:00
+Entry Price: 37.69502411
+Exit Price: 41.46452652
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DOTUSDT
+Entry Time: 2021-11-26 16:00:00
+Exit Time: 2021-11-28 11:00:00
+Entry Price: 37.49599462
+Exit Price: 33.37143522
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: DOTUSDT
+Entry Time: 2021-11-26 17:00:00
+Exit Time: 2021-11-28 11:00:00
+Entry Price: 35.99615484
+Exit Price: 33.37143522
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: DOTUSDT
+Entry Time: 2021-11-29 09:00:00
+Exit Time: 2021-12-01 02:00:00
+Entry Price: 35.75000000
+Exit Price: 39.32500000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DOTUSDT
+Entry Time: 2024-04-13 03:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 6.52495575
+Exit Price: 7.17745133
+Return: 10.00%
+Outcome: WIN
+
+Symbol: PEPEUSDT
+Entry Time: 2024-12-20 15:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 0.00001646
+Exit Price: 0.00001465
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: PEPEUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 0.00001580
+Exit Price: 0.00001465
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: UNIUSDT
+Entry Time: 2021-05-19 20:00:00
+Exit Time: 2021-05-19 20:00:00
+Entry Price: 28.33627050
+Exit Price: 25.21928074
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: UNIUSDT
+Entry Time: 2021-05-19 20:00:00
+Exit Time: 2021-05-19 20:00:00
+Entry Price: 27.20281968
+Exit Price: 25.21928074
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: UNIUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 16:00:00
+Entry Price: 16.70900000
+Exit Price: 18.37990000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: UNIUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 11.23325015
+Exit Price: 12.35657517
+Return: 10.00%
+Outcome: WIN
+
+Symbol: TAOUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 529.37259331
+Exit Price: 471.14160805
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: TAOUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 508.19768958
+Exit Price: 471.14160805
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: TAOUSDT
+Entry Time: 2024-12-18 00:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 519.45715976
+Exit Price: 462.31687219
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: TAOUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 498.67887337
+Exit Price: 462.31687219
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: APTUSDT
+Entry Time: 2024-04-10 21:00:00
+Exit Time: 2024-04-13 02:00:00
+Entry Price: 11.53774204
+Exit Price: 10.26859042
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: APTUSDT
+Entry Time: 2024-04-13 01:00:00
+Exit Time: 2024-04-13 02:00:00
+Entry Price: 11.07623236
+Exit Price: 10.26859042
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: APTUSDT
+Entry Time: 2024-04-16 13:00:00
+Exit Time: 2024-04-18 21:00:00
+Entry Price: 8.77841979
+Exit Price: 9.65626176
+Return: 10.00%
+Outcome: WIN
+
+Symbol: APTUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 10.83431539
+Exit Price: 11.91774693
+Return: 10.00%
+Outcome: WIN
+
+Symbol: APTUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-22 04:00:00
+Entry Price: 10.63498153
+Exit Price: 9.46513356
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: APTUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-22 04:00:00
+Entry Price: 10.20958227
+Exit Price: 9.46513356
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: APTUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2025-01-06 07:00:00
+Entry Price: 9.23000000
+Exit Price: 10.15300000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: APTUSDT
+Entry Time: 2024-12-26 22:00:00
+Exit Time: 2025-01-06 07:00:00
+Entry Price: 8.86080000
+Exit Price: 10.15300000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: APTUSDT
+Entry Time: 2024-12-31 14:00:00
+Exit Time: 2025-01-03 21:00:00
+Entry Price: 8.65295271
+Exit Price: 9.51824798
+Return: 10.00%
+Outcome: WIN
+
+Symbol: NEARUSDT
+Entry Time: 2022-01-22 15:00:00
+Exit Time: 2022-01-22 19:00:00
+Entry Price: 11.67675561
+Exit Price: 10.39231250
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: NEARUSDT
+Entry Time: 2022-01-22 16:00:00
+Exit Time: 2022-01-22 19:00:00
+Entry Price: 11.20968539
+Exit Price: 10.39231250
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: NEARUSDT
+Entry Time: 2022-01-24 09:00:00
+Exit Time: 2022-01-24 16:00:00
+Entry Price: 11.48908730
+Exit Price: 10.22528770
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: NEARUSDT
+Entry Time: 2022-01-24 11:00:00
+Exit Time: 2022-01-24 16:00:00
+Entry Price: 11.02952381
+Exit Price: 10.22528770
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ICPUSDT
+Entry Time: 2024-04-13 03:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 13.21431034
+Exit Price: 11.76073620
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ICPUSDT
+Entry Time: 2024-04-13 03:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 12.68573792
+Exit Price: 11.76073620
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ETCUSDT
+Entry Time: 2021-01-12 01:00:00
+Exit Time: 2021-01-12 07:00:00
+Entry Price: 6.49343773
+Exit Price: 7.14278151
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2021-01-22 10:00:00
+Exit Time: 2021-01-22 22:00:00
+Entry Price: 6.64094157
+Exit Price: 7.30503573
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2021-01-27 23:00:00
+Exit Time: 2021-01-29 00:00:00
+Entry Price: 6.74115705
+Exit Price: 7.41527275
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2021-02-23 18:00:00
+Exit Time: 2021-02-23 18:00:00
+Entry Price: 9.20374164
+Exit Price: 10.12411581
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 41.68144667
+Exit Price: 45.84959134
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 40.01418881
+Exit Price: 45.84959134
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ETCUSDT
+Entry Time: 2024-03-20 08:00:00
+Exit Time: 2024-03-21 05:00:00
+Entry Price: 27.29347403
+Exit Price: 30.02282143
+Return: 10.00%
+Outcome: WIN
+
+Symbol: FETUSDT
+Entry Time: 2021-04-20 15:00:00
+Exit Time: 2021-04-20 18:00:00
+Entry Price: 0.42983455
+Exit Price: 0.47281801
+Return: 10.00%
+Outcome: WIN
+
+Symbol: FETUSDT
+Entry Time: 2021-04-20 15:00:00
+Exit Time: 2021-04-20 18:00:00
+Entry Price: 0.41264117
+Exit Price: 0.47281801
+Return: 14.58%
+Outcome: WIN
+
+Symbol: FILUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 5.13248965
+Exit Price: 4.56791579
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: FILUSDT
+Entry Time: 2024-12-20 05:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 4.92719006
+Exit Price: 4.56791579
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ATOMUSDT
+Entry Time: 2021-05-19 13:00:00
+Exit Time: 2021-05-19 13:00:00
+Entry Price: 18.93838841
+Exit Price: 20.83222725
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ATOMUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 16:00:00
+Entry Price: 11.64900000
+Exit Price: 12.81390000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ATOMUSDT
+Entry Time: 2021-05-24 10:00:00
+Exit Time: 2021-05-24 16:00:00
+Entry Price: 11.18304000
+Exit Price: 12.81390000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ATOMUSDT
+Entry Time: 2024-03-19 16:00:00
+Exit Time: 2024-03-21 11:00:00
+Entry Price: 10.75878308
+Exit Price: 11.83466139
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ALGOUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.16776330
+Exit Price: 0.14930934
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ALGOUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.16105277
+Exit Price: 0.14930934
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 1.06145717
+Exit Price: 0.94469689
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 1.01899889
+Exit Price: 0.94469689
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-18 00:00:00
+Exit Time: 2024-12-19 09:00:00
+Entry Price: 1.03035135
+Exit Price: 0.91701270
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-18 15:00:00
+Exit Time: 2024-12-19 09:00:00
+Entry Price: 0.98913729
+Exit Price: 0.91701270
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-25 00:00:00
+Entry Price: 0.81360000
+Exit Price: 0.89496000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: JUPUSDT
+Entry Time: 2024-12-30 09:00:00
+Exit Time: 2025-01-02 13:00:00
+Entry Price: 0.80340000
+Exit Price: 0.88374000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2022-11-09 04:00:00
+Exit Time: 2022-11-09 07:00:00
+Entry Price: 132.22008322
+Exit Price: 145.44209155
+Return: 10.00%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2022-11-09 04:00:00
+Exit Time: 2022-11-09 07:00:00
+Entry Price: 126.93127989
+Exit Price: 145.44209155
+Return: 14.58%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2022-11-14 09:00:00
+Exit Time: 2022-11-14 22:00:00
+Entry Price: 101.90000000
+Exit Price: 112.09000000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2022-11-14 10:00:00
+Exit Time: 2022-11-14 22:00:00
+Entry Price: 97.82400000
+Exit Price: 112.09000000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2024-01-23 17:00:00
+Exit Time: 2024-02-06 16:00:00
+Entry Price: 104.62848904
+Exit Price: 101.70000000
+Return: -2.80%
+Outcome: LOSS
+
+Symbol: QNTUSDT
+Entry Time: 2024-01-23 23:00:00
+Exit Time: 2024-02-06 16:00:00
+Entry Price: 100.44334948
+Exit Price: 101.70000000
+Return: 1.25%
+Outcome: WIN
+
+Symbol: QNTUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 96.24893307
+Exit Price: 105.87382637
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BONKUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 0.00003281
+Exit Price: 0.00003609
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BONKUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 0.00003267
+Exit Price: 0.00002907
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: BONKUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 0.00003136
+Exit Price: 0.00002907
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: INJUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 25.01993471
+Exit Price: 27.52192818
+Return: 10.00%
+Outcome: WIN
+
+Symbol: INJUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 24.01913732
+Exit Price: 27.52192818
+Return: 14.58%
+Outcome: WIN
+
+Symbol: INJUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-20 03:00:00
+Entry Price: 24.45295378
+Exit Price: 21.76312887
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: INJUSDT
+Entry Time: 2024-12-19 10:00:00
+Exit Time: 2024-12-20 03:00:00
+Entry Price: 23.47483563
+Exit Price: 21.76312887
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: INJUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 05:00:00
+Entry Price: 20.43000000
+Exit Price: 22.47300000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: INJUSDT
+Entry Time: 2024-12-30 09:00:00
+Exit Time: 2025-01-03 20:00:00
+Entry Price: 20.31000000
+Exit Price: 22.34100000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: INJUSDT
+Entry Time: 2025-01-01 12:00:00
+Exit Time: 2025-01-03 20:00:00
+Entry Price: 19.49760000
+Exit Price: 22.34100000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 0.50975253
+Exit Price: 0.56072778
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 0.49857374
+Exit Price: 0.44373063
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-19 11:00:00
+Entry Price: 0.47863079
+Exit Price: 0.44373063
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 06:00:00
+Entry Price: 0.41920000
+Exit Price: 0.46112000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-30 09:00:00
+Exit Time: 2025-01-04 00:00:00
+Entry Price: 0.41060000
+Exit Price: 0.45166000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SEIUSDT
+Entry Time: 2024-12-31 01:00:00
+Exit Time: 2025-01-04 00:00:00
+Entry Price: 0.39417600
+Exit Price: 0.45166000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: CRVUSDT
+Entry Time: 2024-03-19 10:00:00
+Exit Time: 2024-03-21 05:00:00
+Entry Price: 0.61323789
+Exit Price: 0.67456168
+Return: 10.00%
+Outcome: WIN
+
+Symbol: CRVUSDT
+Entry Time: 2024-03-19 16:00:00
+Exit Time: 2024-03-21 05:00:00
+Entry Price: 0.58870838
+Exit Price: 0.67456168
+Return: 14.58%
+Outcome: WIN
+
+Symbol: CRVUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.55582244
+Exit Price: 0.49468197
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: CRVUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.53358954
+Exit Price: 0.49468197
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ZECUSDT
+Entry Time: 2021-05-19 20:00:00
+Exit Time: 2021-05-19 20:00:00
+Entry Price: 186.00623286
+Exit Price: 204.60685615
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZECUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 12:00:00
+Entry Price: 114.53000000
+Exit Price: 125.98300000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZECUSDT
+Entry Time: 2021-06-08 11:00:00
+Exit Time: 2021-06-10 00:00:00
+Entry Price: 128.93977771
+Exit Price: 141.83375548
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZECUSDT
+Entry Time: 2021-06-09 00:00:00
+Exit Time: 2021-06-10 00:00:00
+Entry Price: 123.78218660
+Exit Price: 141.83375548
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ZECUSDT
+Entry Time: 2024-09-02 02:00:00
+Exit Time: 2024-09-04 10:00:00
+Entry Price: 30.98950074
+Exit Price: 27.58065566
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ZECUSDT
+Entry Time: 2024-09-02 07:00:00
+Exit Time: 2024-09-04 10:00:00
+Entry Price: 29.74992071
+Exit Price: 27.58065566
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ZECUSDT
+Entry Time: 2024-09-02 09:00:00
+Exit Time: 2024-09-16 08:00:00
+Entry Price: 29.38000000
+Exit Price: 29.22000000
+Return: -0.54%
+Outcome: LOSS
+
+Symbol: ZECUSDT
+Entry Time: 2024-09-04 10:00:00
+Exit Time: 2024-09-16 08:00:00
+Entry Price: 28.20480000
+Exit Price: 29.22000000
+Return: 3.60%
+Outcome: WIN
+
+Symbol: NEXOUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-21 01:00:00
+Entry Price: 1.25229719
+Exit Price: 1.37752691
+Return: 10.00%
+Outcome: WIN
+
+Symbol: JASMYUSDT
+Entry Time: 2024-07-03 23:00:00
+Exit Time: 2024-07-05 08:00:00
+Entry Price: 0.02544047
+Exit Price: 0.02264202
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: JASMYUSDT
+Entry Time: 2024-07-04 10:00:00
+Exit Time: 2024-07-05 08:00:00
+Entry Price: 0.02442285
+Exit Price: 0.02264202
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: JASMYUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 0.02911677
+Exit Price: 0.03202845
+Return: 10.00%
+Outcome: WIN
+
+Symbol: CAKEUSDT
+Entry Time: 2024-01-23 17:00:00
+Exit Time: 2024-02-06 16:00:00
+Entry Price: 2.43441825
+Exit Price: 2.40900000
+Return: -1.04%
+Outcome: LOSS
+
+Symbol: CAKEUSDT
+Entry Time: 2024-01-23 23:00:00
+Exit Time: 2024-02-06 16:00:00
+Entry Price: 2.33704152
+Exit Price: 2.40900000
+Return: 3.08%
+Outcome: WIN
+
+Symbol: CAKEUSDT
+Entry Time: 2024-04-14 06:00:00
+Exit Time: 2024-04-14 08:00:00
+Entry Price: 2.48287921
+Exit Price: 2.73116713
+Return: 10.00%
+Outcome: WIN
+
+Symbol: CAKEUSDT
+Entry Time: 2024-12-20 03:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 2.48346930
+Exit Price: 2.21028767
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: CAKEUSDT
+Entry Time: 2024-12-20 08:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 2.38413052
+Exit Price: 2.21028767
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: GALAUSDT
+Entry Time: 2024-12-20 04:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 0.03442764
+Exit Price: 0.03064060
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: GALAUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 0.03305053
+Exit Price: 0.03064060
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: GALAUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 05:00:00
+Entry Price: 0.03448342
+Exit Price: 0.03793176
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RAYUSDT
+Entry Time: 2025-02-03 10:00:00
+Exit Time: 2025-02-03 10:00:00
+Entry Price: 5.00793577
+Exit Price: 4.45706284
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: RAYUSDT
+Entry Time: 2025-02-03 10:00:00
+Exit Time: 2025-02-03 10:00:00
+Entry Price: 4.80761834
+Exit Price: 4.45706284
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SANDUSDT
+Entry Time: 2021-04-23 07:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 0.43236059
+Exit Price: 0.38480093
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SANDUSDT
+Entry Time: 2021-04-23 10:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 0.41506617
+Exit Price: 0.38480093
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SANDUSDT
+Entry Time: 2021-09-08 00:00:00
+Exit Time: 2021-09-08 00:00:00
+Entry Price: 0.64279960
+Exit Price: 0.70707956
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SANDUSDT
+Entry Time: 2021-09-08 00:00:00
+Exit Time: 2021-09-08 00:00:00
+Entry Price: 0.61708762
+Exit Price: 0.70707956
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SANDUSDT
+Entry Time: 2021-09-20 20:00:00
+Exit Time: 2021-09-22 06:00:00
+Entry Price: 0.65711242
+Exit Price: 0.58483005
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SANDUSDT
+Entry Time: 2021-09-20 21:00:00
+Exit Time: 2021-09-22 06:00:00
+Entry Price: 0.63082792
+Exit Price: 0.58483005
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SANDUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 0.50172958
+Exit Price: 0.55190254
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SANDUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 0.48166040
+Exit Price: 0.55190254
+Return: 14.58%
+Outcome: WIN
+
+Symbol: PENDLEUSDT
+Entry Time: 2024-04-30 14:00:00
+Exit Time: 2024-05-03 19:00:00
+Entry Price: 4.32900422
+Exit Price: 4.76190465
+Return: 10.00%
+Outcome: WIN
+
+Symbol: PENDLEUSDT
+Entry Time: 2024-05-01 01:00:00
+Exit Time: 2024-05-03 19:00:00
+Entry Price: 4.15584406
+Exit Price: 4.76190465
+Return: 14.58%
+Outcome: WIN
+
+Symbol: PENDLEUSDT
+Entry Time: 2024-05-11 06:00:00
+Exit Time: 2024-05-14 15:00:00
+Entry Price: 4.31400391
+Exit Price: 3.83946348
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: PENDLEUSDT
+Entry Time: 2024-05-13 10:00:00
+Exit Time: 2024-05-14 15:00:00
+Entry Price: 4.14144375
+Exit Price: 3.83946348
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: XTZUSDT
+Entry Time: 2021-02-23 17:00:00
+Exit Time: 2021-02-23 17:00:00
+Entry Price: 3.18211702
+Exit Price: 3.50032872
+Return: 10.00%
+Outcome: WIN
+
+Symbol: XTZUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 4.36878175
+Exit Price: 4.80565993
+Return: 10.00%
+Outcome: WIN
+
+Symbol: XTZUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 4.19403048
+Exit Price: 4.80565993
+Return: 14.58%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2023-10-12 11:00:00
+Exit Time: 2023-10-13 16:00:00
+Entry Price: 1.54531693
+Exit Price: 1.69984862
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2023-10-13 01:00:00
+Exit Time: 2023-10-13 16:00:00
+Entry Price: 1.48350425
+Exit Price: 1.69984862
+Return: 14.58%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 4.69201101
+Exit Price: 5.16121211
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-11 03:00:00
+Exit Time: 2024-12-11 17:00:00
+Entry Price: 5.58775834
+Exit Price: 6.14653417
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-20 00:00:00
+Exit Time: 2024-12-20 18:00:00
+Entry Price: 5.51286962
+Exit Price: 4.90645397
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 18:00:00
+Entry Price: 5.29235484
+Exit Price: 4.90645397
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 23:00:00
+Entry Price: 4.94900000
+Exit Price: 5.44390000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-30 09:00:00
+Exit Time: 2025-01-04 00:00:00
+Entry Price: 4.58200000
+Exit Price: 5.04020000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RUNEUSDT
+Entry Time: 2024-12-30 23:00:00
+Exit Time: 2025-01-04 00:00:00
+Entry Price: 4.39872000
+Exit Price: 5.04020000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.71137852
+Exit Price: 0.78251637
+Return: 10.00%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.68292338
+Exit Price: 0.78251637
+Return: 14.58%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.79746556
+Exit Price: 0.87721211
+Return: 10.00%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.76556693
+Exit Price: 0.87721211
+Return: 14.58%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-12-19 11:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.76509476
+Exit Price: 0.68093433
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: FLOWUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.73449097
+Exit Price: 0.68093433
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: FLOWUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 22:00:00
+Entry Price: 0.72200000
+Exit Price: 0.79420000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: FLOWUSDT
+Entry Time: 2024-12-31 00:00:00
+Exit Time: 2025-01-02 23:00:00
+Entry Price: 0.68807612
+Exit Price: 0.75688374
+Return: 10.00%
+Outcome: WIN
+
+Symbol: APEUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 1.23014942
+Exit Price: 1.35316436
+Return: 10.00%
+Outcome: WIN
+
+Symbol: APEUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 1.21909490
+Exit Price: 1.08499446
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: APEUSDT
+Entry Time: 2024-12-20 03:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 1.17033110
+Exit Price: 1.08499446
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: DYDXUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 1.52766024
+Exit Price: 1.68042626
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DYDXUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 1.51567154
+Exit Price: 1.34894767
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: DYDXUSDT
+Entry Time: 2024-12-20 05:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 1.45504468
+Exit Price: 1.34894767
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: DYDXUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 06:00:00
+Entry Price: 1.41284227
+Exit Price: 1.55412649
+Return: 10.00%
+Outcome: WIN
+
+Symbol: EGLDUSDT
+Entry Time: 2021-12-04 14:00:00
+Exit Time: 2021-12-04 14:00:00
+Entry Price: 280.34125699
+Exit Price: 249.50371872
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: EGLDUSDT
+Entry Time: 2021-12-04 14:00:00
+Exit Time: 2021-12-04 14:00:00
+Entry Price: 269.12760671
+Exit Price: 249.50371872
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: EGLDUSDT
+Entry Time: 2021-12-06 09:00:00
+Exit Time: 2021-12-07 14:00:00
+Entry Price: 277.76039708
+Exit Price: 305.53643679
+Return: 10.00%
+Outcome: WIN
+
+Symbol: EGLDUSDT
+Entry Time: 2021-12-06 16:00:00
+Exit Time: 2021-12-07 14:00:00
+Entry Price: 266.64998120
+Exit Price: 305.53643679
+Return: 14.58%
+Outcome: WIN
+
+Symbol: EGLDUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 18:00:00
+Entry Price: 35.68879733
+Exit Price: 31.76302963
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: EGLDUSDT
+Entry Time: 2024-12-20 03:00:00
+Exit Time: 2024-12-20 18:00:00
+Entry Price: 34.26124544
+Exit Price: 31.76302963
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: EGLDUSDT
+Entry Time: 2024-12-23 10:00:00
+Exit Time: 2024-12-24 06:00:00
+Entry Price: 32.82927231
+Exit Price: 36.11219954
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RSRUSDT
+Entry Time: 2024-01-08 11:00:00
+Exit Time: 2024-01-08 22:00:00
+Entry Price: 0.00232638
+Exit Price: 0.00255902
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RSRUSDT
+Entry Time: 2024-01-20 01:00:00
+Exit Time: 2024-02-03 00:00:00
+Entry Price: 0.00230953
+Exit Price: 0.00222400
+Return: -3.70%
+Outcome: LOSS
+
+Symbol: RSRUSDT
+Entry Time: 2024-01-23 17:00:00
+Exit Time: 2024-02-03 00:00:00
+Entry Price: 0.00221715
+Exit Price: 0.00222400
+Return: 0.31%
+Outcome: WIN
+
+Symbol: RSRUSDT
+Entry Time: 2024-01-23 04:00:00
+Exit Time: 2024-02-06 03:00:00
+Entry Price: 0.00228188
+Exit Price: 0.00217800
+Return: -4.55%
+Outcome: LOSS
+
+Symbol: RSRUSDT
+Entry Time: 2024-01-23 18:00:00
+Exit Time: 2024-02-06 03:00:00
+Entry Price: 0.00219060
+Exit Price: 0.00217800
+Return: -0.58%
+Outcome: LOSS
+
+Symbol: RSRUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 0.00557040
+Exit Price: 0.00612744
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RSRUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 0.00534758
+Exit Price: 0.00612744
+Return: 14.58%
+Outcome: WIN
+
+Symbol: RSRUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-21 00:00:00
+Entry Price: 0.00943558
+Exit Price: 0.01037914
+Return: 10.00%
+Outcome: WIN
+
+Symbol: NEOUSDT
+Entry Time: 2024-03-19 16:00:00
+Exit Time: 2024-03-21 07:00:00
+Entry Price: 13.40525858
+Exit Price: 14.74578443
+Return: 10.00%
+Outcome: WIN
+
+Symbol: NEOUSDT
+Entry Time: 2024-03-20 14:00:00
+Exit Time: 2024-03-21 07:00:00
+Entry Price: 12.86904823
+Exit Price: 14.74578443
+Return: 14.58%
+Outcome: WIN
+
+Symbol: NEOUSDT
+Entry Time: 2024-05-01 16:00:00
+Exit Time: 2024-05-15 15:00:00
+Entry Price: 15.83963396
+Exit Price: 14.48000000
+Return: -8.58%
+Outcome: LOSS
+
+Symbol: NEOUSDT
+Entry Time: 2024-05-09 05:00:00
+Exit Time: 2024-05-15 15:00:00
+Entry Price: 15.20604860
+Exit Price: 14.48000000
+Return: -4.77%
+Outcome: LOSS
+
+Symbol: NEOUSDT
+Entry Time: 2024-05-07 12:00:00
+Exit Time: 2024-05-21 11:00:00
+Entry Price: 15.76181179
+Exit Price: 16.24000000
+Return: 3.03%
+Outcome: WIN
+
+Symbol: NEOUSDT
+Entry Time: 2024-05-09 05:00:00
+Exit Time: 2024-05-21 11:00:00
+Entry Price: 15.13133932
+Exit Price: 16.24000000
+Return: 7.33%
+Outcome: WIN
+
+Symbol: AXSUSDT
+Entry Time: 2024-03-20 14:00:00
+Exit Time: 2024-03-21 03:00:00
+Entry Price: 8.88320751
+Exit Price: 9.77152826
+Return: 10.00%
+Outcome: WIN
+
+Symbol: AXSUSDT
+Entry Time: 2024-12-19 10:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 6.47288679
+Exit Price: 5.76086924
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: AXSUSDT
+Entry Time: 2024-12-19 11:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 6.21397132
+Exit Price: 5.76086924
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: AXSUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 05:00:00
+Entry Price: 6.00800000
+Exit Price: 6.60880000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SUPERUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 1.41383036
+Exit Price: 1.25830902
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SUPERUSDT
+Entry Time: 2024-12-20 18:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 1.35727715
+Exit Price: 1.25830902
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: CFXUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.30352248
+Exit Price: 0.27013501
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: CFXUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.29138158
+Exit Price: 0.27013501
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: CFXUSDT
+Entry Time: 2024-04-15 09:00:00
+Exit Time: 2024-04-15 15:00:00
+Entry Price: 0.24990000
+Exit Price: 0.27489000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: CFXUSDT
+Entry Time: 2024-04-15 13:00:00
+Exit Time: 2024-04-15 15:00:00
+Entry Price: 0.23990400
+Exit Price: 0.27489000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: CFXUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 22:00:00
+Entry Price: 0.15310000
+Exit Price: 0.16841000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: LPTUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 14.35337303
+Exit Price: 12.77450200
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: LPTUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 13.77923811
+Exit Price: 12.77450200
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: FTTUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 39.39846265
+Exit Price: 35.06463176
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: FTTUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 37.82252414
+Exit Price: 35.06463176
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: FTTUSDT
+Entry Time: 2021-09-22 06:00:00
+Exit Time: 2021-09-22 10:00:00
+Entry Price: 48.78586909
+Exit Price: 53.66445600
+Return: 10.00%
+Outcome: WIN
+
+Symbol: COMPUSDT
+Entry Time: 2024-12-20 20:00:00
+Exit Time: 2024-12-20 21:00:00
+Entry Price: 68.27942660
+Exit Price: 75.10736926
+Return: 10.00%
+Outcome: WIN
+
+Symbol: AMPUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.00668978
+Exit Price: 0.00595390
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: AMPUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.00642219
+Exit Price: 0.00595390
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: JSTUSDT
+Entry Time: 2024-03-19 18:00:00
+Exit Time: 2024-03-25 08:00:00
+Entry Price: 0.03411077
+Exit Price: 0.03752185
+Return: 10.00%
+Outcome: WIN
+
+Symbol: JSTUSDT
+Entry Time: 2024-03-20 14:00:00
+Exit Time: 2024-03-25 08:00:00
+Entry Price: 0.03274634
+Exit Price: 0.03752185
+Return: 14.58%
+Outcome: WIN
+
+Symbol: JSTUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-21 09:00:00
+Entry Price: 0.03578720
+Exit Price: 0.03936592
+Return: 10.00%
+Outcome: WIN
+
+Symbol: TWTUSDT
+Entry Time: 2024-12-20 04:00:00
+Exit Time: 2024-12-21 10:00:00
+Entry Price: 1.13704203
+Exit Price: 1.25074624
+Return: 10.00%
+Outcome: WIN
+
+Symbol: TWTUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-21 10:00:00
+Entry Price: 1.09156035
+Exit Price: 1.25074624
+Return: 14.58%
+Outcome: WIN
+
+Symbol: LUNCUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.00011828
+Exit Price: 0.00010527
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: LUNCUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.00011355
+Exit Price: 0.00010527
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: LUNCUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 0.00011169
+Exit Price: 0.00012285
+Return: 10.00%
+Outcome: WIN
+
+Symbol: LUNCUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.00011132
+Exit Price: 0.00009907
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: LUNCUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 17:00:00
+Entry Price: 0.00010686
+Exit Price: 0.00009907
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: 1INCHUSDT
+Entry Time: 2024-03-20 14:00:00
+Exit Time: 2024-03-21 03:00:00
+Entry Price: 0.48371564
+Exit Price: 0.53208721
+Return: 10.00%
+Outcome: WIN
+
+Symbol: 1INCHUSDT
+Entry Time: 2024-12-20 04:00:00
+Exit Time: 2024-12-21 14:00:00
+Entry Price: 0.37532603
+Exit Price: 0.41285863
+Return: 10.00%
+Outcome: WIN
+
+Symbol: 1INCHUSDT
+Entry Time: 2024-12-20 18:00:00
+Exit Time: 2024-12-21 14:00:00
+Entry Price: 0.36031299
+Exit Price: 0.41285863
+Return: 14.58%
+Outcome: WIN
+
+Symbol: DASHUSDT
+Entry Time: 2021-01-22 07:00:00
+Exit Time: 2021-01-25 18:00:00
+Entry Price: 100.89933383
+Exit Price: 110.98926722
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DASHUSDT
+Entry Time: 2021-01-22 09:00:00
+Exit Time: 2021-01-25 18:00:00
+Entry Price: 96.86336048
+Exit Price: 110.98926722
+Return: 14.58%
+Outcome: WIN
+
+Symbol: DASHUSDT
+Entry Time: 2021-01-26 23:00:00
+Exit Time: 2021-02-03 09:00:00
+Entry Price: 101.11143702
+Exit Price: 111.22258073
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DASHUSDT
+Entry Time: 2021-01-27 22:00:00
+Exit Time: 2021-02-03 09:00:00
+Entry Price: 97.06697954
+Exit Price: 111.22258073
+Return: 14.58%
+Outcome: WIN
+
+Symbol: CVXUSDT
+Entry Time: 2024-03-19 10:00:00
+Exit Time: 2024-03-20 14:00:00
+Entry Price: 3.92321555
+Exit Price: 3.49166184
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: CVXUSDT
+Entry Time: 2024-03-19 12:00:00
+Exit Time: 2024-03-20 14:00:00
+Entry Price: 3.76628693
+Exit Price: 3.49166184
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: MINAUSDT
+Entry Time: 2023-03-08 22:00:00
+Exit Time: 2023-03-10 05:00:00
+Entry Price: 0.73755811
+Exit Price: 0.65642672
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: MINAUSDT
+Entry Time: 2023-03-09 07:00:00
+Exit Time: 2023-03-10 05:00:00
+Entry Price: 0.70805579
+Exit Price: 0.65642672
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: MINAUSDT
+Entry Time: 2023-03-13 18:00:00
+Exit Time: 2023-03-14 00:00:00
+Entry Price: 0.67674782
+Exit Price: 0.74442261
+Return: 10.00%
+Outcome: WIN
+
+Symbol: MINAUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-25 01:00:00
+Entry Price: 0.59780000
+Exit Price: 0.65758000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: MINAUSDT
+Entry Time: 2024-12-30 09:00:00
+Exit Time: 2025-01-04 01:00:00
+Entry Price: 0.59110000
+Exit Price: 0.65021000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: MINAUSDT
+Entry Time: 2025-01-01 18:00:00
+Exit Time: 2025-01-04 01:00:00
+Entry Price: 0.56745600
+Exit Price: 0.65021000
+Return: 14.58%
+Outcome: WIN
+
+Symbol: DCRUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 15.96506510
+Exit Price: 14.20890794
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: DCRUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 15.32646250
+Exit Price: 14.20890794
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: DCRUSDT
+Entry Time: 2025-01-01 16:00:00
+Exit Time: 2025-01-03 23:00:00
+Entry Price: 14.83024012
+Exit Price: 16.31326413
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SFPUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.67648655
+Exit Price: 0.74413521
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SFPUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.64942709
+Exit Price: 0.74413521
+Return: 14.58%
+Outcome: WIN
+
+Symbol: SNXUSDT
+Entry Time: 2024-12-20 05:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 2.07949680
+Exit Price: 1.85075215
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: SNXUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-20 20:00:00
+Entry Price: 1.99631693
+Exit Price: 1.85075215
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: SNXUSDT
+Entry Time: 2024-12-23 10:00:00
+Exit Time: 2024-12-24 06:00:00
+Entry Price: 1.93094799
+Exit Price: 2.12404279
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZILUSDT
+Entry Time: 2022-04-30 04:00:00
+Exit Time: 2022-05-01 08:00:00
+Entry Price: 0.08198885
+Exit Price: 0.07297007
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ZILUSDT
+Entry Time: 2022-05-01 02:00:00
+Exit Time: 2022-05-01 08:00:00
+Entry Price: 0.07870929
+Exit Price: 0.07297007
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ZILUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.02185565
+Exit Price: 0.02404122
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZILUSDT
+Entry Time: 2024-01-08 10:00:00
+Exit Time: 2024-01-11 07:00:00
+Entry Price: 0.02033762
+Exit Price: 0.02237138
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZILUSDT
+Entry Time: 2024-01-08 11:00:00
+Exit Time: 2024-01-11 07:00:00
+Entry Price: 0.01952411
+Exit Price: 0.02237138
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ZILUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 04:00:00
+Entry Price: 0.02324669
+Exit Price: 0.02557136
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ROSEUSDT
+Entry Time: 2022-01-22 16:00:00
+Exit Time: 2022-01-22 19:00:00
+Entry Price: 0.31543602
+Exit Price: 0.28073805
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ROSEUSDT
+Entry Time: 2022-01-22 18:00:00
+Exit Time: 2022-01-22 19:00:00
+Entry Price: 0.30281857
+Exit Price: 0.28073805
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ROSEUSDT
+Entry Time: 2022-01-24 16:00:00
+Exit Time: 2022-01-25 05:00:00
+Entry Price: 0.31461908
+Exit Price: 0.34608098
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ROSEUSDT
+Entry Time: 2022-01-24 19:00:00
+Exit Time: 2022-01-25 05:00:00
+Entry Price: 0.30203431
+Exit Price: 0.34608098
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ROSEUSDT
+Entry Time: 2024-03-19 16:00:00
+Exit Time: 2024-03-20 21:00:00
+Entry Price: 0.12656846
+Exit Price: 0.13922531
+Return: 10.00%
+Outcome: WIN
+
+Symbol: QTUMUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 12.22885448
+Exit Price: 10.88368049
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: QTUMUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 11.73970030
+Exit Price: 10.88368049
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: QTUMUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 3.01817399
+Exit Price: 3.31999139
+Return: 10.00%
+Outcome: WIN
+
+Symbol: QTUMUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 2.89744703
+Exit Price: 3.31999139
+Return: 14.58%
+Outcome: WIN
+
+Symbol: QTUMUSDT
+Entry Time: 2024-01-23 18:00:00
+Exit Time: 2024-02-06 17:00:00
+Entry Price: 2.70860994
+Exit Price: 2.85800000
+Return: 5.52%
+Outcome: WIN
+
+Symbol: IOTXUSDT
+Entry Time: 2021-05-18 07:00:00
+Exit Time: 2021-05-18 20:00:00
+Entry Price: 0.03872126
+Exit Price: 0.04259339
+Return: 10.00%
+Outcome: WIN
+
+Symbol: IOTXUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 11:00:00
+Entry Price: 0.03246000
+Exit Price: 0.03570600
+Return: 10.00%
+Outcome: WIN
+
+Symbol: IOTXUSDT
+Entry Time: 2021-05-24 09:00:00
+Exit Time: 2021-05-24 11:00:00
+Entry Price: 0.03116160
+Exit Price: 0.03570600
+Return: 14.58%
+Outcome: WIN
+
+Symbol: IOTXUSDT
+Entry Time: 2021-12-04 14:00:00
+Exit Time: 2021-12-04 14:00:00
+Entry Price: 0.11064258
+Exit Price: 0.12170684
+Return: 10.00%
+Outcome: WIN
+
+Symbol: MASKUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 4.26933241
+Exit Price: 3.79970585
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: MASKUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 4.09855912
+Exit Price: 3.79970585
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: MASKUSDT
+Entry Time: 2024-04-15 09:00:00
+Exit Time: 2024-04-29 08:00:00
+Entry Price: 3.46900000
+Exit Price: 3.43900000
+Return: -0.86%
+Outcome: LOSS
+
+Symbol: MASKUSDT
+Entry Time: 2024-04-16 02:00:00
+Exit Time: 2024-04-29 08:00:00
+Entry Price: 3.33024000
+Exit Price: 3.43900000
+Return: 3.27%
+Outcome: WIN
+
+Symbol: MASKUSDT
+Entry Time: 2024-12-20 02:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 3.03687334
+Exit Price: 2.70281728
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: MASKUSDT
+Entry Time: 2024-12-20 03:00:00
+Exit Time: 2024-12-20 19:00:00
+Entry Price: 2.91539841
+Exit Price: 2.70281728
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: MASKUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2025-01-06 08:00:00
+Entry Price: 3.01100000
+Exit Price: 3.20000000
+Return: 6.28%
+Outcome: WIN
+
+Symbol: MASKUSDT
+Entry Time: 2024-12-30 23:00:00
+Exit Time: 2025-01-06 08:00:00
+Entry Price: 2.89056000
+Exit Price: 3.20000000
+Return: 10.71%
+Outcome: WIN
+
+Symbol: CKBUSDT
+Entry Time: 2024-04-27 10:00:00
+Exit Time: 2024-04-29 01:00:00
+Entry Price: 0.01676533
+Exit Price: 0.01844187
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZRXUSDT
+Entry Time: 2021-04-23 10:00:00
+Exit Time: 2021-04-26 19:00:00
+Entry Price: 1.37607974
+Exit Price: 1.51368771
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ZRXUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-26 19:00:00
+Entry Price: 1.32103655
+Exit Price: 1.51368771
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ASTRUSDT
+Entry Time: 2023-03-09 07:00:00
+Exit Time: 2023-03-10 19:00:00
+Entry Price: 0.05988883
+Exit Price: 0.05330105
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ASTRUSDT
+Entry Time: 2023-03-10 05:00:00
+Exit Time: 2023-03-10 19:00:00
+Entry Price: 0.05749327
+Exit Price: 0.05330105
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ACHUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 22:00:00
+Entry Price: 0.02305000
+Exit Price: 0.02535500
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ACHUSDT
+Entry Time: 2025-02-12 09:00:00
+Exit Time: 2025-02-16 18:00:00
+Entry Price: 0.02646825
+Exit Price: 0.02911508
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ACHUSDT
+Entry Time: 2025-02-12 23:00:00
+Exit Time: 2025-02-16 18:00:00
+Entry Price: 0.02540952
+Exit Price: 0.02911508
+Return: 14.58%
+Outcome: WIN
+
+Symbol: BATUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 0.86967467
+Exit Price: 0.95664213
+Return: 10.00%
+Outcome: WIN
+
+Symbol: BATUSDT
+Entry Time: 2021-12-04 14:00:00
+Exit Time: 2021-12-04 14:00:00
+Entry Price: 1.00228132
+Exit Price: 0.89203038
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: BATUSDT
+Entry Time: 2021-12-04 14:00:00
+Exit Time: 2021-12-04 14:00:00
+Entry Price: 0.96219007
+Exit Price: 0.89203038
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: CELOUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 0.74913458
+Exit Price: 0.82404804
+Return: 10.00%
+Outcome: WIN
+
+Symbol: CELOUSDT
+Entry Time: 2024-12-10 06:00:00
+Exit Time: 2024-12-10 06:00:00
+Entry Price: 0.71916920
+Exit Price: 0.82404804
+Return: 14.58%
+Outcome: WIN
+
+Symbol: CELOUSDT
+Entry Time: 2024-12-19 04:00:00
+Exit Time: 2024-12-20 02:00:00
+Entry Price: 0.73756848
+Exit Price: 0.65643594
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: CELOUSDT
+Entry Time: 2024-12-19 05:00:00
+Exit Time: 2024-12-20 02:00:00
+Entry Price: 0.70806574
+Exit Price: 0.65643594
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: CELOUSDT
+Entry Time: 2024-12-23 09:00:00
+Exit Time: 2024-12-24 23:00:00
+Entry Price: 0.65390000
+Exit Price: 0.71929000
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SCUSDT
+Entry Time: 2024-12-26 17:00:00
+Exit Time: 2025-01-06 10:00:00
+Entry Price: 0.00540400
+Exit Price: 0.00594441
+Return: 10.00%
+Outcome: WIN
+
+Symbol: SCUSDT
+Entry Time: 2025-01-01 18:00:00
+Exit Time: 2025-01-06 10:00:00
+Entry Price: 0.00518784
+Exit Price: 0.00594441
+Return: 14.58%
+Outcome: WIN
+
+Symbol: YFIUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 42308.43657817
+Exit Price: 37654.50855457
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: YFIUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 40616.09911505
+Exit Price: 37654.50855457
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: YFIUSDT
+Entry Time: 2021-05-24 10:00:00
+Exit Time: 2021-05-24 16:00:00
+Entry Price: 32489.54348118
+Exit Price: 35738.49782930
+Return: 10.00%
+Outcome: WIN
+
+Symbol: YFIUSDT
+Entry Time: 2024-12-20 19:00:00
+Exit Time: 2024-12-20 23:00:00
+Entry Price: 7563.53802740
+Exit Price: 8319.89183014
+Return: 10.00%
+Outcome: WIN
+
+Symbol: IDUSDT
+Entry Time: 2024-04-13 02:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.78496143
+Exit Price: 0.69861567
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: IDUSDT
+Entry Time: 2024-04-13 03:00:00
+Exit Time: 2024-04-13 03:00:00
+Entry Price: 0.75356297
+Exit Price: 0.69861567
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ONEUSDT
+Entry Time: 2021-04-23 10:00:00
+Exit Time: 2021-04-23 10:00:00
+Entry Price: 0.09022892
+Exit Price: 0.09925181
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ONEUSDT
+Entry Time: 2021-04-23 10:00:00
+Exit Time: 2021-04-23 10:00:00
+Entry Price: 0.08661976
+Exit Price: 0.09925181
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ONEUSDT
+Entry Time: 2024-01-08 11:00:00
+Exit Time: 2024-01-08 21:00:00
+Entry Price: 0.01473521
+Exit Price: 0.01620873
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ONEUSDT
+Entry Time: 2024-01-19 03:00:00
+Exit Time: 2024-01-23 18:00:00
+Entry Price: 0.01479223
+Exit Price: 0.01316509
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ONEUSDT
+Entry Time: 2024-01-20 01:00:00
+Exit Time: 2024-01-23 18:00:00
+Entry Price: 0.01420054
+Exit Price: 0.01316509
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ONEUSDT
+Entry Time: 2024-01-22 14:00:00
+Exit Time: 2024-01-23 18:00:00
+Entry Price: 0.01472120
+Exit Price: 0.01310187
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ONEUSDT
+Entry Time: 2024-01-23 00:00:00
+Exit Time: 2024-01-23 18:00:00
+Entry Price: 0.01413235
+Exit Price: 0.01310187
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: HOTUSDT
+Entry Time: 2021-01-21 20:00:00
+Exit Time: 2021-01-24 05:00:00
+Entry Price: 0.00064624
+Exit Price: 0.00071086
+Return: 10.00%
+Outcome: WIN
+
+Symbol: HOTUSDT
+Entry Time: 2021-01-22 01:00:00
+Exit Time: 2021-01-24 05:00:00
+Entry Price: 0.00062039
+Exit Price: 0.00071086
+Return: 14.58%
+Outcome: WIN
+
+Symbol: HOTUSDT
+Entry Time: 2021-01-27 22:00:00
+Exit Time: 2021-01-28 14:00:00
+Entry Price: 0.00062933
+Exit Price: 0.00069226
+Return: 10.00%
+Outcome: WIN
+
+Symbol: HOTUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 0.00976529
+Exit Price: 0.01074182
+Return: 10.00%
+Outcome: WIN
+
+Symbol: HOTUSDT
+Entry Time: 2021-04-23 11:00:00
+Exit Time: 2021-04-23 11:00:00
+Entry Price: 0.00937468
+Exit Price: 0.01074182
+Return: 14.58%
+Outcome: WIN
+
+Symbol: RVNUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-15 07:00:00
+Entry Price: 0.02868553
+Exit Price: 0.03155408
+Return: 10.00%
+Outcome: WIN
+
+Symbol: RVNUSDT
+Entry Time: 2024-04-14 05:00:00
+Exit Time: 2024-04-15 07:00:00
+Entry Price: 0.02753811
+Exit Price: 0.03155408
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ZENUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 83.11574521
+Exit Price: 73.97301324
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ZENUSDT
+Entry Time: 2021-05-19 21:00:00
+Exit Time: 2021-05-19 21:00:00
+Entry Price: 79.79111540
+Exit Price: 73.97301324
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: DGBUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.00812782
+Exit Price: 0.00894060
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DGBUSDT
+Entry Time: 2024-01-08 12:00:00
+Exit Time: 2024-01-09 03:00:00
+Entry Price: 0.00757513
+Exit Price: 0.00833264
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DGBUSDT
+Entry Time: 2024-01-20 01:00:00
+Exit Time: 2024-01-23 04:00:00
+Entry Price: 0.00757983
+Exit Price: 0.00833781
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DGBUSDT
+Entry Time: 2024-12-20 17:00:00
+Exit Time: 2024-12-21 03:00:00
+Entry Price: 0.01069486
+Exit Price: 0.01176434
+Return: 10.00%
+Outcome: WIN
+
+Symbol: DGBUSDT
+Entry Time: 2024-12-20 18:00:00
+Exit Time: 2024-12-21 03:00:00
+Entry Price: 0.01026706
+Exit Price: 0.01176434
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ANKRUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.02558847
+Exit Price: 0.02277374
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ANKRUSDT
+Entry Time: 2024-01-03 21:00:00
+Exit Time: 2024-01-03 21:00:00
+Entry Price: 0.02456493
+Exit Price: 0.02277374
+Return: -7.29%
+Outcome: LOSS
+
+Symbol: ANKRUSDT
+Entry Time: 2024-01-08 09:00:00
+Exit Time: 2024-01-11 07:00:00
+Entry Price: 0.02364234
+Exit Price: 0.02600658
+Return: 10.00%
+Outcome: WIN
+
+Symbol: ANKRUSDT
+Entry Time: 2024-01-08 11:00:00
+Exit Time: 2024-01-11 07:00:00
+Entry Price: 0.02269665
+Exit Price: 0.02600658
+Return: 14.58%
+Outcome: WIN
+
+Symbol: ANKRUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.04129780
+Exit Price: 0.03675504
+Return: -11.00%
+Outcome: LOSS
+
+Symbol: ANKRUSDT
+Entry Time: 2024-04-14 04:00:00
+Exit Time: 2024-04-14 05:00:00
+Entry Price: 0.03964589
+Exit Price: 0.03675504
+Return: -7.29%
+Outcome: LOSS
+

@@ -1,0 +1,40 @@
+=== PORTFOLIO ANALYSIS RESULTS ===
+Analysis Date: 2025-06-03 17:51:05.795569
+Source File: backtest_results\1w\10.0%\11.0%\add_buy_4.0pct\backtest_transactions_20250603-175104.txt
+Backtest Period: 2021-01-01 to 2025-06-03
+Strategy: 25% of initial capital + 25% of initial capital on 4.0% drop
+Note: All position sizes are fixed at 25% of initial capital (0.25)
+
+Overall Performance:
+  Positions taken: 128 / 202 potential
+  Annualized Return: 27.25%
+  Annualized Sharpe Ratio: 1.76
+  Maximum Drawdown: -12.16%
+  Turnover: 19.24 positions/year
+
+Yearly Performance:
+  2021:
+    Return: 71.83%
+    Sharpe: 3.38
+    MDD: -7.59%
+    Positions closed: 45
+  2022:
+    Return: 0.08%
+    Sharpe: 0.01
+    MDD: -7.99%
+    Positions closed: 7
+  2023:
+    Return: -0.29%
+    Sharpe: -0.04
+    MDD: -5.33%
+    Positions closed: 4
+  2024:
+    Return: 20.39%
+    Sharpe: 1.02
+    MDD: -12.16%
+    Positions closed: 65
+  2025:
+    Return: 16.55%
+    Sharpe: 1.07
+    MDD: -2.05%
+    Positions closed: 7
