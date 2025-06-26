@@ -1,5 +1,5 @@
 # strategies/momentum.py
-from app.services.strategies.BaseStrategy import BaseStrategy
+from app.strategies.BaseStrategy import BaseStrategy
 
 class MomentumStrategy(BaseStrategy):
     def __init__(self, window=20):

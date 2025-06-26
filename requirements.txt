@@ -5,6 +5,7 @@ uvicorn[standard]           # For running FastAPI
 # Async database (SQL)
 sqlalchemy[asyncio]
 asyncpg                     # PostgreSQL driver
+databases
 
 # Database migration (SQL)
 alembic
