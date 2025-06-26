@@ -54,11 +54,11 @@ jobs:
           pytest --maxfail=1 --disable-warnings -q --cov=app --cov-report=term-missing
 
       # Optionally, upload coverage report to Codecov (if token is set as secret)
-      - name: Upload coverage to Codecov
-        if: ${{ secrets.CODECOV_TOKEN }}
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
-          flags: unittests
-          name: codecov-coverage
+#      - name: Upload coverage to Codecov
+#        if: ${{ secrets.CODECOV_TOKEN }}
+#        uses: codecov/codecov-action@v3
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          files: coverage.xml
+#          flags: unittests
+#          name: codecov-coverage
