@@ -21,6 +21,7 @@ celery[redis]               # Celery with Redis broker
 # Config & validation
 python-dotenv
 pydantic
+pydantic-settings
 
 # Data handling
 pandas

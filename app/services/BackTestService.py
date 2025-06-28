@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 from typing import Dict, Any
-from app.core.db import redis
+from app.core.db import redis_cache
 
 
 class BacktestService:
@@ -29,12 +29,16 @@ class BacktestService:
                      add_buy_pct=5.0, start_date=None,
                      use_cache: bool = True) -> Dict[str, Any]:
         """Run backtest on given symbols and return aggregated results."""
-        cache_key = cls.generate_cache_key(symbols, interval, num_iterations, start_date, strategy.__class__.__name__)
+        print(tp_ratio, sl_ratio, add_buy_pct, save_charts, start_date)
+        cache_key = cls.generate_cache_key(
+            symbols, interval, num_iterations, start_date, strategy.__class__.__name__,
+            tp_ratio, sl_ratio, add_buy_pct, save_charts
+        )
 
         if use_cache:
             # Check Redis cache first
-            if redis:
-                cached_json = redis.get(cache_key)
+            if redis_cache:
+                cached_json = redis_cache.get(cache_key)
                 if cached_json:
                     logging.info(f"[BacktestService] Returning cached results from Redis for key {cache_key[:8]}...")
                     return json.loads(cached_json)
@@ -52,7 +56,6 @@ class BacktestService:
         }
         all_trades = []
         for sym in symbols:
-
             df = fetch_candles_func(sym, interval, limit=num_iterations + 35)
             if df.empty or len(df) < 35:
                 continue
@@ -141,9 +144,9 @@ class BacktestService:
         # Cache the results for future use
         if use_cache:
             cls._cache[cache_key] = results
-            if redis:
+            if redis_cache:
                 try:
-                    redis.set(cache_key, json.dumps(results), ex=3600)  # cache for 1 hour (TTL configurable)
+                    redis_cache.set(cache_key, json.dumps(results), ex=3600)  # cache for 1 hour (TTL configurable)
                 except Exception as e:
                     logging.error(f"Redis caching failed: {e}")
         return results

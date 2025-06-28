@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any, List
 
 from pydantic import BaseModel, Field
 
-from app.dto import SubStrategySpec
+from app.dto.SubStrategySpec import SubStrategySpec
 
 
 class StrategySpec(BaseModel):

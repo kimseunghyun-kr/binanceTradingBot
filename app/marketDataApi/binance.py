@@ -6,7 +6,7 @@ from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
 from app.core.db import mongo_sync_db       # MongoClient for persistence:contentReference[oaicite:11]{index=11}
 from app.pydanticConfig.settings import settings
-import redis
+from redis import Redis
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
@@ -49,7 +49,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
 
     # 2) Check Redis cache
     try:
-        redis_client = redis.from_url(settings.REDIS_BROKER_URL)
+        redis_client = Redis.from_url(settings.REDIS_BROKER_URL)
         raw_json = redis_client.get(cache_key)
         if raw_json:
             logging.info(f"Cache HIT (Redis) for {cache_key}")
@@ -61,7 +61,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
         redis_client = None  # skip Redis caching if error
 
     # 3) Check MongoDB for stored candles
-    if mongo_sync_db:
+    if mongo_sync_db is not None:
         coll = mongo_sync_db["candles"]  # new collection for OHLCV data
         query = {"symbol": symbol, "interval": interval}
         if start_time is not None:
@@ -113,7 +113,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
     df = df.sort_values("open_time").reset_index(drop=True)
 
     # Store fetched candles into MongoDB (upsert each candle)
-    if mongo_sync_db:
+    if mongo_sync_db is not None:
         coll = mongo_sync_db["candles"]
         for _, row in df.iterrows():
             doc = {
@@ -133,7 +133,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
             except Exception as e:
                 logging.warning(f"MongoDB upsert failed for {symbol} {interval}: {e}")
     # Cache the result in Redis and memory
-    if redis_client:
+    if redis_client is not None:
         try: redis_client.set(cache_key, df.to_json(), ex=3600)
         except: pass
     _candle_cache[cache_key] = df

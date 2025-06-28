@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
-from app.dto import StrategySpec
+from app.dto.StrategySpec import StrategySpec
 
 
 class BacktestRequest(BaseModel):
@@ -14,3 +14,4 @@ class BacktestRequest(BaseModel):
     add_buy_pct: float = 5.0
     start_date: Optional[str] = None
     symbols: Optional[List[str]] = None
+    symbol_query: Optional[str] = None

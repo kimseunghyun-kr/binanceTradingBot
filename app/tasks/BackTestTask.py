@@ -15,8 +15,9 @@ if settings.MONGO_URI:
     mongo_sync_client = MongoClient(settings.MONGO_URI)
     mongo_sync_db = mongo_sync_client[settings.MONGO_DATABASE]
 
+print("imported BackTestTask")
 
-@celery.task(name="app.tasks.backtest.run_backtest_task")
+@celery.task(name="app.tasks.BackTestTask.run_backtest_task")
 def run_backtest_task(config: dict):
     """
     Celery task to execute a backtest. `config` contains strategy spec and backtest parameters.

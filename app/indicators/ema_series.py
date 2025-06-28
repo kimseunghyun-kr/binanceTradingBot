@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def compute_ema_series(
-        df: pd.DataFrame,
+        df: Union[pd.DataFrame, pd.Series],
         column: str = 'close',
         period: int = 33,
         start: Optional[Union[int, str, pd.Timestamp]] = None,
@@ -15,7 +15,10 @@ def compute_ema_series(
         inplace: bool = False,
         out_col: Optional[str] = None
 ) -> pd.Series:
-    data = df[column]
+    if isinstance(df, pd.Series):
+        data = df
+    else:
+        data = df[column]
     if start is not None or end is not None:
         data = data.loc[start:end]
     ema = data.ewm(

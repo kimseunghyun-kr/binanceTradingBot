@@ -64,7 +64,7 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
             return -1
 
         subset_closes = closes.iloc[-mod_window:]
-        ema_series = compute_ema_series(subset_closes, 15)
+        ema_series = compute_ema_series(subset_closes, column='close', period=15)
 
         # Check if EMA value is None before comparison
         ema_value = ema_series[peak_idx]

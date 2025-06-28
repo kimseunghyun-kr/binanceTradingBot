@@ -41,10 +41,11 @@ if settings.POSTGRES_DSN:
 
 
 # Redis
-redis : Redis = None
+redis_cache : Redis = None
 if settings.REDIS_BROKER_URL:
     try:
-        redis = redis.Redis.from_url(settings.REDIS_BROKER_URL, decode_responses=True)
+        redis_cache = Redis.from_url(settings.REDIS_BROKER_URL, decode_responses=True)
     except Exception as e:
         logging.error(f"Redis connection failed: {e}")
-        redis = None
+        redis_cache = None
+print(redis_cache)

@@ -5,6 +5,7 @@ from app.core.celery_app import celery
 from app.core.db import mongo_sync_db
 from app.services.AnalysisService import AnalysisService
 
+print("imported AnalysisTask")
 
 @celery.task(name="app.tasks.analysis.run_analysis_task")
 def run_analysis_task(config: dict):
