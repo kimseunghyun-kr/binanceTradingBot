@@ -2,6 +2,7 @@ import logging
 from typing import List, Tuple
 
 from app.marketDataApi.binance import fetch_candles
+from app.strategies.BaseStrategy import BaseStrategy
 from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
 
@@ -9,14 +10,13 @@ class AnalysisService:
     """Service for running current market analysis on a list of symbols."""
 
     @staticmethod
-    def analyze_symbols(symbols: List[str], interval: str = "1d") -> Tuple[List[str], int]:
+    def analyze_symbols(strategy : BaseStrategy = PeakEMAReversalStrategy(), symbols: List[str] = [], interval: str = "1d") -> Tuple[List[str], int]:
         """
         Analyze each symbol for a buy signal using PeakEMAReversalStrategy (default).
         Returns a tuple (yes_signals, no_count):
           - yes_signals: list of strings like "SYMBOL(EMA_period)" for each buy signal detected.
           - no_count: number of symbols with no buy signal.
         """
-        strategy = PeakEMAReversalStrategy()
         yes_signals = []
         no_count = 0
         for sym in symbols:

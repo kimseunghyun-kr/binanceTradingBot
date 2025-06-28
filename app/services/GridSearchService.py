@@ -1,6 +1,7 @@
 # app/services/GridSearchService.py
 
 from itertools import product
+from typing import Optional
 
 from app.marketDataApi.binance import fetch_candles
 from app.services.BackTestService import BacktestService
@@ -9,8 +10,22 @@ from app.services.StrategyService import StrategyService
 
 class GridSearchService:
     @staticmethod
-    def run_grid_search(strategy, timeframe, tp_list, sl_list, add_buy_pct_list,
-                        num_iterations, use_cache, save_charts, start_date, symbols):
+    def run_grid_search(strategy: dict, timeframe: str, tp_list: list, sl_list: list, add_buy_pct_list: list,
+                        num_iterations: int, use_cache: bool, save_charts: bool,
+                        start_date: Optional[str], symbols: list):
+        # Prepare strategy instance, including sub-strategies if any
+        strategy_name = strategy["name"]
+        # Construct params dict with possible 'strategies' list for ensemble
+        strat_params = {
+            "params": strategy.get("params", {}) or {},
+            "strategies": strategy.get("strategies", []) or []
+        }
+        try:
+            strategy_instance = StrategyService.get_strategy_instance(strategy_name, strat_params)
+        except ValueError as e:
+            # Unknown strategy or missing sub-strategies
+            raise e
+
         # Expand grid
         combos = list(product(tp_list, sl_list, add_buy_pct_list))
         results = []

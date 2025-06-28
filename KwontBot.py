@@ -7,7 +7,8 @@ from app.controller import (SymbolController as symbols,
                             BacktestController as backtest,
                             StrategyController as strategies,
                             AnalyzeController as analyze,
-                            GridSearchController as gridSearch
+                            GridSearchController as gridSearch,
+                            TaskController as tasks
                             )
 from app.core import db
 
@@ -29,8 +30,9 @@ app.include_router(backtest.router)
 app.include_router(analyze.router)
 app.include_router(strategies.router)
 app.include_router(symbols.router)
-
 app.include_router(gridSearch.router)
+
+app.include_router(tasks.router)
 
 
 # Startup and shutdown events for DB connections

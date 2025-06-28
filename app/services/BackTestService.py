@@ -2,19 +2,23 @@ import hashlib
 import json
 import logging
 from typing import Dict, Any
+from app.core.db import redis
 
 
 class BacktestService:
     _cache: Dict[str, Dict[str, Any]] = {}
 
     @staticmethod
-    def generate_cache_key(symbols, interval, num_iterations, start_date, strategy_name):
+    def generate_cache_key(symbols, interval, num_iterations, start_date, strategy_name,
+                           tp_ratio, sl_ratio, add_buy_pct, save_charts):
         data = {
             "symbols": sorted(symbols),
             "interval": interval,
             "num_iterations": num_iterations,
-            "start_date": start_date,
-            "strategy": strategy_name
+            "start_date": start_date or "",
+            "strategy": strategy_name,
+            "tp": tp_ratio, "sl": sl_ratio, "add_buy_pct": add_buy_pct,
+            "save_charts": bool(save_charts)
         }
         key_str = json.dumps(data, sort_keys=True)
         return hashlib.md5(key_str.encode()).hexdigest()
@@ -26,10 +30,20 @@ class BacktestService:
                      use_cache: bool = True) -> Dict[str, Any]:
         """Run backtest on given symbols and return aggregated results."""
         cache_key = cls.generate_cache_key(symbols, interval, num_iterations, start_date, strategy.__class__.__name__)
-        if use_cache and cache_key in cls._cache:
-            logging.info(
-                f"Using cached results for {strategy.__class__.__name__} {interval} on {len(symbols)} symbols.")
-            return cls._cache[cache_key]
+
+        if use_cache:
+            # Check Redis cache first
+            if redis:
+                cached_json = redis.get(cache_key)
+                if cached_json:
+                    logging.info(f"[BacktestService] Returning cached results from Redis for key {cache_key[:8]}...")
+                    return json.loads(cached_json)
+            # Fallback to in-memory cache
+            if cache_key in cls._cache:
+                logging.info(
+                    f"[BacktestService] Using cached results for {strategy.__class__.__name__} {interval} on {len(symbols)} symbols.")
+                return cls._cache[cache_key]
+
         # Initialize results structure
         results = {
             'trades': [], 'win_count': 0, 'loss_count': 0, 'error_count': 0,
@@ -38,6 +52,7 @@ class BacktestService:
         }
         all_trades = []
         for sym in symbols:
+
             df = fetch_candles_func(sym, interval, limit=num_iterations + 35)
             if df.empty or len(df) < 35:
                 continue
@@ -121,7 +136,16 @@ class BacktestService:
                 if drawdown_pct > max_dd:
                     max_dd = drawdown_pct
             results['max_drawdown_pct'] = max_dd
-        cls._cache[cache_key] = results
+
+
+        # Cache the results for future use
+        if use_cache:
+            cls._cache[cache_key] = results
+            if redis:
+                try:
+                    redis.set(cache_key, json.dumps(results), ex=3600)  # cache for 1 hour (TTL configurable)
+                except Exception as e:
+                    logging.error(f"Redis caching failed: {e}")
         return results
 
     @staticmethod

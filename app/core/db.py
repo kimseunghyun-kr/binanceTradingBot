@@ -3,6 +3,7 @@ import logging
 from databases import Database
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
+from redis import Redis
 
 from app.pydanticConfig.settings import settings
 
@@ -27,11 +28,23 @@ if settings.MONGO_URI:
 
     # Select DB (Sync)
     mongo_sync_db = mongo_sync_client[db_name]
-
     logging.info(f"[Mongo] Connected (async & sync) using DB: {db_name}")
+    mongo_sync_db["candles"].create_index(
+        [("symbol", 1), ("interval", 1), ("open_time", 1)], unique=True
+    )
 
 # PostgreSQL
 database: Database = None
 if settings.POSTGRES_DSN:
     database = Database(settings.POSTGRES_DSN)
     logging.info(f"[Postgres] Configured: {settings.POSTGRES_DSN}")
+
+
+# Redis
+redis : Redis = None
+if settings.REDIS_BROKER_URL:
+    try:
+        redis = redis.Redis.from_url(settings.REDIS_BROKER_URL, decode_responses=True)
+    except Exception as e:
+        logging.error(f"Redis connection failed: {e}")
+        redis = None
