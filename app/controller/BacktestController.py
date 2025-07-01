@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException
-
 from app.core import SymbolInitialize as symbol_utils
 from app.dto.BackTestRequest import BacktestRequest
 from app.dto.TaskSubmitResponse import TaskSubmitResponse
 from app.services.StrategyService import StrategyService
+from app.services.SymbolService import SymbolService
 from app.tasks.BackTestTask import run_backtest_task
 
-router = APIRouter(prefix="", tags=["Backtest"])  # No prefix, endpoint is /backtest
+import json
 
+router = APIRouter(prefix="", tags=["Backtest"])
 
 @router.post("/backtest", response_model=TaskSubmitResponse)
 def start_backtest(request: BacktestRequest):
@@ -15,12 +16,34 @@ def start_backtest(request: BacktestRequest):
     Start a backtest based on the provided configuration.
     This schedules a Celery task to run the backtest and returns a task ID for tracking.
     """
-    # Ensure symbols are available
-    symbol_list = request.symbols or symbol_utils.ANALYSIS_SYMBOLS
+    # 1. Support both symbol list and symbol_criteria
+    if request.symbols:
+        symbol_list = request.symbols
+    elif getattr(request, "symbol_criteria", None):
+        criteria = request.symbol_criteria
+        # Use your SymbolService to get a pre-filtered universe DataFrame
+        symbols_df = SymbolService.get_symbols_by_market_cap(
+            min_cap=criteria.get("min_market_cap", 0),
+            max_cap=criteria.get("max_market_cap", 2e10),
+            max_pages=criteria.get("max_pages", 3),
+            api_key=criteria.get("api_key", None),
+        )
+        # Validate the strategy instance (as before)
+        strat = StrategyService.get_strategy_instance(
+            request.strategy.name,
+            {"params": request.strategy.params or {},
+             "strategies": [s.dict() for s in (request.strategy.strategies or [])]}
+        )
+        # Run the code-based filter (e.g., user’s filter_symbols)
+        symbol_list = strat.filter_symbols(symbols_df)
+    else:
+        symbol_list = symbol_utils.ANALYSIS_SYMBOLS
+
     if not symbol_list:
         raise HTTPException(status_code=400, detail="No symbols available for backtest. Please load symbols first.")
+
+    # Validate strategy as before
     try:
-        # Create strategy instance (just for validation; actual strategy logic will run in task)
         StrategyService.get_strategy_instance(request.strategy.name,
                                               {"params": request.strategy.params or {},
                                                "strategies": [s.dict() for s in (request.strategy.strategies or [])]})

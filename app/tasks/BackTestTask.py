@@ -5,10 +5,11 @@ import pandas as pd
 from pymongo import MongoClient
 
 from app.core.celery_app import celery
-from app.marketDataApi.binance import fetch_candles, get_valid_binance_symbols  # Import data fetcher
+from app.marketDataApi.binance import fetch_candles
 from app.pydanticConfig.settings import settings
 from app.services.BackTestService import BacktestService
 from app.services.StrategyService import StrategyService
+from app.services.SymbolService import SymbolService
 
 # Initialize synchronous Mongo client for task context (Celery tasks run in separate process)
 mongo_sync_client = None
@@ -24,24 +25,20 @@ def run_backtest_task(config: dict):
     Celery task to execute a backtest. `config` contains strategy spec and backtest parameters.
     """
     strategy_spec = config.get("strategy_spec", {})
-    # Instantiate strategy object
     try:
         strat = StrategyService.get_strategy_instance(
             strategy_spec["name"],
             {"params": strategy_spec.get("params", {}), "strategies": strategy_spec.get("strategies", [])}
         )
-        # Get all tradable symbols (e.g. USDT pairs from Binance)
-        all_symbols = list(get_valid_binance_symbols())  # returns a set of symbols:contentReference[oaicite:2]{index=2}
-        symbols_df = pd.DataFrame({'symbol': all_symbols})
-        filtered_symbols = strat.filter_symbols(symbols_df)
+        # Use symbol list passed in config (already filtered)
+        filtered_symbols = config.get("symbols", [])
     except Exception as e:
-        # Strategy instantiation failed
         return {"error": str(e)}
 
     # Run backtest using BacktestService, providing the data fetch function
     results = BacktestService.run_backtest(
         strat,
-        symbols=config.get("symbols", []),
+        symbols=filtered_symbols,
         fetch_candles_func=fetch_candles,
         interval=config.get("timeframe"),
         num_iterations=config.get("num_iterations", 100),
@@ -52,7 +49,7 @@ def run_backtest_task(config: dict):
         start_date=config.get("start_date"),
         use_cache=config.get("use_cache", True)
     )
-    # Store detailed results in MongoDB for record
+    # Store detailed results in MongoDB for record (same as before)
     if mongo_sync_client:
         try:
             result_doc = {
@@ -71,3 +68,4 @@ def run_backtest_task(config: dict):
         "total_return_pct": results.get("total_return_pct")
     }
     return summary
+

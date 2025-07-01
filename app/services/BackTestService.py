@@ -2,7 +2,9 @@ import hashlib
 import json
 import logging
 from typing import Dict, Any
-from app.core.db import redis_cache
+from app.core.db import redis_cache, mongo_sync_db
+from app.services.MarketDataUpdateService import ensure_candles_up_to_date
+from app.strategies.BaseStrategy import BaseStrategy
 
 
 class BacktestService:
@@ -24,7 +26,7 @@ class BacktestService:
         return hashlib.md5(key_str.encode()).hexdigest()
 
     @classmethod
-    def run_backtest(cls, strategy, symbols, fetch_candles_func, interval,
+    def run_backtest(cls, strategy: BaseStrategy, symbols, fetch_candles_func, interval,
                      num_iterations=100, tp_ratio=0.1, sl_ratio=0.05, save_charts=False,
                      add_buy_pct=5.0, start_date=None,
                      use_cache: bool = True) -> Dict[str, Any]:
@@ -55,19 +57,17 @@ class BacktestService:
             'avg_win_pct': 0.0, 'avg_loss_pct': 0.0, 'profit_factor': 0.0, 'equity_curve': []
         }
         all_trades = []
-        # replace this sym in symbols to do a form of a sql query based on the ANALYSIS_SYMBOL
-        # to get the required symbols
-        # this method must be in Strategy Object.
+        lookback = strategy.get_required_lookback()
+
         for sym in symbols:
-            # honestly we should either have a list of indicators to be listed by the strategy to run through
-            # individually in this function then pass them through or do these checks within the strategy_run
-            df = fetch_candles_func(sym, interval, limit=num_iterations + 35)
-            if df.empty or len(df) < 35:
+            # Fetch only as much as you need—cache/DB logic is internal
+            df = fetch_candles_func(sym, interval, limit=num_iterations + lookback)
+            if df.empty or len(df) < lookback:
                 continue
-            last_index = len(df) - 3
-            first_index = max(35, last_index - (num_iterations - 1))
+            last_index = len(df) - 1
+            first_index = max(lookback, last_index - (num_iterations - 1))
             for i in range(last_index, first_index - 1, -1):
-                window_df = df.iloc[max(0, i - 34): i + 1].copy()
+                window_df = df.iloc[max(0, i - lookback + 1): i + 1].copy()
                 decision = strategy.decide(window_df, interval, tp_ratio=tp_ratio, sl_ratio=sl_ratio)
                 if decision.get('signal') != 'BUY':
                     continue
