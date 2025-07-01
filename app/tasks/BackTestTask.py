@@ -1,10 +1,11 @@
 # app/tasks/BackTestTask.py
 from datetime import datetime
 
+import pandas as pd
 from pymongo import MongoClient
 
 from app.core.celery_app import celery
-from app.marketDataApi.binance import fetch_candles  # Import data fetcher
+from app.marketDataApi.binance import fetch_candles, get_valid_binance_symbols  # Import data fetcher
 from app.pydanticConfig.settings import settings
 from app.services.BackTestService import BacktestService
 from app.services.StrategyService import StrategyService
@@ -29,9 +30,14 @@ def run_backtest_task(config: dict):
             strategy_spec["name"],
             {"params": strategy_spec.get("params", {}), "strategies": strategy_spec.get("strategies", [])}
         )
+        # Get all tradable symbols (e.g. USDT pairs from Binance)
+        all_symbols = list(get_valid_binance_symbols())  # returns a set of symbols:contentReference[oaicite:2]{index=2}
+        symbols_df = pd.DataFrame({'symbol': all_symbols})
+        filtered_symbols = strat.filter_symbols(symbols_df)
     except Exception as e:
         # Strategy instantiation failed
         return {"error": str(e)}
+
     # Run backtest using BacktestService, providing the data fetch function
     results = BacktestService.run_backtest(
         strat,

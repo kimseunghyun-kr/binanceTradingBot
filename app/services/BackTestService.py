@@ -55,7 +55,12 @@ class BacktestService:
             'avg_win_pct': 0.0, 'avg_loss_pct': 0.0, 'profit_factor': 0.0, 'equity_curve': []
         }
         all_trades = []
+        # replace this sym in symbols to do a form of a sql query based on the ANALYSIS_SYMBOL
+        # to get the required symbols
+        # this method must be in Strategy Object.
         for sym in symbols:
+            # honestly we should either have a list of indicators to be listed by the strategy to run through
+            # individually in this function then pass them through or do these checks within the strategy_run
             df = fetch_candles_func(sym, interval, limit=num_iterations + 35)
             if df.empty or len(df) < 35:
                 continue

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import pandas as pd
 
@@ -7,6 +7,26 @@ class BaseStrategy:
     """
     Abstract base class for all strategies.
     """
+
+    def filter_symbols(self, symbols_df: pd.DataFrame) -> List[str]:
+        """
+        (Optional) Return a subset of symbols for this strategy.
+        Default: use all symbols in symbols_df.
+        """
+        return symbols_df['symbol'].tolist()
+
+    def aggregate_signals(self, trades: List[Dict[str, Any]]) -> Any:
+        """
+        (Optional) Combine or select among multiple trade signals.
+        Default: no aggregation (pass through list of trades).
+        """
+        return trades
+
+    def required_indicators(self) -> List[str]:
+        """
+        (Optional) List any technical indicators the strategy needs (e.g. ["EMA", "RSI"]).
+        """
+        return []
 
     def decide(self, df: pd.DataFrame, interval: str, **kwargs) -> Dict[str, Any]:
         """

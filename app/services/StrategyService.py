@@ -1,5 +1,6 @@
 from typing import List, Dict
 
+from app.strategies.BaseStrategy import BaseStrategy
 from app.strategies.concreteStrategies.EnsembleStrategy import EnsembleStrategy
 from app.strategies.concreteStrategies.MomentumStrategy import MomentumStrategy
 from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
@@ -16,7 +17,7 @@ class StrategyService:
     ]
 
     @staticmethod
-    def get_strategy_instance(name: str, params: Dict) -> object:
+    def get_strategy_instance(name: str, params: Dict) -> BaseStrategy:
         """
         Factory method: Create a strategy instance by name with given parameters.
         Raises ValueError if strategy name is unknown.
