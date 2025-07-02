@@ -4,6 +4,7 @@ from app.services.BackTestAnalysisCoordinatorService import BacktestAnalysisCoor
 
 print("imported BackTestAnalysisTask")
 
+
 @celery.task(bind=True)
 def run_backtest_analysis_task(self, params):
     coordinator = BacktestAnalysisCoordinator(**params)

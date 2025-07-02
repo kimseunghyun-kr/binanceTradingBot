@@ -53,10 +53,10 @@ python worker.py
 * Results show in the browser/Postman when ready.
 * **Debugging:**
 
-  * Breakpoints in your IDE are hit by the Celery worker **when it runs the task**.
-  * Errors/stack traces print to the terminal or IDE console running `worker.py`.
-  * If a task fails or hangs, check worker logs/console.
-  * Error handling is minimal; failed tasks may hang or show minimal error info.
+    * Breakpoints in your IDE are hit by the Celery worker **when it runs the task**.
+    * Errors/stack traces print to the terminal or IDE console running `worker.py`.
+    * If a task fails or hangs, check worker logs/console.
+    * Error handling is minimal; failed tasks may hang or show minimal error info.
 
 ### 7. Notes
 
@@ -64,7 +64,7 @@ python worker.py
 * Robust error handling is planned for future updates.
 * If you get issues:
 
-  * Confirm both `run_local.py` and `worker.py` are running.
-  * Check that dependencies (Redis, MongoDB, etc) are available.
-  * Review worker logs for stack traces.
-  * If tasks hang, restart the worker.
+    * Confirm both `run_local.py` and `worker.py` are running.
+    * Check that dependencies (Redis, MongoDB, etc) are available.
+    * Review worker logs for stack traces.
+    * If tasks hang, restart the worker.

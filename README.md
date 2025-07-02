@@ -4,32 +4,36 @@
 
 ## Overview
 
-This project is a robust, modular backtesting platform for trading strategies. It combines **FastAPI** for web-based orchestration and **Celery** for distributed and asynchronous execution of computationally heavy backtest tasks. It is designed for flexibility, developer productivity, and scaling to large symbol universes (e.g., Binance USDT pairs).
+This project is a robust, modular backtesting platform for trading strategies. It combines **FastAPI** for web-based
+orchestration and **Celery** for distributed and asynchronous execution of computationally heavy backtest tasks. It is
+designed for flexibility, developer productivity, and scaling to large symbol universes (e.g., Binance USDT pairs).
 
 > **⚠️ Project status:**
 >
-> This project is **not even pre-alpha** and is currently in its **first development iteration**. Many features are planned, but only core Celery task orchestration and the controller-service pipeline are confirmed to function at a basic level. Symbol query/filtering and core business logic are **not production-ready nor tested**.
+> This project is **not even pre-alpha** and is currently in its **first development iteration**. Many features are
+> planned, but only core Celery task orchestration and the controller-service pipeline are confirmed to function at a
+> basic level. Symbol query/filtering and core business logic are **not production-ready nor tested**.
 
 * **Technology stack:** Python, FastAPI, Celery, Redis, MongoDB, Pydantic, Pandas
 * **Key features:**
 
-  * Submit and track custom trading strategy backtests over HTTP
-  * Fully async background workers (Celery)
-  * Symbol universe can be filtered, queried, or set dynamically (**symbol query feature under development**)
-  * Swagger UI for interactive exploration and manual runs
-  * Debug-friendly: run everything locally, debug in PyCharm/VSCode
-  * Modular strategy/service design for easy extension
+    * Submit and track custom trading strategy backtests over HTTP
+    * Fully async background workers (Celery)
+    * Symbol universe can be filtered, queried, or set dynamically (**symbol query feature under development**)
+    * Swagger UI for interactive exploration and manual runs
+    * Debug-friendly: run everything locally, debug in PyCharm/VSCode
+    * Modular strategy/service design for easy extension
 
 ## Features & Project Status
 
 * **Confirmed Working:**
 
-  * Celery background task system
-  * Controller → Service pipeline (`backtest.py` endpoint end-to-end call)
+    * Celery background task system
+    * Controller → Service pipeline (`backtest.py` endpoint end-to-end call)
 * **Under Development:**
 
-  * Symbol query/advanced filtering (currently not production ready)
-  * Core business logic for strategies/backtest results (business computation NOT verified)
+    * Symbol query/advanced filtering (currently not production ready)
+    * Core business logic for strategies/backtest results (business computation NOT verified)
 
 ## Usage Quickstart
 
@@ -68,8 +72,8 @@ python worker.py
 
 * Use the Swagger UI or Postman:
 
-  * `/backtest` to start a job (returns a `task_id`)
-  * `/tasks/{task_id}` to get result/status
+    * `/backtest` to start a job (returns a `task_id`)
+    * `/tasks/{task_id}` to get result/status
 * Symbol filtering/query feature is under development (currently only static symbol set supported)
 
 ### 6. Debugging

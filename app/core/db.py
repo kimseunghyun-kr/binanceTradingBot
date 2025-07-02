@@ -39,9 +39,8 @@ if settings.POSTGRES_DSN:
     database = Database(settings.POSTGRES_DSN)
     logging.info(f"[Postgres] Configured: {settings.POSTGRES_DSN}")
 
-
 # Redis
-redis_cache : Redis = None
+redis_cache: Redis = None
 if settings.REDIS_BROKER_URL:
     try:
         redis_cache = Redis.from_url(settings.REDIS_BROKER_URL, decode_responses=True)

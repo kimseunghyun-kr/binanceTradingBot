@@ -13,7 +13,7 @@ def fibonacci_retracement(high_price: float, low_price: float, levels: list = No
     retracements = {}
     for r in levels:
         price_level = high_price - r * diff
-        retracements[f"{int(r*100)}%"] = price_level
+        retracements[f"{int(r * 100)}%"] = price_level
     retracements["0%"] = low_price
     retracements["100%"] = high_price
     return retracements

@@ -7,6 +7,7 @@ from app.services.AnalysisService import AnalysisService
 
 print("imported AnalysisTask")
 
+
 @celery.task(name="app.tasks.analysis.run_analysis_task")
 def run_analysis_task(config: dict):
     """

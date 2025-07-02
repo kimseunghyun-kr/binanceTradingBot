@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+
 from app.core import SymbolInitialize as symbol_utils
 from app.dto.BackTestRequest import BacktestRequest
 from app.dto.TaskSubmitResponse import TaskSubmitResponse
@@ -6,9 +7,8 @@ from app.services.StrategyService import StrategyService
 from app.services.SymbolService import SymbolService
 from app.tasks.BackTestTask import run_backtest_task
 
-import json
-
 router = APIRouter(prefix="", tags=["Backtest"])
+
 
 @router.post("/backtest", response_model=TaskSubmitResponse)
 def start_backtest(request: BacktestRequest):

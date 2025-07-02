@@ -76,7 +76,19 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-
+      -
+  orchestrator:
+    build:
+      context: ./orchestrator
+    container_name: tradingbot_orchestrator
+    restart: unless-stopped
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/trading"
+      MONGO_DB: "trading"
+    depends_on:
+      - mongo
 volumes:
   mongo_data:
   pg_data:
+
+

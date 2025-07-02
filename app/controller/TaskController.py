@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
 from celery.result import AsyncResult
+from fastapi import APIRouter, HTTPException
+
 from app.core.celery_app import celery
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
+
 
 @router.get("/{task_id}")
 def get_task_status(task_id: str):

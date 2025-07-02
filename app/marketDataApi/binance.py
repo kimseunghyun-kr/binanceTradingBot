@@ -1,15 +1,17 @@
 import logging
 from typing import Optional
-import pandas as pd
 
+import pandas as pd
+from redis import Redis
+
+from app.core.db import mongo_sync_db  # MongoClient for persistence:contentReference[oaicite:11]{index=11}
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
-from app.core.db import mongo_sync_db       # MongoClient for persistence:contentReference[oaicite:11]{index=11}
 from app.pydanticConfig.settings import settings
-from redis import Redis
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
+
 
 ###############################################################################
 # GET VALID BINANCE SYMBOLS
@@ -79,8 +81,10 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
             logging.info(f"Cache HIT (MongoDB) for {symbol} {interval} from {len(docs)} docs")
             # Update caches
             if redis_client:
-                try: redis_client.set(cache_key, df.to_json(), ex=3600)
-                except: pass
+                try:
+                    redis_client.set(cache_key, df.to_json(), ex=3600)
+                except:
+                    pass
             _candle_cache[cache_key] = df
             return df
 
@@ -104,11 +108,11 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
 
     # Build DataFrame as before
     df = pd.DataFrame(raw, columns=[
-        "open_time","open","high","low","close","volume",
-        "close_time","quote_asset_volume","num_trades",
-        "taker_buy_base","taker_buy_quote","ignored"
+        "open_time", "open", "high", "low", "close", "volume",
+        "close_time", "quote_asset_volume", "num_trades",
+        "taker_buy_base", "taker_buy_quote", "ignored"
     ])
-    for col in ["open","high","low","close","volume"]:
+    for col in ["open", "high", "low", "close", "volume"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.sort_values("open_time").reset_index(drop=True)
 
@@ -134,9 +138,10 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
                 logging.warning(f"MongoDB upsert failed for {symbol} {interval}: {e}")
     # Cache the result in Redis and memory
     if redis_client is not None:
-        try: redis_client.set(cache_key, df.to_json(), ex=3600)
-        except: pass
+        try:
+            redis_client.set(cache_key, df.to_json(), ex=3600)
+        except:
+            pass
     _candle_cache[cache_key] = df
 
     return df
-

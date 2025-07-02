@@ -1,9 +1,11 @@
 import logging
 import os
+
 from config_profile import PROFILE
 
 dotenv_file = f".env.{PROFILE}" if os.path.exists(f".env.{PROFILE}") else ".env"
 from dotenv import load_dotenv
+
 load_dotenv(dotenv_file)
 
 from app.core.celery_app import celery

@@ -64,25 +64,17 @@ class BaseStrategy:
         """
         return self.__dict__
 
+        # ...
+
     def get_required_lookback(self) -> int:
         """
-        Returns
-        -------
-        int
-            The minimum number of historical bars (rows) required by this strategy
-            to generate a valid trading signal in the decide() method.
-
-        Explanation
-        -----------
-        - This should account for the largest indicator period (e.g., EMA200 needs at least 200 bars),
-          plus any additional lookback the strategy logic requires.
-        - For example, if your strategy uses both EMA15 and EMA33, return at least 33.
-        - If your logic needs to access additional bars for safety (e.g., rolling calculations, edge cases),
-          include those in the total.
-        - This value is used by the backtest runner to:
-            1. Ensure enough candle data is fetched and passed to each rolling window.
-            2. Avoid errors from insufficient DataFrame length in the strategy.
-        - You can override this method in child strategies to return a custom value.
+        How many historical bars this strategy requires per run.
+        Override if more are needed (e.g., for long EMA).
         """
-        return 35  # Default: matches legacy behavior. Override in subclasses for custom needs.
+        return max([period for period in self.get_indicator_periods()] + [35])
 
+    def get_indicator_periods(self) -> list:
+        """
+        Override this to return all periods required by indicators (e.g., [15, 33, 50]).
+        """
+        return [35]  # Default fallback

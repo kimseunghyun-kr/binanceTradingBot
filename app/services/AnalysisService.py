@@ -10,7 +10,8 @@ class AnalysisService:
     """Service for running current market analysis on a list of symbols."""
 
     @staticmethod
-    def analyze_symbols(strategy : BaseStrategy = PeakEMAReversalStrategy(), symbols: List[str] = [], interval: str = "1d") -> Tuple[List[str], int]:
+    def analyze_symbols(strategy: BaseStrategy = PeakEMAReversalStrategy(), symbols: List[str] = [],
+                        interval: str = "1d") -> Tuple[List[str], int]:
         """
         Analyze each symbol for a buy signal using PeakEMAReversalStrategy (default).
         Returns a tuple (yes_signals, no_count):

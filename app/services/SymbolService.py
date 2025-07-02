@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 import pandas as pd
 import requests
@@ -24,9 +23,8 @@ class SymbolService:
         df = df[["symbol", "baseAsset", "quoteAsset", "status"]]
         return df.reset_index(drop=True)
 
-
     @staticmethod
-    def get_symbols_by_market_cap(min_cap: float = 0, max_cap: float= 1000000,
+    def get_symbols_by_market_cap(min_cap: float = 0, max_cap: float = 1000000,
                                   max_pages: int = 30, api_key: str = None) -> pd.DataFrame:
         # This is similar to your filter_symbols_by_market_cap, but returns a DataFrame
         api_key = api_key or settings.COINMARKETCAP_API_KEY
@@ -39,7 +37,8 @@ class SymbolService:
         for page_index in range(max_pages):
             start = page_index * CMC_PAGE_SIZE + 1
             params = {"start": str(start), "limit": str(CMC_PAGE_SIZE), "convert": "USD"}
-            resp = requests.get(f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest", params=params, headers=headers, timeout=30)
+            resp = requests.get(f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest", params=params, headers=headers,
+                                timeout=30)
             data = resp.json()
             page_coins = data.get("data", [])
             if not page_coins:

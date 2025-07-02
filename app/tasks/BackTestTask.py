@@ -1,7 +1,6 @@
 # app/tasks/BackTestTask.py
 from datetime import datetime
 
-import pandas as pd
 from pymongo import MongoClient
 
 from app.core.celery_app import celery
@@ -9,7 +8,6 @@ from app.marketDataApi.binance import fetch_candles
 from app.pydanticConfig.settings import settings
 from app.services.BackTestService import BacktestService
 from app.services.StrategyService import StrategyService
-from app.services.SymbolService import SymbolService
 
 # Initialize synchronous Mongo client for task context (Celery tasks run in separate process)
 mongo_sync_client = None
@@ -18,6 +16,7 @@ if settings.MONGO_URI:
     mongo_sync_db = mongo_sync_client[settings.MONGO_DATABASE]
 
 print("imported BackTestTask")
+
 
 @celery.task(name="app.tasks.BackTestTask.run_backtest_task")
 def run_backtest_task(config: dict):
@@ -68,4 +67,3 @@ def run_backtest_task(config: dict):
         "total_return_pct": results.get("total_return_pct")
     }
     return summary
-
