@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 from app.marketDataApi.binance import fetch_candles
 from app.marketDataApi.loader import initialize_symbols_from_config
 from app.services.BackTestService import BacktestService
-from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
+from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
 
 class CoordinatorService:

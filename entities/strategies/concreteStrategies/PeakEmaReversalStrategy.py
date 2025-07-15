@@ -1,24 +1,25 @@
 from typing import Optional, Dict, Any
-
 import pandas as pd
 
 from app.indicators.ema_series import compute_ema_series
-from app.strategies.ParameterisedStrategy import ParametrizedStrategy
-
+from entities.strategies.ParameterisedStrategy import ParametrizedStrategy
 
 class PeakEMAReversalStrategy(ParametrizedStrategy):
     """
-    Strategy that detects a single price peak followed by a bearish pattern and EMA pullback.
-    If conditions meet, it signals 'BUY' with an entry at the weekly EMA value.
+    Detects a single price peak followed by a bearish pattern and EMA pullback.
+    If conditions meet, signals 'BUY' with entry at the EMA value.
     """
 
-    def decide(self, df: pd.DataFrame, interval: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05, **kwargs) -> Dict[
-        str, Any]:
-        initial_signal = self.check_upper_section(df, interval)
-        trade = self.generate_trade_signal(df, initial_signal, tp_ratio, sl_ratio)
+    def decide(self, df: pd.DataFrame, interval: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05, **kwargs) -> Dict[str, Any]:
+        """
+        Main strategy entry point.
+        Returns a dict: signal, entry_price, tp_price, sl_price, confidence, meta, strategy_name, decision
+        """
+        initial_signal = self._check_upper_section(df, interval)
+        trade = self._generate_trade_signal(df, initial_signal, tp_ratio, sl_ratio)
         signal = trade['signal']
         meta = {"ema_period": trade.get('ema_period')}
-        decision = f"YES_{trade['ema_period']}" if trade['signal'] == 'BUY' else "NO"
+        decision = f"YES_{trade['ema_period']}" if signal == 'BUY' else "NO"
 
         return {
             "signal": signal,
@@ -28,26 +29,52 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
             "confidence": None,
             "meta": meta,
             "strategy_name": "PeakEMAReversalStrategy",
-            "decision": decision
+            "decision": decision,
+            "direction": trade.get("direction", "LONG")  # <-- always outputs "LONG"
         }
 
-    # --- Helper functions below are "protected" (could prefix with _ if you want) ---
-
-    ###############################################################################
-    # UPPER SECTION STRATEGY LOGIC
-    ###############################################################################
-    def check_single_peak(self, highs: pd.Series, closes: pd.Series, recent_window=7, total_window=200) -> int:
+    def _check_upper_section(self, df: pd.DataFrame, interval: str) -> str:
         """
-        Single-peak condition:
+        UPPER SECTION STRATEGY LOGIC
+        1) Identify single peak
+        2) Check bearish pattern ('all' or 'all_but_one')
+        3) If passes, check EMA pullback
+        """
+        if interval == "1w":
+            recent_window = 5
+            total_window = 52
+            pattern_buffer = 0.2
+        else:  # "1d" or fallback
+            recent_window = 7
+            total_window = 200
+            pattern_buffer = 0.1
+
+        peak_idx = self._check_single_peak(
+            df["high"], df["close"], recent_window=recent_window, total_window=total_window
+        )
+        if peak_idx == -1:
+            return "NO"
+
+        pattern = self._check_bearish_pattern(df, start_idx=peak_idx + 1, buffer=pattern_buffer)
+        if pattern not in ("all", "all_but_one"):
+            return "NO"
+
+        use_period = 15 if pattern == "all" else 33
+        if self._is_low_under_ema(df, use_period):
+            return f"INITIAL_YES_{use_period}"
+        return "NO"
+
+    def _check_single_peak(self, highs: pd.Series, closes: pd.Series, recent_window=7, total_window=200) -> int:
+        """
+        Find single-peak condition:
         1. Highest candle within total_window is in the recent_window
-        2. The high price at peak should be at least 20% bigger than 15-EMA
-        3. At least one recent close is higher than older highs
-        4. The peak candle's close or its previous candle's close
-           is above all prior highs
+        2. The high price at peak > 1.2 * 15EMA
+        3. At least one recent close is higher than earlier highs
+        4. Peak's close or previous close is above all prior highs
+        Returns: peak index (int) or -1 if not found
         """
         if len(highs) < recent_window + 7 or len(closes) < recent_window + 7:
             return -1
-
         if total_window < recent_window + 7:
             return -1
 
@@ -59,18 +86,15 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
             return -1
         peak_idx = max_indices[0]
 
-        # check if that peak is in the last `recent_window` of the subset
+        # Check if peak is in last 'recent_window' of subset
         if peak_idx not in subset_highs.iloc[-recent_window:].index:
             return -1
 
         subset_closes = closes.iloc[-mod_window:]
         ema_series = compute_ema_series(subset_closes, column='close', period=15)
-
-        # Check if EMA value is None before comparison
         ema_value = ema_series[peak_idx]
         if ema_value is None or pd.isna(ema_value):
             return -1
-
         if subset_highs[peak_idx] < 1.2 * ema_value:
             return -1
 
@@ -94,12 +118,10 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
 
         return peak_idx
 
-    def check_bearish_pattern(self, df: pd.DataFrame, window=7, start_idx: Optional[int] = None, buffer=0.1) -> str:
+    def _check_bearish_pattern(self, df: pd.DataFrame, window=7, start_idx: Optional[int] = None, buffer=0.1) -> str:
         """
-        We look at up to 'window' candles after the peak.
-        'all' => all are 'bearish'
-        'all_but_one' => exactly 1 bullish, rest bearish
-        'none' => anything else
+        Check if the window after the peak is mostly bearish.
+        Returns: 'all', 'all_but_one', or 'none'
         """
         pos = None
         if start_idx is not None:
@@ -151,7 +173,10 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
         else:
             return "none"
 
-    def is_low_under_ema(self, df: pd.DataFrame, period: int) -> bool:
+    def _is_low_under_ema(self, df: pd.DataFrame, period: int) -> bool:
+        """
+        Return True if the most recent low is under the EMA of the given period.
+        """
         if len(df) < 2:
             return False
         ema_series = compute_ema_series(df["close"], period)
@@ -160,67 +185,25 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
         curr_ema = ema_series.iloc[last_idx]
         return curr_low < curr_ema
 
-    def check_upper_section(self, df: pd.DataFrame, interval: str) -> str:
+    def _generate_trade_signal(self, df: pd.DataFrame, initial_signal: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05) -> dict:
         """
-        UPPER SECTION STRATEGY LOGIC
-        1) Identify single peak
-        2) Check pattern => 'all' or 'all_but_one'
-        3) If yes => use EMA(15) or EMA(33)
+        Build the output signal dict for the orchestrator/backtest engine.
         """
-        if interval == "1w":
-            recent_window = 5
-            total_window = 52
-        elif interval == "1d":
-            recent_window = 7
-            total_window = 200
-        else:
-            recent_window = 7
-            total_window = 200
-
-        peak_idx = self.check_single_peak(df["high"], df["close"], recent_window=recent_window,
-                                          total_window=total_window)
-        if peak_idx == -1:
-            return "NO"
-
-        if interval == "1w":
-            pattern = self.check_bearish_pattern(df, start_idx=peak_idx + 1, buffer=0.2)
-        elif interval == "1d":
-            pattern = self.check_bearish_pattern(df, start_idx=peak_idx + 1, buffer=0.1)
-        else:
-            pattern = self.check_bearish_pattern(df, start_idx=peak_idx + 1, buffer=0.1)
-
-        if pattern not in ("all", "all_but_one"):
-            return "NO"
-
-        use_period = 15 if pattern == "all" else 33
-        if self.is_low_under_ema(df, use_period):
-            return f"INITIAL_YES_{use_period}"
-        return "NO"
-
-    def generate_trade_signal(self, df: pd.DataFrame, initial_signal: str,
-                              tp_ratio: float = 0.1, sl_ratio: float = 0.05) -> dict:
         if not initial_signal.startswith("INITIAL_YES"):
             return {'signal': 'NO', 'entry_price': None, 'tp_price': None, 'sl_price': None, 'ema_period': None}
 
         ema_period = int(initial_signal.split('_')[-1])
         ema_series = compute_ema_series(df["close"], ema_period)
-
-        # Get weekly EMA as initial entry price
-        weekly_ema = ema_series.iloc[-1]
-
-        # For backtesting, actual entry will be determined in TWAP function
-        # using min(first_hour_open, weekly_ema)
-        entry_price = weekly_ema
-
-        # Calculate initial TP/SL based on weekly EMA
-        # These will be recalculated in TWAP based on real entry price
+        entry_price = ema_series.iloc[-1]
         tp_price = entry_price * (1 + tp_ratio)
         sl_price = entry_price * (1 - sl_ratio)
 
         return {
             'signal': 'BUY',
-            'entry_price': entry_price,  # This is weekly EMA
+            'entry_price': entry_price,
             'tp_price': tp_price,
             'sl_price': sl_price,
-            'ema_period': ema_period
+            'ema_period': ema_period,
+            'direction': 'LONG'  # <-- explicitly mark as long
         }
+

@@ -3,7 +3,7 @@ from typing import Tuple
 
 from app.marketDataApi.apiconfig.config import ANALYSIS_SYMBOLS
 from app.marketDataApi.binance import fetch_candles
-from app.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
+from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 from app.utils.plot import plot_and_save_chart
 
 

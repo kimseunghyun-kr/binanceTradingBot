@@ -1,5 +1,5 @@
 # strategies/ensemble.py
-from app.strategies.BaseStrategy import BaseStrategy
+from entities.strategies.BaseStrategy import BaseStrategy
 
 
 class EnsembleStrategy(BaseStrategy):
