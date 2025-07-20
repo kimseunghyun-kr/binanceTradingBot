@@ -22,7 +22,17 @@ class SymbolService:
         return sorted(valid_symbols)
 
     @staticmethod
-    def filter_symbols_by_market_cap(min_cap: float, max_cap: float, max_pages: int, api_key: str) -> List[str]:
+    def filter_symbols_by_market_cap(
+        min_cap: float,
+        max_cap: float,
+        max_pages: int,
+        api_key: str | None = None,
+    ) -> List[str]:
+        """Return symbols within the market cap range.
+
+        If ``api_key`` is not provided the value from configuration is used.
+        """
+
         # Ensure API key is available
         api_key = api_key or settings.COINMARKETCAP_API_KEY
         if not api_key:
