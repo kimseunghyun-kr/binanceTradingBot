@@ -9,8 +9,8 @@ from typing import List, Dict, Tuple, Any
 
 from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 from entities.portfolio.BasePortfolioManager import BasePortfolioManager
-from entities.tradeProposal.TradeMeta import TradeMeta
-from entities.tradeProposal.TradeProposal import TradeProposal
+from entities.tradeManager.TradeMeta import TradeMeta
+from entities.tradeManager.TradeProposal import TradeProposal
 from strategyOrchestrator.Pydantic_config import settings
 from strategyOrchestrator.repository.candleRepository import CandleRepository
 

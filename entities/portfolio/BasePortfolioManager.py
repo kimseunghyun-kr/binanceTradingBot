@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional, Callable
 
 from entities.portfolio.TradeLogEntry import TradeLogEntry
 from entities.portfolio.fees.fees import static_fee_model
-from entities.tradeProposal.TradeProposal import TradeProposal
+from entities.tradeManager.TradeProposal import TradeProposal
 
 
 class BasePortfolioManager:
@@ -12,12 +12,13 @@ class BasePortfolioManager:
     - Tracks cash, positions, trade log, equity curve.
     - Modular: add slippage, fees, position sizing, risk logic.
     """
-    def __init__(self, initial_cash=100_000, max_positions=5, fee_model=None, slippage_model=None):
+    def __init__(self, initial_cash=100_000, max_positions=5, sizing_model=None, fee_model=None, slippage_model=None):
         self.cash = initial_cash
         self.max_positions = max_positions
         self.positions = {}  # symbol -> list of active positions, to allow multi-leg
         self.trade_log = []
         self.equity_curve = []
+        self.sizing_model = sizing_model or (lambda meta, action: 1.0)
         self.fee_model = fee_model or static_fee_model
         self.slippage_model = slippage_model or (lambda meta, action: 0.0)
         self._timestamp = None
@@ -39,8 +40,13 @@ class BasePortfolioManager:
         symbol = trade_proposal.symbol
         entry_time = trade_proposal.entry_time
         entry_price = trade_proposal.entry_price
-        size = trade_proposal.size
+
+
         meta = trade_proposal.meta
+        size = self.sizing_model(meta, "entry")
+        if size is None or size <= 0:
+            return False  # invalid size, skip
+
         fee = self.fee_model(meta, "entry")
         slippage = self.slippage_model(meta, "entry")
 
