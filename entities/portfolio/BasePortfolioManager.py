@@ -1,146 +1,153 @@
-from typing import Dict, Any, Optional, Callable
+# entities/portfolio/BasePortfolioManager.py
+from __future__ import annotations
+
+import heapq
+from typing import Dict, Any, Callable, List, Optional
 
 from entities.portfolio.TradeLogEntry import TradeLogEntry
-from entities.portfolio.fees.fees import static_fee_model
-from entities.tradeManager.TradeProposal import TradeProposal
+from entities.portfolio.fees.fees     import static_fee_model
+from entities.tradeManager.FillRecord import FillRecord
+from entities.tradeManager.TradeProposal  import TradeProposal
+from entities.tradeManager.TradeEvent      import TradeEvent
+from entities.tradeManager.TransactionLedger import TransactionManager
 
 
 class BasePortfolioManager:
     """
-    Portfolio Manager abstract base class.
-    - Accepts lazy TradeProposals.
-    - Tracks cash, positions, trade log, equity curve.
-    - Modular: add slippage, fees, position sizing, risk logic.
+    Event-driven portfolio:
+
+    • Enqueue TradeEvents produced by TradeProposals
+    • At each bar flush due events into TransactionManager
+    • Keep cash / equity curve / trade-log
     """
-    def __init__(self, initial_cash=100_000, max_positions=5, sizing_model=None, fee_model=None, slippage_model=None):
-        self.cash = initial_cash
-        self.max_positions = max_positions
-        self.positions = {}  # symbol -> list of active positions, to allow multi-leg
-        self.trade_log = []
-        self.equity_curve = []
-        self.sizing_model = sizing_model or (lambda meta, action: 1.0)
-        self.fee_model = fee_model or static_fee_model
-        self.slippage_model = slippage_model or (lambda meta, action: 0.0)
-        self._timestamp = None
 
-    def can_open(self, symbol, entry_price, size):
-        """
-        Basic constraints: not over max positions and enough cash.
-        Extendable for more complex logic.
-        """
-        total_positions = sum(len(v) for v in self.positions.values())
-        return total_positions < self.max_positions and self.cash >= entry_price * size
+    # ────────────────────────────────────────────────────────────────
+    # INIT
+    # ────────────────────────────────────────────────────────────────
+    def __init__(
+        self,
+        initial_cash:    float = 100_000,
+        max_positions:   int   = 5,
+        sizing_model:    Optional[Callable[[Any, str], float]] = None,
+        fee_model:       Optional[Callable[[TradeEvent], float]] = None,
+        slippage_model:  Optional[Callable[[TradeEvent], float]] = None,
+    ):
+        self.cash            = initial_cash
+        self.max_positions   = max_positions
+        self.sizing_model    = sizing_model      or (lambda meta, act: 1.0)
+        self.fee_model       = fee_model         or static_fee_model
+        self.slippage_model  = slippage_model    or (lambda ev: 0.0)
 
-    def try_execute(self, trade_proposal: 'TradeProposal', add_buy_pct=5.0):
-        """
-        Receives a TradeProposal object, makes allocation decision, executes if allowed.
-        Only realizes trade outcome after accepting.
-        """
-        # Only look at entry info here—outcome is lazy
-        symbol = trade_proposal.symbol
-        entry_time = trade_proposal.entry_time
-        entry_price = trade_proposal.entry_price
+        # Execution ledger
+        self.tm = TransactionManager(self.fee_model, self.slippage_model)
 
+        # Min-heap of future TradeEvents
+        self._event_q: List[TradeEvent] = []
+        heapq.heapify(self._event_q)
 
-        meta = trade_proposal.meta
-        size = self.sizing_model(meta, "entry")
-        if size is None or size <= 0:
-            return False  # invalid size, skip
+        # Outputs
+        self._trade_log:    List[dict] = []      # list of dicts
+        self.equity_curve:  List[dict] = []
 
-        fee = self.fee_model(meta, "entry")
-        slippage = self.slippage_model(meta, "entry")
+    # ────────────────────────────────────────────────────────────────
+    # INTERNAL
+    # ────────────────────────────────────────────────────────────────
+    def _open_legs(self) -> int:
+        """Count current open position *legs* (non-zero Position objects)."""
+        return sum(1 for pos in self.tm.positions.values() if pos.qty != 0)
 
-        if not self.can_open(symbol, entry_price, size):
-            return False
-
-        # Reserve capital, add position
-        if symbol not in self.positions:
-            self.positions[symbol] = []
-        self.positions[symbol].append({
-            'entry_time': entry_time,
-            'entry_price': entry_price,
-            'size': size,
-        })
-        self.cash -= entry_price * size
-
-        # Realize trade outcome for accepted trade only
-        outcome_trades = trade_proposal.realize(add_buy_pct=add_buy_pct, fee=fee, slippage=slippage)
-        if outcome_trades is None:
-            # If the trade simulation failed, release the reserved capital
-            self.cash += entry_price * size
-            self.positions[symbol].pop()
-            if not self.positions[symbol]:
-                del self.positions[symbol]
-            return False
-
-        # Close all sub-trades on outcome
-        for trade in outcome_trades:
-            self.close_position(symbol, trade['entry_time'], trade['exit_time'], trade['entry_price'], trade['exit_price'], size, trade)
+    def _risk_ok(self, _meta) -> bool:
+        """Risk-check stub – extend with exposure, VAR, etc."""
         return True
 
-    def close_position(
-            self,
-            symbol: str,
-            entry_time: int,
-            exit_time: int,
-            entry_price: float,
-            exit_price: float,
-            size: float,
-            trade: Dict[str, Any],
-            extra_analytics_fn: Optional[Callable[[Dict[str, Any], "BasePortfolioManager"], None]] = None,
-    ) -> None:
+    # ────────────────────────────────────────────────────────────────
+    # PUBLIC – CALLED BY ORCHESTRATOR
+    # ────────────────────────────────────────────────────────────────
+    def try_execute(
+        self,
+        proposal: TradeProposal,
+        *,
+        now_ts:  int | None = None,
+        add_pct: float      = 5.0,
+    ) -> bool:
         """
-        Close an open position, return capital, log trade, and update portfolio equity.
+        Validate & enqueue a TradeProposal.
 
-        Args:
-            symbol (str): Trading symbol (e.g., "BTCUSDT").
-            entry_time (int): Timestamp of entry (e.g., ms since epoch).
-            exit_time (int): Timestamp of exit.
-            entry_price (float): Entry price of the trade.
-            exit_price (float): Exit price of the trade.
-            size (float): Position size (e.g., number of contracts or lots).
-            trade (dict): Trade result metadata (must contain at least 'result' and 'exit_type').
-            extra_analytics_fn (callable, optional): Optional callback for per-trade analytics or side-effects.
-                Should accept (trade_log_entry, portfolio_manager) as arguments.
-
-        Returns:
-            None
-
-        Side Effects:
-            - Removes the closed position from active positions.
-            - Updates cash balance and appends trade to trade log.
-            - Calls mark_to_market to record equity at exit_time.
-            - If extra_analytics_fn is given, calls it with the trade log entry and self (the portfolio manager).
+        Only OPEN events occurring *now_ts* count toward max_positions.
         """
-        positions_list = self.positions.get(symbol, [])
-        for i, pos in enumerate(positions_list):
-            if pos['entry_time'] == entry_time and pos['entry_price'] == entry_price:
-                positions_list.pop(i)
-                break
-        if not positions_list:
-            self.positions.pop(symbol, None)
-        self.cash += exit_price * size
-        trade_log_entry = TradeLogEntry.from_args(
-            symbol, entry_time, entry_price, exit_time, exit_price, size, trade
+        now_ts = now_ts or proposal.meta.entry_time
+
+        if not self._risk_ok(proposal.meta):
+            return False
+
+        events = proposal.build_events(add_pct=add_pct)
+        if not events:
+            return False
+
+        # capacity check
+        opens_now = sum(1 for e in events if e.is_entry and e.ts == now_ts)
+        if self._open_legs() + opens_now > self.max_positions:
+            return False
+
+        # optional sizing model (multiplicative on entry qty)
+        scale = self.sizing_model(proposal.meta, "entry") or 1.0
+        if scale != 1.0:
+            events = [
+                TradeEvent(e.ts, e.price, e.qty * scale, e.event, dict(e.meta))
+                if e.is_entry else e
+                for e in events
+            ]
+
+        for ev in events:
+            heapq.heappush(self._event_q, ev)
+        return True
+
+    # ----------------------------------------------------------------
+    def on_bar(self, ts: int, mark_prices: Dict[str, float]) -> None:
+        """
+        Process all events with timestamp ≤ ts, update cash & equity.
+        """
+        # 1️⃣ Ingest events due up to this bar
+        while self._event_q and self._event_q[0].ts <= ts:
+            ev = heapq.heappop(self._event_q)
+            pre_fills = len(self.tm.get_fills())           # before ingest
+            self.tm.ingest([ev])
+            post_fills = self.tm.get_fills()
+
+            # If this was an EXIT we record a TradeLogEntry using the
+            # *actual* exec price from the corresponding FillRecord.
+            if ev.is_exit and post_fills:
+                fill: FillRecord = post_fills[-1]          # latest fill
+                self._log_exit(ev, fill.exec_price)
+
+        # 2️⃣ Realised cash
+        self.cash += self.tm.pop_cash_delta()
+
+        # 3️⃣ Mark-to-market
+        equity = self.cash + self.tm.unrealised_pnl(mark_prices)
+        self.equity_curve.append({"time": ts, "equity": equity})
+
+    # ────────────────────────────────────────────────────────────────
+    # LOGGING
+    # ────────────────────────────────────────────────────────────────
+    def _log_exit(self, ev: TradeEvent, exec_px: float):
+        tle = TradeLogEntry.from_args(
+            symbol      = ev.meta.get("symbol", "UNK"),
+            entry_time  = ev.meta.get("orig_entry_ts", ev.ts),
+            entry_price = ev.meta.get("orig_entry_px", ev.price),
+            exit_time   = ev.ts,
+            exit_price  = exec_px,                       # actual
+            size        = abs(ev.qty),
+            trade       = {"exit_type": ev.meta.get("exit", ev.event.name)},
         )
-        self.trade_log.append(trade_log_entry.__dict__)
-        self.mark_to_market({symbol: exit_price}, exit_time)
-        if extra_analytics_fn:
-            extra_analytics_fn(trade_log_entry, self)
+        self._trade_log.append(tle.__dict__)
 
-    def mark_to_market(self, current_prices, time):
-        # Mark total equity at a given time (cash + market value of open positions)
-        equity = self.cash
-        for symbol, pos_list in self.positions.items():
-            for pos in pos_list:
-                price = current_prices.get(symbol, pos['entry_price'])
-                equity += price * pos['size']
-        self.equity_curve.append({'time': time, 'equity': equity})
-        return equity
-
-    def get_results(self):
+    # ────────────────────────────────────────────────────────────────
+    # RESULTS
+    # ────────────────────────────────────────────────────────────────
+    def get_results(self) -> dict:
         return {
-            'trade_log': self.trade_log,
-            'final_cash': self.cash,
-            'equity_curve': self.equity_curve
+            "final_cash":  self.cash,
+            "trade_log":   self._trade_log,
+            "equity_curve":self.equity_curve,
         }
