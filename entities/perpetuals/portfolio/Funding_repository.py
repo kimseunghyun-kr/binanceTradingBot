@@ -2,8 +2,10 @@
 FundingProvider backed by Mongo.  Documents are expected like:
 { "symbol":"BTCUSDT", "ts": 1718908800, "rate": 0.00025 }
 """
-from typing import Protocol, Dict
+from typing import Protocol
+
 from pymongo import MongoClient
+
 from strategyOrchestrator.Pydantic_config import settings
 
 

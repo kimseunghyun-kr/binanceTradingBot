@@ -18,37 +18,36 @@ Key design points
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
 import sys
 import time
-import hashlib
-import logging
 import traceback
-import heapq
 from types import SimpleNamespace
-from typing import Dict, List, Any, Callable, Tuple
+from typing import Dict, List, Any, Callable
 
 import pandas as pd
 
+from entities.perpetuals.portfolio.PerpPortfolioManager import PerpPortfolioManager
 # ──────────────────────────────────────────────
 # Project-specific imports – EDIT IF PATHS DIFFER
 # ──────────────────────────────────────────────
 from entities.portfolio.BasePortfolioManager import BasePortfolioManager
-from entities.perpetuals.portfolio.PerpPortFolioManager import PerpPortfolioManager
-from entities.tradeManager.TradeMeta import TradeMeta
-from entities.tradeManager.TradeProposal import TradeProposal
-from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
-    PeakEMAReversalStrategy,
-)
-from strategyOrchestrator.repository.candleRepository import CandleRepository
-from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
-
 # Fee / slippage helpers
 from entities.portfolio.fees.fees import (
     static_fee_model,
     per_symbol_fee_model,
     random_slippage_model,
 )
+from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
+    PeakEMAReversalStrategy,
+)
+from entities.tradeManager.TradeMeta import TradeMeta
+from entities.tradeManager.TradeProposal import TradeProposal
+from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
+from strategyOrchestrator.repository.candleRepository import CandleRepository
+
 
 # ──────────────────────────────────────────────
 # Logging helpers
@@ -78,6 +77,7 @@ def _wrap_meta(fn_meta: Callable[[Any, str], float]) -> Callable:
     Adapt a legacy signature (meta, action) -> float
     into the ledger‐expected (event) -> float.
     """
+
     def _inner(ev):
         meta = SimpleNamespace(symbol=ev.meta["symbol"])
         return fn_meta(meta, "entry")
@@ -89,7 +89,7 @@ def _wrap_meta(fn_meta: Callable[[Any, str], float]) -> Callable:
 # Trade-proposal generation
 # ──────────────────────────────────────────────
 def _precheck_df(
-    df: pd.DataFrame, need_cols: set[str], lookback: int, sym: str, log: logging.Logger
+        df: pd.DataFrame, need_cols: set[str], lookback: int, sym: str, log: logging.Logger
 ) -> pd.DataFrame | None:
     if df.empty or len(df) < lookback:
         log.warning(f"{sym}: insufficient candles – {len(df)} rows")
@@ -103,16 +103,16 @@ def _precheck_df(
 
 
 def build_proposals(
-    symbols: List[str],
-    interval: str,
-    symbol_data: Dict[str, Any],
-    repo: CandleRepository,
-    strategy,
-    lookback: int,
-    num_iter: int,
-    tp_ratio: float,
-    sl_ratio: float,
-    log: logging.Logger,
+        symbols: List[str],
+        interval: str,
+        symbol_data: Dict[str, Any],
+        repo: CandleRepository,
+        strategy,
+        lookback: int,
+        num_iter: int,
+        tp_ratio: float,
+        sl_ratio: float,
+        log: logging.Logger,
 ) -> List[TradeProposal]:
     """
     Runs strategy.decide() over each symbol/window and builds TradeProposal objects.
@@ -135,7 +135,7 @@ def build_proposals(
         first_idx = max(lookback, len(df) - num_iter)
 
         for i in range(last_idx, first_idx - 1, -1):
-            window = df.iloc[max(0, i - lookback + 1) : i + 1].copy()
+            window = df.iloc[max(0, i - lookback + 1): i + 1].copy()
 
             try:
                 dec = strategy.decide(
@@ -177,22 +177,22 @@ def build_proposals(
 # ──────────────────────────────────────────────
 def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
     # ╭─ Config extraction ───────────────────────────────────────────╮
-    symbols:    List[str]        = cfg["symbols"]
-    interval:   str              = cfg["interval"]
-    num_iter:   int              = cfg.get("num_iterations", 60)
-    symbol_json:Dict[str, Any]   = cfg["symbol_data"]
+    symbols: List[str] = cfg["symbols"]
+    interval: str = cfg["interval"]
+    num_iter: int = cfg.get("num_iterations", 60)
+    symbol_json: Dict[str, Any] = cfg["symbol_data"]
 
-    tp_ratio:   float            = cfg.get("tp_ratio", 2.0)
-    sl_ratio:   float            = cfg.get("sl_ratio", 1.0)
-    add_pct:    float            = cfg.get("add_buy_pct", 5.0)
+    tp_ratio: float = cfg.get("tp_ratio", 2.0)
+    sl_ratio: float = cfg.get("sl_ratio", 1.0)
+    add_pct: float = cfg.get("add_buy_pct", 5.0)
 
-    fee_cfg                     = cfg.get("fee", 0.001)     # float | "per_symbol" | "static"
-    slip_cfg                    = cfg.get("slippage", 0.0)  # float | "random"
-    market                      = cfg.get("market", "SPOT") # "SPOT" | "PERP"
+    fee_cfg = cfg.get("fee", 0.001)  # float | "per_symbol" | "static"
+    slip_cfg = cfg.get("slippage", 0.0)  # float | "random"
+    market = cfg.get("market", "SPOT")  # "SPOT" | "PERP"
     # ╰───────────────────────────────────────────────────────────────╯
 
     # Candle repository – supply your own DB creds via settings
-    repo = CandleRepository(settings.MONGO_URI, settings.MONGO_DB)  #  ### EDIT ME
+    repo = CandleRepository(settings.MONGO_URI, settings.MONGO_DB)  # ### EDIT ME
 
     strategy = PeakEMAReversalStrategy()
     lookback = strategy.get_required_lookback()
@@ -264,9 +264,7 @@ def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
         while prop_idx < len(proposals) and proposals[prop_idx].meta.entry_time <= ts:
             pm.try_execute(
                 proposals[prop_idx],
-                add_pct=add_pct,
-                fee=0.0,          # costs handled in ledger
-                slippage=0.0,
+                add_pct=add_pct
             )
             prop_idx += 1
 

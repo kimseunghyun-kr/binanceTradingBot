@@ -44,6 +44,7 @@ def call_strategy_orchestrator(input_config: dict):
 ```
 
 주요 특징:
+
 - **완전 격리**: 각 백테스트는 독립된 Docker 컨테이너에서 실행
 - **상태 비공유**: 컨테이너 간 상태 공유 없음
 - **통신 프로토콜**: stdin/stdout을 통한 JSON 통신
@@ -111,10 +112,11 @@ classDiagram
 **핵심 메소드 설명:**
 
 #### `decide(df: pd.DataFrame, interval: str, **kwargs) -> Dict[str, Any]`
+
 - **역할**: 전략의 핵심 결정 로직
-- **입력**: 
-  - `df`: OHLCV 캔들 데이터
-  - `interval`: 시간 간격 ('1w', '1d' 등)
+- **입력**:
+    - `df`: OHLCV 캔들 데이터
+    - `interval`: 시간 간격 ('1w', '1d' 등)
 - **출력**: 거래 신호 딕셔너리
   ```python
   {
@@ -130,11 +132,13 @@ classDiagram
   ```
 
 #### `get_required_lookback() -> int`
+
 - **역할**: 전략이 필요한 과거 데이터 바 개수
 - **기본값**: 35개 또는 지표 주기 중 최대값
 - **용도**: 백테스트 시 충분한 데이터 확보
 
 #### `filter_symbols(symbols_df: pd.DataFrame) -> List[str]`
+
 - **역할**: 거래할 심볼 필터링
 - **기본동작**: 모든 심볼 반환
 - **커스터마이징**: 특정 조건으로 심볼 선택 가능
@@ -188,34 +192,75 @@ flowchart TD
 **주요 메소드 상세:**
 
 #### `_check_single_peak(highs, closes, recent_window=7, total_window=200) -> int`
+
 ```python
 # 피크 탐지 조건:
-1. total_window 내 최고가가 recent_window 안에 있음
-2. 피크 고가 > 1.2 * EMA15
-3. 최근 종가 중 하나가 이전 고가보다 높음
-4. 피크의 종가 또는 이전 종가가 모든 이전 고가보다 높음
+1.
+total_window
+내
+최고가가
+recent_window
+안에
+있음
+2.
+피크
+고가 > 1.2 * EMA15
+3.
+최근
+종가
+중
+하나가
+이전
+고가보다
+높음
+4.
+피크의
+종가
+또는
+이전
+종가가
+모든
+이전
+고가보다
+높음
 ```
 
 #### `_check_bearish_pattern(df, window=7, start_idx, buffer=0.1) -> str`
+
 ```python
 # 약세 패턴 판단:
-- "all": 모든 캔들이 약세
-- "all_but_one": 하나만 제외하고 약세
-- "none": 약세 패턴 아님
+- "all": 모든
+캔들이
+약세
+- "all_but_one": 하나만
+제외하고
+약세
+- "none": 약세
+패턴
+아님
 
 # 약세 캔들 조건:
-1. 현재 고가 <= 이전 고가
-2. 종가 <= 시가 (음봉)
-3. 고가 <= 시가 * (1 + buffer)
+1.
+현재
+고가 <= 이전
+고가
+2.
+종가 <= 시가(음봉)
+3.
+고가 <= 시가 * (1 + buffer)
 ```
 
 #### `_generate_trade_signal(df, initial_signal, tp_ratio=0.1, sl_ratio=0.05)`
+
 ```python
 # 거래 신호 생성:
-- entry_price = 현재 EMA 값
+- entry_price = 현재
+EMA
+값
 - tp_price = entry_price * (1 + tp_ratio)  # 기본 10% 상승
 - sl_price = entry_price * (1 - sl_ratio)  # 기본 5% 하락
-- direction = "LONG" (항상 매수만)
+- direction = "LONG"(항상
+매수만)
 ```
 
 ### 3.3 EnsembleStrategy.py - 앙상블 전략
@@ -228,6 +273,7 @@ class EnsembleStrategy(BaseStrategy):
 ```
 
 **특징:**
+
 - 여러 전략을 조합하여 사용
 - 가중치 기반 의사결정 (현재는 첫 BUY 신호 반환)
 - 확장 가능한 구조
@@ -261,6 +307,7 @@ stateDiagram-v2
 ```
 
 **주요 속성:**
+
 - `cash`: 현재 보유 현금
 - `max_positions`: 최대 동시 포지션 수 (기본: 5)
 - `positions`: {symbol: [포지션 리스트]} 구조
@@ -270,35 +317,81 @@ stateDiagram-v2
 **핵심 메소드 설명:**
 
 #### `can_open(symbol, entry_price, size) -> bool`
+
 ```python
 # 포지션 오픈 가능 여부 확인
-조건1: 현재 총 포지션 수 < max_positions
+조건1: 현재
+총
+포지션
+수 < max_positions
 조건2: cash >= entry_price * size
 ```
 
 #### `try_execute(trade_proposal: TradeProposal, add_buy_pct=5.0) -> bool`
+
 ```python
 # 거래 실행 프로세스:
-1. 진입 가능 여부 확인 (can_open)
-2. 자금 예약 및 포지션 추가
-3. TradeProposal.realize() 호출하여 거래 시뮬레이션
-4. 성공 시 결과 처리, 실패 시 롤백
+1.
+진입
+가능
+여부
+확인(can_open)
+2.
+자금
+예약
+및
+포지션
+추가
+3.
+TradeProposal.realize()
+호출하여
+거래
+시뮬레이션
+4.
+성공
+시
+결과
+처리, 실패
+시
+롤백
 ```
 
 #### `close_position(...)`
+
 ```python
 # 포지션 청산 및 기록:
-1. 활성 포지션에서 제거
-2. 자금 반환 (exit_price * size)
-3. TradeLogEntry 생성 및 기록
-4. mark_to_market 호출하여 자산가치 업데이트
-5. 선택적 분석 콜백 실행
+1.
+활성
+포지션에서
+제거
+2.
+자금
+반환(exit_price * size)
+3.
+TradeLogEntry
+생성
+및
+기록
+4.
+mark_to_market
+호출하여
+자산가치
+업데이트
+5.
+선택적
+분석
+콜백
+실행
 ```
 
 #### `mark_to_market(current_prices, time) -> float`
+
 ```python
 # 포트폴리오 총 가치 계산:
-equity = cash + Σ(각 포지션의 현재 시장가치)
+equity = cash + Σ(각
+포지션의
+현재
+시장가치)
 ```
 
 ### 4.2 TradeLogEntry.py - 거래 기록
@@ -313,19 +406,20 @@ class TradeLogEntry:
     exit_price: float
     size: float
     exit_type: str  # 'TP', 'SL', 'CLOSE'
-    result: str     # 'WIN', 'LOSS'
+    result: str  # 'WIN', 'LOSS'
     return_pct: float
     pnl: float
     direction: str  # 'LONG', 'SHORT'
 ```
 
 **팩토리 메소드:**
+
 ```python
 @classmethod
-def from_args(cls, symbol, entry_time, entry_price, 
+def from_args(cls, symbol, entry_time, entry_price,
               exit_time, exit_price, size, trade):
-    # trade 딕셔너리에서 TradeLogEntry 생성
-    # LONG/SHORT에 따른 PnL 계산 자동화
+# trade 딕셔너리에서 TradeLogEntry 생성
+# LONG/SHORT에 따른 PnL 계산 자동화
 ```
 
 ## 5. TradeProposal 디렉토리 상세 분석
@@ -335,12 +429,12 @@ def from_args(cls, symbol, entry_time, entry_price,
 ```python
 @dataclass(frozen=True)  # 불변 객체
 class TradeMeta:
-    symbol: str          # 거래 심볼
-    entry_time: int      # 진입 시간
-    entry_price: float   # 진입 가격
-    tp_price: float      # 목표가
-    sl_price: float      # 손절가
-    size: float = 1      # 포지션 크기
+    symbol: str  # 거래 심볼
+    entry_time: int  # 진입 시간
+    entry_price: float  # 진입 가격
+    tp_price: float  # 목표가
+    sl_price: float  # 손절가
+    size: float = 1  # 포지션 크기
     direction: str = "LONG"  # 거래 방향
 ```
 
@@ -374,8 +468,8 @@ flowchart LR
 **핵심 메소드: `realize()`**
 
 ```python
-def realize(self, add_buy_pct=5.0, fee=0.0, slippage=0.0, 
-            execution_delay_bars=0, crossing_policy="prefer_sl", 
+def realize(self, add_buy_pct=5.0, fee=0.0, slippage=0.0,
+            execution_delay_bars=0, crossing_policy="prefer_sl",
             analytics_hook=None) -> Optional[List[Dict[str, Any]]]
 ```
 

@@ -1,5 +1,6 @@
 from entities.strategies.BaseStrategy import BaseStrategy
 
+
 class ParametrizedStrategy(BaseStrategy):
     """
     Optional adapter/intermediate class that manages user parameters

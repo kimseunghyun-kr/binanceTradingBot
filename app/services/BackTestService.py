@@ -2,7 +2,9 @@ import hashlib
 import json
 import logging
 from typing import Dict, Any
+
 from app.core.db import redis_cache
+
 
 class BacktestService:
     _cache: Dict[str, Dict[str, Any]] = {}
@@ -72,6 +74,7 @@ class BacktestService:
                 except Exception as e:
                     logging.error(f"Redis caching failed: {e}")
         return results
+
 
 def call_strategy_orchestrator(input_config: dict):
     """Spawn orchestrator as Docker container (stdin/stdout) or as a subprocess for local dev."""

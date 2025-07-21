@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class TradeMeta:
@@ -10,4 +9,4 @@ class TradeMeta:
     tp_price: float
     sl_price: float
     size: float = 1
-    direction: str = "LONG"   # "LONG" or "SHORT"
+    direction: str = "LONG"  # "LONG" or "SHORT"

@@ -1,9 +1,10 @@
-from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 from config_profile import DOTENV_FILE
 
 load_dotenv(DOTENV_FILE)
+
 
 class Settings(BaseSettings):
     MONGO_URI: str
@@ -12,5 +13,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = DOTENV_FILE
         case_sensitive = False
+
 
 settings = Settings()

@@ -1,105 +1,77 @@
-# entities/portfolio/TransactionLedger.py
+# entities/portfolio/TransactionManager.py
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List, Callable
+from typing import Callable, Dict, List
 
-from .FillRecord import FillRecord
-from .Position   import Position
-from .TradeEvent import TradeEvent
+from FillRecord import FillRecord
+from Position import Position
+from entities.tradeManager.FillPolicy import FillPolicy, AggressiveMarketPolicy
+from entities.tradeManager.TradeEvent import TradeEvent
+from entities.tradeManager.TradeEventType import TradeEventType
 
 
-class TransactionManager:
+class TransactionLedger:
     """
-    Deterministic cash & position ledger.
+    Deterministic cash & position ledger with pluggable execution model.
 
-    • Accepts a time-ordered stream of TradeEvents whose `price`
-      is the *raw* market price (no costs baked in).
-
-    • Applies slippage and fee **once** for each fill:
-        exec_px  = raw_px × (1 ± slip_pct)
-        cashΔ    = -notional ± proceeds - fee_cash
-
-    • Updates per-symbol Position objects and maintains a
-      rolling cash-flow log so the PortfolioManager can
-      query realised/unrealised PnL at any bar.
+    Workflow
+    --------
+    1. `PortfolioManager` passes a *time-sorted* list of TradeEvents.
+    2. Injected `FillPolicy` converts each TradeEvent → 1‒N FillRecords
+       (applying *its* own fee / slippage logic).
+    3. `_apply_fill()` books cash, updates Position, stores FillRecord.
     """
 
-    # --------------------------------------------------------------------- #
+    # ------------------------------------------------------------------ #
     # INIT
-    # --------------------------------------------------------------------- #
+    # ------------------------------------------------------------------ #
     def __init__(
-        self,
-        fee_model: Callable[[TradeEvent], float],
-        slippage_model: Callable[[TradeEvent], float],
+            self,
+            fee_model: Callable[[TradeEvent], float],
+            slippage_model: Callable[[TradeEvent], float],
+            fill_policy: FillPolicy | None = None,
     ):
-        # Open positions keyed by symbol
+        # live positions keyed by symbol
         self.positions: Dict[str, Position] = defaultdict(Position)
 
-        # [(timestamp, cash_delta)]; negative = cash out, positive = in
+        # [(ts, cash_delta)]   – negative = cash out, positive = in
         self._cash_log: List[tuple[int, float]] = []
 
-        self._fee_model = fee_model        # returns *percentage* (e.g. 0.001)
-        self._slip_model = slippage_model  # returns *percentage* (e.g. 0.0005)
-        self._fills: List[FillRecord] = []  # NEW
+        # analytics
+        self._fills: List[FillRecord] = []
 
-    # --------------------------------------------------------------------- #
+        # pricing models
+        self._fee_model = fee_model
+        self._slip_model = slippage_model
+
+        # policy that performs the slicing **and** cost application
+        self._fill_policy: FillPolicy = (
+                fill_policy or AggressiveMarketPolicy(fee_model, slippage_model)
+        )
+
+    # ------------------------------------------------------------------ #
     # PUBLIC API
-    # --------------------------------------------------------------------- #
+    # ------------------------------------------------------------------ #
     def ingest(self, events: List[TradeEvent]) -> None:
         """
-        Apply a batch of TradeEvents.
-
-        The caller must already have sorted them by `ts`
-        (PortfolioManager does this when dequeuing per-bar).
+        Book a batch of TradeEvents.  Caller guarantees they’re sorted by `ts`.
         """
         for ev in events:
-            # ---- execution price with slippage ---------------------------
-            slip_pct = self._slip_model(ev)           # percent (e.g. 0.0005)
-            sign     = 1.0 if ev.qty > 0 else -1.0    # buy vs sell
-            exec_px  = ev.price * (1.0 + sign * slip_pct)
-
-            # ---- fee on notional ----------------------------------------
-            fee_pct   = self._fee_model(ev)           # percent (e.g. 0.001)
-            notional  = exec_px * ev.qty              # buy: +, sell: -
-            fee_cash  = abs(notional) * fee_pct       # always cash out
-
-            # ---- cash delta ---------------------------------------------
-            #   • buy  (+qty): cash out  = -notional - fee
-            #   • sell (-qty): cash in   = -notional - fee
-            cash_delta = -notional - fee_cash
-            self._cash_log.append((ev.ts, cash_delta))
-
-            # ---- update position ----------------------------------------
-            symbol        = ev.meta.get("symbol", "UNK")
-            self.positions[symbol].apply(ev)
-
-            # keep immutable fill record for analytics
-            self._fills.append(
-                FillRecord(
-                    ts=ev.ts,
-                    symbol=symbol,
-                    side="BUY" if ev.qty > 0 else "SELL",
-                    qty=ev.qty,
-                    raw_price=ev.price,
-                    exec_price=exec_px,
-                    fee_cash=fee_cash,
-                    event=ev.event,
-                    meta=ev.meta,
-                )
-            )
+            for fill in self._fill_policy.fill(ev, book=None):
+                self._apply_fill(fill)
 
     # ------------------------------------------------------------------ #
-    # CASH & PnL QUERIES
+    # CASH & PNL QUERIES
     # ------------------------------------------------------------------ #
     def current_cash_delta(self) -> float:
-        """Return realised cash delta *since the last pop* (non-destructive)."""
+        """Realised cash Δ since last pop (non-destructive)."""
         return sum(delta for _, delta in self._cash_log)
 
     def pop_cash_delta(self) -> float:
         """
-        Return realised cash delta and clear the internal log.
-        Called by PortfolioManager once per bar.
+        Return realised cash Δ **and clear** the log.
+        Called once per bar by PortfolioManager.
         """
         total = self.current_cash_delta()
         self._cash_log.clear()
@@ -107,20 +79,46 @@ class TransactionManager:
 
     def unrealised_pnl(self, mark_prices: Dict[str, float]) -> float:
         """
-        Compute MTM PnL using `mark_prices` (symbol → last price).
+        Mark-to-market PnL given `mark_prices` (symbol → last price).
         """
         pnl = 0.0
         for sym, pos in self.positions.items():
             if pos.qty == 0:
                 continue
-            mark = mark_prices.get(sym, pos.avg_px)   # fallback: last exec px
+            mark = mark_prices.get(sym, pos.avg_px)  # fallback: avg_px
             pnl += pos.qty * (mark - pos.avg_px)
         return pnl
 
-
     def get_fills(self) -> List[FillRecord]:
+        """Expose immutable fills list for analytics / trade-log."""
+        return list(self._fills)
+
+    # ------------------------------------------------------------------ #
+    # INTERNAL
+    # ------------------------------------------------------------------ #
+    def _apply_fill(self, fill: FillRecord) -> None:
         """
-        expose fills for analytics / trade-log
-        :return:
+        Book a single FillRecord:
+          • cash ledger
+          • position object
+          • analytics store
         """
-        return list(self._fills)  # copy to keep ledger immutable
+        # ---- cash delta -------------------------------------------------
+        cash_delta = -fill.exec_price * fill.qty - fill.fee_cash
+        self._cash_log.append((fill.ts, cash_delta))
+
+        # ---- position update -------------------------------------------
+        symbol = fill.symbol
+
+        # Reuse Position.apply() by wrapping fill as a pseudo-TradeEvent
+        pseudo_ev = TradeEvent(
+            ts=fill.ts,
+            price=fill.exec_price,
+            qty=fill.qty,
+            event=fill.event or TradeEventType.OPEN,
+            meta=fill.meta,
+        )
+        self.positions[symbol].apply(pseudo_ev)
+
+        # ---- analytics store -------------------------------------------
+        self._fills.append(fill)

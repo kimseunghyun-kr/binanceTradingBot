@@ -1,7 +1,10 @@
 import random
+
+
 def static_fee_model(meta, action="entry"):
     """Always returns the same fee percentage."""
     return 0.001  # 0.1%
+
 
 def per_symbol_fee_model(meta, action="entry"):
     """Fee varies by symbol (could come from config/db)."""

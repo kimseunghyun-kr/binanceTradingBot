@@ -2,164 +2,150 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing      import List, Sequence, Callable
+from typing import List, Sequence, Union, Callable, Optional
 
 import pandas as pd
 
-from .TradeEventType import TradeEventType
-from .TradeMeta      import TradeMeta
-from .TradeEvent     import TradeEvent
+from TradeEvent import TradeEvent
+from TradeEventType import TradeEventType
+from TradeMeta import TradeMeta
+from orders.OrderLeg import OrderLeg
+
+# --------------------------------------------------------------------------- #
+# TradeProposal:  ✔ multi-leg, ✔ partial-fill, ✔ backward-compatible realise()
+# --------------------------------------------------------------------------- #
+Timestamp = Union[int, float]  # unix ms / sec - doesn’t matter here
 
 
 @dataclass
 class TradeProposal:
     """
-    Pure container that converts a strategy signal into an ordered
-    list of TradeEvents.  **Prices are raw** – the ledger will apply
-    fee & slippage exactly once.
+    A *declarative plan* consisting of one or more OrderLeg objects.
+    `build_events()` turns that plan into a chronologically-sorted list
+    of TradeEvents **with raw (pre-fee, pre-slippage) prices**.
 
-    Attributes
+    Parameters
     ----------
-    meta       : TradeMeta        – immutable per-trade metadata
-    detail_df  : pd.DataFrame     – higher-resolution candles used to
-                                    evaluate DCA and exit conditions
+    meta       : immutable details that never change for the life of the trade
+    legs       : list[OrderLeg]  – scale-in / scale-out instructions
+    detail_df  : high-resolution candles needed to evaluate triggers
     """
     meta: TradeMeta
+    legs: List[OrderLeg]
     detail_df: pd.DataFrame
+
     _events: List[TradeEvent] = field(default_factory=list, init=False)
 
     # ------------------------------------------------------------------ #
     # PUBLIC
     # ------------------------------------------------------------------ #
-    def build_events(
-        self,
-        *,
-        add_pct: float = 5.0,          # DCA distance (% from filled entry)
-        execution_delay_bars: int = 0  # skip N candles before first fill
-    ) -> Sequence[TradeEvent]:
+    def build_events(self) -> Sequence[TradeEvent]:
         """
-        Return an **ordered** list of TradeEvent objects.
-
-        Side-effect: caches the list on first build so subsequent
-        calls are O(1).
+        Materialise the OrderLeg plan into executable TradeEvents.
+        Result is cached so multiple calls are O(1).
         """
-        if self._events:                       # idempotent guard
+        if self._events or self.detail_df.empty or not self.legs:
             return self._events
 
-        if self.detail_df.empty:
-            return self._events                # keep empty
+        df = self.detail_df.reset_index(drop=True)
+        open_legs = self.legs.copy()  # legs yet to be filled
 
-        df  = self.detail_df.reset_index(drop=True)
-        idx0 = execution_delay_bars
-        first_candle = df.iloc[idx0]
+        # ---- iterate through candles, trigger legs when their condition is met
+        for idx, candle in df.iterrows():
+            ts = int(candle["open_time"])
 
-        # -------------------------------------------------------------- #
-        # 1) Determine execution price for initial fill (RAW price)
-        # -------------------------------------------------------------- #
-        if self.meta.direction == "LONG":
-            entry_px = min(first_candle["open"], self.meta.entry_price)
-            init_qty =  self.meta.size
-        else:
-            entry_px = max(first_candle["open"], self.meta.entry_price)
-            init_qty = -self.meta.size
+            # iterate over a *copy* so we can safely remove while iterating
+            for leg in open_legs[:]:
+                if self._triggered(idx, ts, candle, leg.when):
+                    price = self._resolve_price(candle, leg.px)
+                    signed_qty = leg.qty if leg.side == "BUY" else -leg.qty
 
-        base_meta = {
-            "symbol"       : self.meta.symbol,
-            "orig_entry_ts": self.meta.entry_time,
-            "orig_entry_px": self.meta.entry_price,
-        }
-
-        self._events.append(
-            TradeEvent(
-                ts   = int(first_candle["open_time"]),
-                price= float(entry_px),         # RAW price
-                qty  = init_qty,
-                event= TradeEventType.OPEN,
-                meta = {**base_meta, "leg": "INIT"},
-            )
-        )
-
-        # -------------------------------------------------------------- #
-        # 2) Optional single DCA leg
-        # -------------------------------------------------------------- #
-        if add_pct > 0:
-            if self.meta.direction == "LONG":
-                dca_price  = entry_px * (1 - add_pct / 100)   # cheaper
-                dca_hit    = lambda c: c["low"]  <= dca_price
-                dca_qty    =  self.meta.size
-            else:
-                dca_price  = entry_px * (1 + add_pct / 100)   # dearer
-                dca_hit    = lambda c: c["high"] >= dca_price
-                dca_qty    = -self.meta.size
-
-            for _, candle in df.iloc[idx0:].iterrows():
-                if dca_hit(candle):
                     self._events.append(
                         TradeEvent(
-                            ts   = int(candle["open_time"]),
-                            price= float(dca_price),          # RAW
-                            qty  = dca_qty,
-                            event= TradeEventType.OPEN,
-                            meta = {**base_meta, "leg": "DCA"},
+                            ts=ts,
+                            price=float(price),
+                            qty=signed_qty,
+                            event=TradeEventType.OPEN,
+                            meta={
+                                "symbol": self.meta.symbol,
+                                "leg": leg.comment or f"leg{idx}",
+                                "tif": leg.tif,
+                            },
                         )
                     )
-                    break  # only one DCA leg
+                    open_legs.remove(leg)  # remove filled leg
 
-        # -------------------------------------------------------------- #
-        # 3) Exit – first TP or SL that triggers
-        # -------------------------------------------------------------- #
-        tp_px, sl_px = self._calc_tp_sl()
+            if not open_legs:  # all legs filled ⇒ stop early
+                break
 
-        total_size = sum(ev.qty for ev in self._events)  # signed
-        exit_qty   = -total_size                         # flatten to zero
+        # ------------------------------------------------------------------ #
+        # SIMPLE TP / SL EXIT (legacy behaviour – replace / extend as needed)
+        # ------------------------------------------------------------------ #
+        total_pos = sum(ev.qty for ev in self._events)
+        if total_pos:
+            exit_qty = -total_pos
+            tp_px, sl_px = self.meta.tp_price, self.meta.sl_price
 
-        def _append_exit(ts: int, px: float, label: str):
-            self._events.append(
-                TradeEvent(
-                    ts   = ts,
-                    price= float(px),                     # RAW
-                    qty  = exit_qty,
-                    event= TradeEventType.CLOSE,
-                    meta = {**base_meta, "exit": label},
-                )
-            )
-
-        for _, candle in df.iloc[idx0:].iterrows():
-            ts_now = int(candle["open_time"])
-
-            if self.meta.direction == "LONG":
-                if candle["high"] >= tp_px:              # TP first
-                    _append_exit(ts_now, tp_px, "TP")
-                    break
-                if candle["low"]  <= sl_px:              # SL first
-                    _append_exit(ts_now, sl_px, "SL")
-                    break
-            else:  # SHORT
-                if candle["low"]  <= tp_px:
-                    _append_exit(ts_now, tp_px, "TP")
-                    break
-                if candle["high"] >= sl_px:
-                    _append_exit(ts_now, sl_px, "SL")
+            for _, candle in df[idx:].iterrows():
+                ts = int(candle["open_time"])
+                hit = self._check_exit(candle, tp_px, sl_px)
+                if hit:
+                    self._events.append(
+                        TradeEvent(
+                            ts=ts,
+                            price=float(hit["price"]),
+                            qty=exit_qty,
+                            event=TradeEventType.CLOSE,
+                            meta={
+                                "symbol": self.meta.symbol,
+                                "exit": hit["label"],
+                            },
+                        )
+                    )
                     break
 
         return self._events
 
     # ------------------------------------------------------------------ #
-    # PRIVATE
+    # BACKWARD-COMPAT ALIAS  (PortfolioManager still calls realise())
     # ------------------------------------------------------------------ #
-    def _calc_tp_sl(self) -> tuple[float, float]:
-        """
-        Returns (tp_price, sl_price).
-
-        Current implementation just echoes the values that the strategy
-        placed inside TradeMeta, but you can plug in more sophisticated
-        laddering here without touching other modules.
-        """
-        return float(self.meta.tp_price), float(self.meta.sl_price)
+    def realize(self, *_, **__) -> List[TradeEvent]:
+        """Alias kept for legacy code; behaves exactly like old realise()."""
+        return list(self.build_events())
 
     # ------------------------------------------------------------------ #
-    # Legacy alias – PortfolioManager still calls realise()
+    # INTERNAL HELPERS
     # ------------------------------------------------------------------ #
-    def realize(self, *args, **kwargs) -> List[TradeEvent]:
-        """Back-compat wrapper."""
-        return list(self.build_events(*args, **kwargs))
+    @staticmethod
+    def _triggered(idx: int, ts: Timestamp,
+                   candle: pd.Series,
+                   cond: Union[int, Timestamp, Callable[[pd.Series], bool]]
+                   ) -> bool:
+        """Return True if `cond` is satisfied at the current candle."""
+        if isinstance(cond, int):  # bar-index offset
+            return idx >= cond
+        if callable(cond):  # predicate on candle
+            return bool(cond(candle))
+        return ts >= cond  # timestamp
+
+    @staticmethod
+    def _resolve_price(candle: pd.Series,
+                       px: Union[float, Callable[[pd.Series], float]]
+                       ) -> float:
+        """Resolve limit/trigger price (callable or static)."""
+        return float(px(candle) if callable(px) else px)
+
+    def _check_exit(self, candle: pd.Series,
+                    tp_px: float, sl_px: float
+                    ) -> Optional[dict]:
+        if self.meta.direction == "LONG":
+            if candle["high"] >= tp_px:
+                return {"price": tp_px, "label": "TP"}
+            if candle["low"] <= sl_px:
+                return {"price": sl_px, "label": "SL"}
+        else:  # SHORT
+            if candle["low"] <= tp_px:
+                return {"price": tp_px, "label": "TP"}
+            if candle["high"] >= sl_px:
+                return {"price": sl_px, "label": "SL"}
+        return None

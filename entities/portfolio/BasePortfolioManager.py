@@ -5,11 +5,11 @@ import heapq
 from typing import Dict, Any, Callable, List, Optional
 
 from entities.portfolio.TradeLogEntry import TradeLogEntry
-from entities.portfolio.fees.fees     import static_fee_model
+from entities.portfolio.fees.fees import static_fee_model
 from entities.tradeManager.FillRecord import FillRecord
-from entities.tradeManager.TradeProposal  import TradeProposal
-from entities.tradeManager.TradeEvent      import TradeEvent
-from entities.tradeManager.TransactionLedger import TransactionManager
+from entities.tradeManager.TradeEvent import TradeEvent
+from entities.tradeManager.TradeProposal import TradeProposal
+from entities.tradeManager.TransactionLedger import TransactionLedger
 
 
 class BasePortfolioManager:
@@ -25,29 +25,29 @@ class BasePortfolioManager:
     # INIT
     # ────────────────────────────────────────────────────────────────
     def __init__(
-        self,
-        initial_cash:    float = 100_000,
-        max_positions:   int   = 5,
-        sizing_model:    Optional[Callable[[Any, str], float]] = None,
-        fee_model:       Optional[Callable[[TradeEvent], float]] = None,
-        slippage_model:  Optional[Callable[[TradeEvent], float]] = None,
+            self,
+            initial_cash: float = 100_000,
+            max_positions: int = 5,
+            sizing_model: Optional[Callable[[Any, str], float]] = None,
+            fee_model: Optional[Callable[[TradeEvent], float]] = None,
+            slippage_model: Optional[Callable[[TradeEvent], float]] = None,
     ):
-        self.cash            = initial_cash
-        self.max_positions   = max_positions
-        self.sizing_model    = sizing_model      or (lambda meta, act: 1.0)
-        self.fee_model       = fee_model         or static_fee_model
-        self.slippage_model  = slippage_model    or (lambda ev: 0.0)
+        self.cash = initial_cash
+        self.max_positions = max_positions
+        self.sizing_model = sizing_model or (lambda meta, act: 1.0)
+        self.fee_model = fee_model or static_fee_model
+        self.slippage_model = slippage_model or (lambda ev: 0.0)
 
         # Execution ledger
-        self.tm = TransactionManager(self.fee_model, self.slippage_model)
+        self.tm = TransactionLedger(self.fee_model, self.slippage_model)
 
         # Min-heap of future TradeEvents
         self._event_q: List[TradeEvent] = []
         heapq.heapify(self._event_q)
 
         # Outputs
-        self._trade_log:    List[dict] = []      # list of dicts
-        self.equity_curve:  List[dict] = []
+        self._trade_log: List[dict] = []  # list of dicts
+        self.equity_curve: List[dict] = []
 
     # ────────────────────────────────────────────────────────────────
     # INTERNAL
@@ -64,11 +64,11 @@ class BasePortfolioManager:
     # PUBLIC – CALLED BY ORCHESTRATOR
     # ────────────────────────────────────────────────────────────────
     def try_execute(
-        self,
-        proposal: TradeProposal,
-        *,
-        now_ts:  int | None = None,
-        add_pct: float      = 5.0,
+            self,
+            proposal: TradeProposal,
+            *,
+            now_ts: int | None = None,
+            add_pct: float = 5.0,
     ) -> bool:
         """
         Validate & enqueue a TradeProposal.
@@ -110,14 +110,14 @@ class BasePortfolioManager:
         # 1️⃣ Ingest events due up to this bar
         while self._event_q and self._event_q[0].ts <= ts:
             ev = heapq.heappop(self._event_q)
-            pre_fills = len(self.tm.get_fills())           # before ingest
+            pre_fills = len(self.tm.get_fills())  # before ingest
             self.tm.ingest([ev])
             post_fills = self.tm.get_fills()
 
             # If this was an EXIT we record a TradeLogEntry using the
             # *actual* exec price from the corresponding FillRecord.
             if ev.is_exit and post_fills:
-                fill: FillRecord = post_fills[-1]          # latest fill
+                fill: FillRecord = post_fills[-1]  # latest fill
                 self._log_exit(ev, fill.exec_price)
 
         # 2️⃣ Realised cash
@@ -132,13 +132,13 @@ class BasePortfolioManager:
     # ────────────────────────────────────────────────────────────────
     def _log_exit(self, ev: TradeEvent, exec_px: float):
         tle = TradeLogEntry.from_args(
-            symbol      = ev.meta.get("symbol", "UNK"),
-            entry_time  = ev.meta.get("orig_entry_ts", ev.ts),
-            entry_price = ev.meta.get("orig_entry_px", ev.price),
-            exit_time   = ev.ts,
-            exit_price  = exec_px,                       # actual
-            size        = abs(ev.qty),
-            trade       = {"exit_type": ev.meta.get("exit", ev.event.name)},
+            symbol=ev.meta.get("symbol", "UNK"),
+            entry_time=ev.meta.get("orig_entry_ts", ev.ts),
+            entry_price=ev.meta.get("orig_entry_px", ev.price),
+            exit_time=ev.ts,
+            exit_price=exec_px,  # actual
+            size=abs(ev.qty),
+            trade={"exit_type": ev.meta.get("exit", ev.event.name)},
         )
         self._trade_log.append(tle.__dict__)
 
@@ -147,7 +147,7 @@ class BasePortfolioManager:
     # ────────────────────────────────────────────────────────────────
     def get_results(self) -> dict:
         return {
-            "final_cash":  self.cash,
-            "trade_log":   self._trade_log,
-            "equity_curve":self.equity_curve,
+            "final_cash": self.cash,
+            "trade_log": self._trade_log,
+            "equity_curve": self.equity_curve,
         }

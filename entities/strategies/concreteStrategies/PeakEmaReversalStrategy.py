@@ -1,8 +1,10 @@
 from typing import Optional, Dict, Any
+
 import pandas as pd
 
 from app.indicators.ema_series import compute_ema_series
 from entities.strategies.ParameterisedStrategy import ParametrizedStrategy
+
 
 class PeakEMAReversalStrategy(ParametrizedStrategy):
     """
@@ -10,7 +12,8 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
     If conditions meet, signals 'BUY' with entry at the EMA value.
     """
 
-    def decide(self, df: pd.DataFrame, interval: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05, **kwargs) -> Dict[str, Any]:
+    def decide(self, df: pd.DataFrame, interval: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05, **kwargs) -> Dict[
+        str, Any]:
         """
         Main strategy entry point.
         Returns a dict: signal, entry_price, tp_price, sl_price, confidence, meta, strategy_name, decision
@@ -185,7 +188,8 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
         curr_ema = ema_series.iloc[last_idx]
         return curr_low < curr_ema
 
-    def _generate_trade_signal(self, df: pd.DataFrame, initial_signal: str, tp_ratio: float = 0.1, sl_ratio: float = 0.05) -> dict:
+    def _generate_trade_signal(self, df: pd.DataFrame, initial_signal: str, tp_ratio: float = 0.1,
+                               sl_ratio: float = 0.05) -> dict:
         """
         Build the output signal dict for the orchestrator/backtest engine.
         """
@@ -206,4 +210,3 @@ class PeakEMAReversalStrategy(ParametrizedStrategy):
             'ema_period': ema_period,
             'direction': 'LONG'  # <-- explicitly mark as long
         }
-

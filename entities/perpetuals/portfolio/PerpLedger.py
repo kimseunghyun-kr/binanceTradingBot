@@ -3,8 +3,9 @@ Extension of your TransactionLedger that understands funding-only events
 and works entirely in USD notionals (no external price feeds).
 """
 from __future__ import annotations
-from typing import Dict, List, Tuple
+
 from collections import defaultdict
+from typing import Dict, List, Tuple
 
 from entities.tradeManager.Position import Position
 from entities.tradeManager.TradeEvent import TradeEvent
@@ -15,7 +16,7 @@ class PerpLedger:
     def __init__(self, fee_model, slippage_model):
         self.positions: Dict[str, Position] = defaultdict(Position)
         self.cash_changes: List[Tuple[int, float]] = []
-        self.fee_model      = fee_model
+        self.fee_model = fee_model
         self.slippage_model = slippage_model
 
     # identical to old ingest except recognises FUNDING / LIQUIDATE qty==0
@@ -27,8 +28,8 @@ class PerpLedger:
                 continue
 
             slip = self.slippage_model(ev)
-            fee  = self.fee_model(ev)
-            px   = ev.price * (1 + slip + fee * (1 if ev.qty > 0 else -1))
+            fee = self.fee_model(ev)
+            px = ev.price * (1 + slip + fee * (1 if ev.qty > 0 else -1))
             notional = px * ev.qty * -1
             self.cash_changes.append((ev.ts, notional))
             self.positions[ev.meta["symbol"]].apply(ev)
