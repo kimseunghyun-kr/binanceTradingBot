@@ -43,8 +43,10 @@ from entities.portfolio.fees.fees import (
 from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy,
 )
+from entities.tradeManager.FillPolicy import FillPolicy, AggressiveMarketPolicy, VWAPDepthPolicy
 from entities.tradeManager.TradeMeta import TradeMeta
 from entities.tradeManager.TradeProposal import TradeProposal
+from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
 from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
 from strategyOrchestrator.repository.candleRepository import CandleRepository
 
@@ -84,7 +86,22 @@ def _wrap_meta(fn_meta: Callable[[Any, str], float]) -> Callable:
 
     return _inner
 
-
+# ──────────────────────────────────────────────
+# Fill-policy factory
+# ──────────────────────────────────────────────
+def _build_fill_policy(cfg: Dict[str, Any],
+                       fee_fn: Callable,
+                       slip_fn: Callable) -> FillPolicy:
+    spec = cfg.get("fill_policy", {"name": "AggressiveMarketPolicy", "params": {}})
+    name, params = spec["name"], spec.get("params", {})
+    mapping = {
+        "AggressiveMarketPolicy": AggressiveMarketPolicy,
+        "VWAPDepthPolicy": VWAPDepthPolicy,
+    }
+    cls = mapping.get(name)
+    if cls is None:
+        raise ValueError(f"Unknown fill_policy {name}")
+    return cls(**params, fee_model=fee_fn, slip_model=slip_fn)
 # ──────────────────────────────────────────────
 # Trade-proposal generation
 # ──────────────────────────────────────────────
@@ -102,70 +119,71 @@ def _precheck_df(
     return df
 
 
+# ─────────── Build TradeProposals (now via Builder) ─────────── #
 def build_proposals(
-        symbols: List[str],
-        interval: str,
-        symbol_data: Dict[str, Any],
-        repo: CandleRepository,
-        strategy,
-        lookback: int,
-        num_iter: int,
-        tp_ratio: float,
-        sl_ratio: float,
-        log: logging.Logger,
-) -> List[TradeProposal]:
-    """
-    Runs strategy.decide() over each symbol/window and builds TradeProposal objects.
-    """
+    symbols:   List[str],
+    interval:  str,
+    symbol_df: Dict[str, Any],
+    repo:      CandleRepository,
+    strategy,
+    lookback:  int,
+    num_iter:  int,
+    tp_ratio:  float,
+    sl_ratio:  float,
+    log:       logging.Logger,
+) -> List["TradeProposal"]:
     need = {"open_time", "open", "high", "low", "close"}
-    proposals: list[TradeProposal] = []
+    proposals: list = []
 
     for sym in symbols:
         try:
-            df = pd.read_json(symbol_data[sym], orient="split")
+            df = pd.read_json(symbol_df[sym], orient="split")
         except Exception as exc:
             log.error(f"{sym}: failed to load JSON – {exc}")
             continue
 
         df = _precheck_df(df, need, lookback, sym, log)
-        if df is None:
-            continue
+        if df is None: continue
 
-        last_idx = len(df) - 1
+        last_idx  = len(df) - 1
         first_idx = max(lookback, len(df) - num_iter)
 
         for i in range(last_idx, first_idx - 1, -1):
             window = df.iloc[max(0, i - lookback + 1): i + 1].copy()
 
             try:
-                dec = strategy.decide(
-                    window, interval, tp_ratio=tp_ratio, sl_ratio=sl_ratio
-                )
+                dec = strategy.decide(window, interval,
+                                      tp_ratio=tp_ratio, sl_ratio=sl_ratio)
             except Exception:
                 log.error(f"{sym}@{int(df['open_time'].iloc[i])}\n" + traceback.format_exc())
                 continue
 
-            if dec.get("signal") != "BUY":
+            if dec.get("signal") != "BUY":    # only demo LONG
                 continue
 
-            entry_ts = int(df["open_time"].iloc[i])
-
-            # Detail candles for post-entry monitoring
+            entry_ts  = int(df["open_time"].iloc[i])
             detail_int = "1h" if interval in {"1d", "1w"} else "15m"
-            detail_df = repo.fetch_candles(sym, detail_int, 2000, start_time=entry_ts)
+            detail_df  = repo.fetch_candles(sym, detail_int, 2000, start_time=entry_ts)
             if detail_df.empty:
                 log.warning(f"{sym}@{entry_ts}: no detail candles → skipped")
                 continue
 
-            meta = TradeMeta(
-                symbol=sym,
-                entry_time=entry_ts,
-                entry_price=float(dec["entry_price"]),
-                tp_price=float(dec["tp_price"]),
-                sl_price=float(dec["sl_price"]),
-                size=1,
+            # ---- Build proposal via DSL (single market leg) -------------
+            proposal = (
+                TradeProposalBuilder(sym, size=1.0, direction="LONG")
+                .scale_in(n=1, start_pct=0.0, step_pct=0.0, reference="open")
+                .bracket_exit(tp=tp_ratio, sl=sl_ratio)
+                # NEW: inject strategy-decided prices *before* build()
+                .set_entry_params(
+                    entry_price=float(dec["entry_price"]),
+                    tp_price=float(dec["tp_price"]),
+                    sl_price=float(dec["sl_price"]),
+                    entry_ts=entry_ts
+                )
+                .build(detail_df)
             )
-            proposals.append(TradeProposal(meta, detail_df))
+
+            proposals.append(proposal)
 
     proposals.sort(key=lambda p: p.meta.entry_time)
     log.info(f"Built {len(proposals)} proposals")
@@ -212,19 +230,18 @@ def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
     )
 
     # 2 Instantiate portfolio manager with ONE pass cost models
-    if isinstance(fee_cfg, (float, int)):
-        fee_model = _const_event_model(fee_cfg)
-    elif fee_cfg == "per_symbol":
-        fee_model = _wrap_meta(per_symbol_fee_model)
-    else:
-        fee_model = _wrap_meta(static_fee_model)
+    fee_model = (
+        _const_event_model(fee_cfg) if isinstance(fee_cfg, (float, int))
+        else _wrap_meta(per_symbol_fee_model) if fee_cfg == "per_symbol"
+        else _wrap_meta(static_fee_model)
+    )
+    slip_model = (
+        _const_event_model(slip_cfg) if isinstance(slip_cfg, (float, int))
+        else _wrap_meta(random_slippage_model) if slip_cfg == "random"
+        else _const_event_model(0.0)
+    )
 
-    if isinstance(slip_cfg, (float, int)):
-        slip_model = _const_event_model(slip_cfg)
-    elif slip_cfg == "random":
-        slip_model = _wrap_meta(random_slippage_model)
-    else:
-        slip_model = _const_event_model(0.0)
+    fill_policy = _build_fill_policy(cfg, fee_model, slip_model)
 
     PMClass = PerpPortfolioManager if market == "PERP" else BasePortfolioManager
     pm = PMClass(
@@ -232,6 +249,7 @@ def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
         max_positions=5,
         fee_model=fee_model,
         slippage_model=slip_model,
+        fill_policy=fill_policy,
     )
 
     # 3 Build a global timeline of candle close timestamps
