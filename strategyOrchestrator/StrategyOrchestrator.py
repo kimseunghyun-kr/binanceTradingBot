@@ -19,6 +19,7 @@ Key design points
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import logging
 import sys
@@ -34,20 +35,63 @@ from entities.perpetuals.portfolio.PerpPortfolioManager import PerpPortfolioMana
 # Project-specific imports – EDIT IF PATHS DIFFER
 # ──────────────────────────────────────────────
 from entities.portfolio.BasePortfolioManager import BasePortfolioManager
+from entities.portfolio.capacity.CapacityPolicy import LegCapacity, SymbolCapacity
 # Fee / slippage helpers
 from entities.portfolio.fees.fees import (
     static_fee_model,
     per_symbol_fee_model,
     random_slippage_model,
 )
+from entities.portfolio.sizingModel.SizingModel import fixed_fraction
 from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy,
 )
-from entities.tradeManager.FillPolicy import FillPolicy, AggressiveMarketPolicy, VWAPDepthPolicy
+from entities.tradeManager.FillPolicy import AggressiveMarketPolicy, VWAPDepthPolicy
 from entities.tradeManager.TradeProposal import TradeProposal
 from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
 from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
 from strategyOrchestrator.repository.candleRepository import CandleRepository
+
+
+# ──────────────────────────────────────────────────────────────
+# Dynamic plug-in loader
+# ──────────────────────────────────────────────────────────────
+"""
+Users may pass arbitrary plug-ins via JSON, e.g.
+
+"strategy":        { "module": "user_code.my_rsi",      "class": "RSIStrategy",      "params": { "rsi_len": 14 } },
+"fill_policy":     { "module": "my_exec.vwap",          "class": "VWAPDepthPolicy",  "params": { "depth": 8    } },
+"capacity_policy": { "module": "entities.portfolio.capacity_policy",
+                     "class": "SymbolCapacity",         "params": { "max_symbols": 4 } },
+"sizing_model":    { "module": "entities.portfolio.sizing_model",
+                     "class": "fixed_fraction",         "params": { "frac": 0.5 } }
+"""
+
+def _load_obj(spec: Dict[str, Any],
+              fallback: Dict[str, Any],
+              label: str):
+    """
+    Instantiate `{module,class,params}` OR built-in mapping entry.
+    """
+    if not spec:                            # empty → default
+        cls = fallback["__default__"]
+        return cls()
+
+    cls_name  = spec.get("class")
+    params    = spec.get("params",  {})
+    mod_path  = spec.get("module")
+
+    # built-in?
+    if cls_name in fallback:
+        return fallback[cls_name](**params)
+
+    # dynamic import
+    try:
+        mod = importlib.import_module(mod_path)
+        cls = getattr(mod, cls_name)
+    except (ImportError, AttributeError) as exc:
+        raise ImportError(f"{label} plug-in not found: {exc}") from exc
+    return cls(**params)
 
 
 # ──────────────────────────────────────────────
@@ -85,22 +129,7 @@ def _wrap_meta(fn_meta: Callable[[Any, str], float]) -> Callable:
 
     return _inner
 
-# ──────────────────────────────────────────────
-# Fill-policy factory
-# ──────────────────────────────────────────────
-def _build_fill_policy(cfg: Dict[str, Any],
-                       fee_fn: Callable,
-                       slip_fn: Callable) -> FillPolicy:
-    spec = cfg.get("fill_policy", {"name": "AggressiveMarketPolicy", "params": {}})
-    name, params = spec["name"], spec.get("params", {})
-    mapping = {
-        "AggressiveMarketPolicy": AggressiveMarketPolicy,
-        "VWAPDepthPolicy": VWAPDepthPolicy,
-    }
-    cls = mapping.get(name)
-    if cls is None:
-        raise ValueError(f"Unknown fill_policy {name}")
-    return cls(**params, fee_model=fee_fn, slip_model=slip_fn)
+
 # ──────────────────────────────────────────────
 # Trade-proposal generation
 # ──────────────────────────────────────────────
@@ -193,122 +222,102 @@ def build_proposals(
 # Global-clock back-test
 # ──────────────────────────────────────────────
 def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
+
     # ╭─ Config extraction ───────────────────────────────────────────╮
-    symbols: List[str] = cfg["symbols"]
-    interval: str = cfg["interval"]
-    num_iter: int = cfg.get("num_iterations", 60)
-    symbol_json: Dict[str, Any] = cfg["symbol_data"]
+    symbols      : List[str]      = cfg["symbols"]
+    interval     : str            = cfg["interval"]
+    symbol_json  : Dict[str, Any] = cfg["symbol_data"]
+    num_iter     : int            = cfg.get("num_iterations", 60)
+    market       : str            = cfg.get("market", "SPOT")
+    tp_ratio     : float          = cfg.get("tp_ratio", 2.0)
+    sl_ratio     : float          = cfg.get("sl_ratio", 1.0)
 
-    tp_ratio: float = cfg.get("tp_ratio", 2.0)
-    sl_ratio: float = cfg.get("sl_ratio", 1.0)
-    add_pct: float = cfg.get("add_buy_pct", 5.0)
 
-    fee_cfg = cfg.get("fee", 0.001)  # float | "per_symbol" | "static"
-    slip_cfg = cfg.get("slippage", 0.0)  # float | "random"
-    market = cfg.get("market", "SPOT")  # "SPOT" | "PERP"
+    # ---------- fee / slip ----------
+    fee_cfg  = cfg.get("fee", 0.001)
+    slip_cfg = cfg.get("slippage", 0.0)
     # ╰───────────────────────────────────────────────────────────────╯
 
-    # Candle repository – supply your own DB creds via settings
-    repo = CandleRepository(settings.MONGO_URI, settings.MONGO_DB)  # ### EDIT ME
+    fee_model  = (_const_event_model(fee_cfg) if isinstance(fee_cfg, (float,int))
+                  else _wrap_meta(per_symbol_fee_model) if fee_cfg=="per_symbol"
+                  else _wrap_meta(static_fee_model))
+    slip_model = (_const_event_model(slip_cfg) if isinstance(slip_cfg,(float,int))
+                  else _wrap_meta(random_slippage_model) if slip_cfg=="random"
+                  else _const_event_model(0.0))
 
-    strategy = PeakEMAReversalStrategy()
+    # ---------- plug-ins ----------
+    STRAT_MAP = {"PeakEMAReversalStrategy": PeakEMAReversalStrategy,
+                 "__default__": PeakEMAReversalStrategy}
+    FILL_MAP  = {"AggressiveMarketPolicy": AggressiveMarketPolicy,
+                 "VWAPDepthPolicy":        VWAPDepthPolicy,
+                 "__default__":            AggressiveMarketPolicy}
+    CAP_MAP   = {"LegCapacity": LegCapacity,
+                 "SymbolCapacity": SymbolCapacity,
+                 "__default__":    LegCapacity}
+    SIZE_MAP  = {"fixed_fraction": fixed_fraction,
+                 "__default__":    (lambda frac=1.0: fixed_fraction(frac))}
+
+    strategy         = _load_obj(cfg.get("strategy",        {}), STRAT_MAP, "strategy")
+    fill_policy      = _load_obj(cfg.get("fill_policy",     {}), FILL_MAP,  "fill_policy")
+    capacity_policy  = _load_obj(cfg.get("capacity_policy", {}), CAP_MAP,   "capacity_policy")
+    sizing_model     = _load_obj(cfg.get("sizing_model",    {}), SIZE_MAP,  "sizing_model")
+
+    # give fee / slip fn to fill_policy if it supports them
+    if hasattr(fill_policy, "fee_model"):
+        fill_policy.fee_model  = fee_model
+    if hasattr(fill_policy, "slip_model"):
+        fill_policy.slip_model = slip_model
+
     lookback = strategy.get_required_lookback()
+    repo     = CandleRepository(settings.MONGO_URI, settings.MONGO_DB)
 
-    # 1 Generate proposals (raw prices, no costs baked-in)
-    proposals = build_proposals(
-        symbols,
-        interval,
-        symbol_json,
-        repo,
-        strategy,
-        lookback,
-        num_iter,
-        tp_ratio,
-        sl_ratio,
-        log,
-    )
+    # ---------- build proposals ----------
+    props = build_proposals(symbols, interval, symbol_json, repo,
+                            strategy, lookback, num_iter,
+                            tp_ratio, sl_ratio, log)
 
-    # 2 Instantiate portfolio manager with ONE pass cost models
-    fee_model = (
-        _const_event_model(fee_cfg) if isinstance(fee_cfg, (float, int))
-        else _wrap_meta(per_symbol_fee_model) if fee_cfg == "per_symbol"
-        else _wrap_meta(static_fee_model)
-    )
-    slip_model = (
-        _const_event_model(slip_cfg) if isinstance(slip_cfg, (float, int))
-        else _wrap_meta(random_slippage_model) if slip_cfg == "random"
-        else _const_event_model(0.0)
-    )
-
-    fill_policy = _build_fill_policy(cfg, fee_model, slip_model)
-
-    PMClass = PerpPortfolioManager if market == "PERP" else BasePortfolioManager
+    # ---------- choose portfolio manager ----------
+    PMClass = PerpPortfolioManager if market=="PERP" else BasePortfolioManager
     pm = PMClass(
-        initial_cash=100_000,
-        max_positions=5,
-        fee_model=fee_model,
-        slippage_model=slip_model,
-        fill_policy=fill_policy,
+        initial_cash    = 100_000,
+        fee_model       = fee_model,
+        slippage_model  = slip_model,
+        fill_policy     = fill_policy,
+        capacity_policy = capacity_policy,
+        sizing_model    = sizing_model,
     )
 
-    # 3 Build a global timeline of candle close timestamps
-    detail_int = "1h" if interval in {"1d", "1w"} else "15m"
-    detail_candles: dict[str, pd.DataFrame] = {
-        sym: repo.fetch_candles(sym, detail_int, 10_000)
-        for sym in symbols
-    }
+    # ---------- global timeline ----------
+    detail_int = "1h" if interval in {"1d","1w"} else "15m"
+    detail_candles = {s: repo.fetch_candles(s, detail_int, 10_000)
+                      for s in symbols}
+    timeline = sorted({int(r.open_time)
+                       for df in detail_candles.values()
+                       for r in df.itertuples()})
+    close_map = {(s,int(r.open_time)): float(r.close)
+                 for s,df in detail_candles.items()
+                 for r in df.itertuples()}
 
-    # Flatten to timestamp set
-    timeline: list[int] = sorted(
-        {
-            int(row.open_time)
-            for df in detail_candles.values()
-            for row in df.itertuples()
-        }
-    )
-
-    # Fast lookup of close price at (symbol, ts)
-    close_map: dict[tuple[str, int], float] = {
-        (sym, int(row.open_time)): float(row.close)
-        for sym, df in detail_candles.items()
-        for row in df.itertuples()
-    }
-
-    # 4 Global clock loop
-    prop_idx = 0
+    # ---------- main loop ----------
+    pidx = 0
     for ts in timeline:
-        # a) admit proposals whose entry_time ≤ ts
-        while prop_idx < len(proposals) and proposals[prop_idx].meta.entry_time <= ts:
-            pm.try_execute(
-                proposals[prop_idx],
-                add_pct=add_pct
-            )
-            prop_idx += 1
-
-        # b) mark-to-market at this bar
-        prices = {
-            sym: close_map[(sym, ts)]
-            for sym in symbols
-            if (sym, ts) in close_map
-        }
+        while pidx < len(props) and props[pidx].meta.entry_time <= ts:
+            pm.try_execute(props[pidx], now_ts=ts)
+            pidx += 1
+        prices = {s: close_map[(s,ts)] for s in symbols if (s,ts) in close_map}
         pm.on_bar(ts, prices)
 
-    # Flush one extra bar to trigger exits that fell *inside* last candle
     if timeline:
-        pm.on_bar(timeline[-1] + 1, {})
+        pm.on_bar(timeline[-1]+1, {})   # flush
 
-    # 5 Collect results
     result = pm.get_results()
-    result.update(
-        {
-            "symbol_count": len(symbols),
-            "market": market,
-            "interval": interval,
-            "strategy": strategy.__class__.__name__,
-        }
-    )
+    result.update({
+        "symbol_count": len(symbols),
+        "market": market,
+        "interval": interval,
+        "strategy": strategy.__class__.__name__,
+    })
     return result
-
 
 # ──────────────────────────────────────────────
 # CLI entry-point

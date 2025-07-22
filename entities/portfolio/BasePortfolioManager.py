@@ -1,10 +1,12 @@
 # entities/portfolio/BasePortfolioManager.py
 from __future__ import annotations
 import heapq
-from typing import Dict, Any, Callable, List, Optional
+from typing import Dict, Any, Callable, List, Optional, Set
 
 from entities.portfolio.TradeLogEntry   import TradeLogEntry
+from entities.portfolio.capacity.CapacityPolicy import CapacityPolicy, LegCapacity
 from entities.portfolio.fees.fees       import static_fee_model
+from entities.portfolio.sizingModel.SizingModel import SizingModel
 from entities.tradeManager.FillRecord   import FillRecord
 from entities.tradeManager.TradeEvent   import TradeEvent
 from entities.tradeManager.TradeProposal import TradeProposal
@@ -26,14 +28,15 @@ class BasePortfolioManager:
     def __init__(
         self,
         initial_cash   : float = 100_000,
-        max_positions  : int   = 5,
-        sizing_model   : Optional[Callable[[Any, str], float]] = None,
+        capacity_policy: CapacityPolicy | None = None,
+        sizing_model: SizingModel | None = None,
         fee_model      : Optional[Callable[[TradeEvent], float]] = None,
         slippage_model : Optional[Callable[[TradeEvent], float]] = None,
         fill_policy    : Any    = None,     # optional, injected into ledger
     ):
         self.cash           = initial_cash
-        self.max_positions  = max_positions
+        self.capacity = capacity_policy or LegCapacity(max_legs=5)
+        self.sizer = sizing_model or (lambda *_: 1.0)
         self.sizing_model   = sizing_model   or (lambda meta, act: 1.0)
         self.fee_model      = fee_model      or static_fee_model
         self.slip_model     = slippage_model or (lambda ev: 0.0)
@@ -49,6 +52,10 @@ class BasePortfolioManager:
     # ──────────────────────────────────────────────────────────────
     # INTERFACE LAYER – override any you need
     # ──────────────────────────────────────────────────────────────
+
+    def _open_symbols(self) -> Set[str]:
+        return {sym for sym, pos in self.tm.positions.items() if pos.qty != 0}
+
     def _open_legs(self) -> int:
         """Count Position objects with non-zero qty."""
         return sum(1 for p in self.tm.positions.values() if p.qty != 0)
@@ -62,10 +69,6 @@ class BasePortfolioManager:
         required = entry_px * size
         return self.cash >= required
 
-    def _capacity_ok(self, opens_now: int) -> bool:
-        """Max simultaneous legs."""
-        return self._open_legs() + opens_now <= self.max_positions
-
     # Single decision point ------------------------------------------------
     def can_open(
         self,
@@ -76,8 +79,11 @@ class BasePortfolioManager:
         return (
             self._risk_ok(proposal.meta)
             and self._cash_ok(first_entry.price, abs(first_entry.qty))
-            and self._capacity_ok(
-                sum(1 for e in proposal.build_events() if e.is_entry and e.ts == now_ts)
+            and self.capacity.admit(
+                proposal,
+                now_ts,
+                self._event_q,
+                self._open_symbols(),
             )
         )
 
@@ -89,22 +95,21 @@ class BasePortfolioManager:
         proposal: TradeProposal,
         *,
         now_ts: int | None = None,
-        add_pct: float = 5.0,
     ) -> bool:
         now_ts = now_ts or proposal.meta.entry_time
-        events = proposal.build_events(add_pct=add_pct)
+        events = proposal.build_events()
         if not events:
             return False
 
         first_entry = next((e for e in events if e.is_entry), None)
         if first_entry is None:
-            return False  # defensive
+            return False
 
         if not self.can_open(proposal, now_ts, first_entry):
             return False
 
-        # optional sizing model
-        scale = self.sizing_model(proposal.meta, "entry") or 1.0
+        # apply portfolio-level sizing
+        scale = self.sizer(proposal.meta, "entry") or 1.0
         if scale != 1.0:
             events = [
                 TradeEvent(e.ts, e.price, e.qty * scale, e.event, dict(e.meta))
