@@ -13,6 +13,8 @@ PriceRef = Union[str, Callable[[pd.Series], float]]
 class TradeProposalBuilder:
     # ───────────────────────── init ───────────────────────── #
     def __init__(self, symbol: str, *, size: float = 1.0, direction: str = "LONG"):
+        self._exit_resolver = None
+        self._crossing_policy = None
         if direction not in {"LONG", "SHORT"}:
             raise ValueError("direction must be 'LONG' or 'SHORT'")
         self.symbol    = symbol
@@ -35,10 +37,19 @@ class TradeProposalBuilder:
         return self
 
     # ───────────────────────── exit helper ───────────────────────── #
-    def bracket_exit(self, *, tp: float, sl: float) -> "TradeProposalBuilder":
+    def bracket_exit(
+            self,
+            *,
+            tp: float,
+            sl: float,
+            crossing_policy: str | None = "prefer_sl",  # legacy presets
+            exit_resolver: Callable[[pd.Series, float, float, str], str] | None = None,
+    ) -> "TradeProposalBuilder":
         if tp <= 0 or sl <= 0:
             raise ValueError("tp and sl must be positive positive fractions")
         self._tp_pct, self._sl_pct = tp, sl
+        self._crossing_policy = crossing_policy
+        self._exit_resolver = exit_resolver  # <- NEW
         return self
 
     # ───────────────────────── NEW: inject prices from strategy ────── #
@@ -89,4 +100,10 @@ class TradeProposalBuilder:
             size        = self.size,
             direction   = self.direction,
         )
-        return TradeProposal(meta=meta, legs=self._legs, detail_df=detail_df)
+        return TradeProposal(
+            meta=meta,
+            legs=self._legs,
+            detail_df=detail_df,
+            _crossing_policy=self._crossing_policy,
+            _exit_resolver=self._exit_resolver,
+        )

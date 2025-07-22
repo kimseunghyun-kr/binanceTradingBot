@@ -104,7 +104,11 @@ class TransactionLedger:
           • analytics store
         """
         # ---- cash delta -------------------------------------------------
-        cash_delta = -fill.exec_price * fill.qty - fill.fee_cash
+        if fill.qty == 0 and fill.event.name == "FUNDING":
+            cash_delta = -fill.fee_cash  # funding fee already signed
+        else:
+            cash_delta = -fill.exec_price * fill.qty - fill.fee_cash
+
         self._cash_log.append((fill.ts, cash_delta))
 
         # ---- position update -------------------------------------------

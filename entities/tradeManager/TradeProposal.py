@@ -34,6 +34,9 @@ class TradeProposal:
     legs: List[OrderLeg]
     detail_df: pd.DataFrame
 
+    _crossing_policy: str | None = "prefer_sl"
+    _exit_resolver: Callable[[pd.Series, float, float, str], Optional[dict]] | None = None
+
     _events: List[TradeEvent] = field(default_factory=list, init=False)
 
     # ------------------------------------------------------------------ #
@@ -135,17 +138,43 @@ class TradeProposal:
         """Resolve limit/trigger price (callable or static)."""
         return float(px(candle) if callable(px) else px)
 
-    def _check_exit(self, candle: pd.Series,
-                    tp_px: float, sl_px: float
-                    ) -> Optional[dict]:
-        if self.meta.direction == "LONG":
-            if candle["high"] >= tp_px:
+    def _check_exit(
+            self,
+            candle: pd.Series,
+            tp_px: float,
+            sl_px: float,
+    ) -> Optional[dict]:
+
+        # 1️⃣ user-supplied resolver beats presets
+        if self._exit_resolver:
+            return self._exit_resolver(
+                candle, tp_px, sl_px, self.meta.direction
+            )
+
+        # 2️⃣ preset crossing policies
+        hit_tp = (
+            candle["high"] >= tp_px if self.meta.direction == "LONG"
+            else candle["low"] <= tp_px
+        )
+        hit_sl = (
+            candle["low"] <= sl_px if self.meta.direction == "LONG"
+            else candle["high"] >= sl_px
+        )
+
+        if hit_tp and hit_sl:
+            mode = self._crossing_policy or "prefer_sl"
+            if mode == "prefer_tp":
                 return {"price": tp_px, "label": "TP"}
-            if candle["low"] <= sl_px:
-                return {"price": sl_px, "label": "SL"}
-        else:  # SHORT
-            if candle["low"] <= tp_px:
-                return {"price": tp_px, "label": "TP"}
-            if candle["high"] >= sl_px:
-                return {"price": sl_px, "label": "SL"}
+            if mode == "random":
+                import random
+                return {"price": tp_px, "label": "TP"} if random.random() < 0.5 \
+                    else {"price": sl_px, "label": "SL"}
+            # default: prefer_sl
+            return {"price": sl_px, "label": "SL"}
+
+        if hit_tp:
+            return {"price": tp_px, "label": "TP"}
+        if hit_sl:
+            return {"price": sl_px, "label": "SL"}
         return None
+

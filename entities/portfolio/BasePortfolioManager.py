@@ -57,9 +57,10 @@ class BasePortfolioManager:
         """High-level risk (VAR, leverage, blacklist symbols…)."""
         return True
 
+    # inside BasePortfolioManager._cash_ok
     def _cash_ok(self, entry_px: float, size: float) -> bool:
-        """Spot cash check. Override for margin logic."""
-        return True   # default: infinite cash
+        required = entry_px * size
+        return self.cash >= required
 
     def _capacity_ok(self, opens_now: int) -> bool:
         """Max simultaneous legs."""
