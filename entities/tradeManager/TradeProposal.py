@@ -6,10 +6,10 @@ from typing import List, Sequence, Union, Callable, Optional
 
 import pandas as pd
 
-from TradeEvent import TradeEvent
-from TradeEventType import TradeEventType
-from TradeMeta import TradeMeta
-from orders.OrderLeg import OrderLeg
+from entities.tradeManager.TradeEvent import TradeEvent
+from entities.tradeManager.TradeEventType import TradeEventType
+from entities.tradeManager.TradeMeta import TradeMeta
+from entities.tradeManager.orders.OrderLeg import OrderLeg
 
 # --------------------------------------------------------------------------- #
 # TradeProposal:  ✔ multi-leg, ✔ partial-fill, ✔ backward-compatible realise()

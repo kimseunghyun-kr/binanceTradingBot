@@ -36,7 +36,7 @@ class PerpPortfolioManager(BasePortfolioManager):
             if pos.qty == 0:
                 continue
             spec = PERP_SPECS.get(sym)
-            if not spec or ts % spec.funding_intvl:
+            if not spec or (ts % spec.funding_intvl) != 0:
                 continue
             rate = funding_provider.get_rate(sym, ts)
             cash = -pos.qty * pos.avg_px * rate
