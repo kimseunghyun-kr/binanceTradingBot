@@ -10,7 +10,7 @@ from entities.tradeManager.TradeEventType import TradeEventType
 @dataclass(frozen=True, slots=True)
 class FillRecord:
     """
-    Immutable execution record produced by the TransactionManager.
+    Immutable execution record produced by the TransactionLedger.
     """
     ts: int
     symbol: str

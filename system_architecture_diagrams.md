@@ -164,7 +164,7 @@ sequenceDiagram
         alt Signal is BUY/SELL
             BackTestService->>TradeProposal: Create proposal
             BackTestService->>PortfolioManager: try_execute(proposal)
-            PortfolioManager->>PortfolioManager: can_open() check
+            PortfolioManager->>PortfolioManager: TransactionLedger check
             
             alt Can open position
                 PortfolioManager->>TradeProposal: realize()

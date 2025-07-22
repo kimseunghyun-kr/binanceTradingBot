@@ -1,4 +1,4 @@
-# entities/portfolio/TransactionManager.py
+# entities/portfolio/TransactionLedger.py
 from __future__ import annotations
 
 from collections import defaultdict

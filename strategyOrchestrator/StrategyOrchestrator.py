@@ -44,7 +44,6 @@ from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy,
 )
 from entities.tradeManager.FillPolicy import FillPolicy, AggressiveMarketPolicy, VWAPDepthPolicy
-from entities.tradeManager.TradeMeta import TradeMeta
 from entities.tradeManager.TradeProposal import TradeProposal
 from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
 from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
