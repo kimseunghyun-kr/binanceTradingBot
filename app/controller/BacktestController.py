@@ -7,7 +7,31 @@ from app.services.StrategyService import StrategyService
 from app.services.SymbolService import SymbolService
 from app.tasks.BackTestTask import run_backtest_task
 
+
 router = APIRouter(prefix="", tags=["Backtest"])
+
+
+def _resolve_symbols(request: BacktestRequest) -> list:
+    """Return the list of symbols to use for a backtest request."""
+    if request.symbols:
+        return request.symbols
+    if getattr(request, "symbol_criteria", None):
+        criteria = request.symbol_criteria
+        symbols_df = SymbolService.get_symbols_by_market_cap(
+            min_cap=criteria.get("min_market_cap", 0),
+            max_cap=criteria.get("max_market_cap", 2e10),
+            max_pages=criteria.get("max_pages", 3),
+            api_key=criteria.get("api_key", None),
+        )
+        strategy = StrategyService.get_strategy_instance(
+            request.strategy.name,
+            {
+                "params": request.strategy.params or {},
+                "strategies": [s.dict() for s in (request.strategy.strategies or [])],
+            },
+        )
+        return strategy.filter_symbols(symbols_df)
+    return symbol_utils.ANALYSIS_SYMBOLS
 
 
 @router.post("/backtest", response_model=TaskSubmitResponse)
@@ -16,28 +40,7 @@ def start_backtest(request: BacktestRequest):
     Start a backtest based on the provided configuration.
     This schedules a Celery task to run the backtest and returns a task ID for tracking.
     """
-    # 1. Support both symbol list and symbol_criteria
-    if request.symbols:
-        symbol_list = request.symbols
-    elif getattr(request, "symbol_criteria", None):
-        criteria = request.symbol_criteria
-        # Use your SymbolService to get a pre-filtered universe DataFrame
-        symbols_df = SymbolService.get_symbols_by_market_cap(
-            min_cap=criteria.get("min_market_cap", 0),
-            max_cap=criteria.get("max_market_cap", 2e10),
-            max_pages=criteria.get("max_pages", 3),
-            api_key=criteria.get("api_key", None),
-        )
-        # Validate the strategy instance (as before)
-        strat = StrategyService.get_strategy_instance(
-            request.strategy.name,
-            {"params": request.strategy.params or {},
-             "strategies": [s.dict() for s in (request.strategy.strategies or [])]}
-        )
-        # Run the code-based filter (e.g., user’s filter_symbols)
-        symbol_list = strat.filter_symbols(symbols_df)
-    else:
-        symbol_list = symbol_utils.ANALYSIS_SYMBOLS
+    symbol_list = _resolve_symbols(request)
 
     if not symbol_list:
         raise HTTPException(status_code=400, detail="No symbols available for backtest. Please load symbols first.")

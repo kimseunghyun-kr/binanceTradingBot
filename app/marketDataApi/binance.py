@@ -4,13 +4,94 @@ from typing import Optional
 import pandas as pd
 from redis import Redis
 
-from app.core.db import mongo_sync_db  # MongoClient for persistence:contentReference[oaicite:11]{index=11}
+from app.core.db import mongo_sync_db  # Mongo client for persistence
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
 from app.pydanticConfig.settings import settings
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
+
+
+def _fetch_from_redis(cache_key: str):
+    """Return DataFrame from Redis cache and Redis client if available."""
+    try:
+        client = Redis.from_url(settings.REDIS_BROKER_URL)
+        raw_json = client.get(cache_key)
+        if raw_json:
+            logging.info(f"Cache HIT (Redis) for {cache_key}")
+            df = pd.read_json(raw_json)
+            _candle_cache[cache_key] = df
+            return df.copy(), client
+        return None, client
+    except Exception as e:
+        logging.warning(f"Redis fetch failed for {cache_key}: {e}")
+        return None, None
+
+
+def _fetch_from_mongo(symbol: str, interval: str, start_time: Optional[int], limit: int,
+                       redis_client: Optional[Redis], cache_key: str):
+    """Load candles from MongoDB if available."""
+    if mongo_sync_db is None:
+        return None
+    coll = mongo_sync_db["candles"]
+    query = {"symbol": symbol, "interval": interval}
+    if start_time is not None:
+        query["open_time"] = {"$gte": start_time}
+
+    if start_time is None:
+        docs = list(coll.find(query).sort("open_time", -1).limit(limit))
+        docs.reverse()
+    else:
+        docs = list(coll.find(query).sort("open_time", 1).limit(limit))
+
+    if docs and len(docs) >= limit:
+        df = pd.DataFrame(docs).sort_values("open_time").reset_index(drop=True)
+        logging.info(f"Cache HIT (MongoDB) for {symbol} {interval} from {len(docs)} docs")
+        if redis_client:
+            try:
+                redis_client.set(cache_key, df.to_json(), ex=3600)
+            except Exception:
+                pass
+        _candle_cache[cache_key] = df
+        return df
+    return None
+
+
+def _cache_result(cache_key: str, df: pd.DataFrame, redis_client: Optional[Redis]):
+    """Persist fetched candles to caches."""
+    if redis_client:
+        try:
+            redis_client.set(cache_key, df.to_json(), ex=3600)
+        except Exception:
+            pass
+    _candle_cache[cache_key] = df
+
+
+def _upsert_mongo(symbol: str, interval: str, df: pd.DataFrame):
+    """Insert or update candle records in MongoDB."""
+    if mongo_sync_db is None:
+        return
+    coll = mongo_sync_db["candles"]
+    for _, row in df.iterrows():
+        doc = {
+            "symbol": symbol,
+            "interval": interval,
+            "open_time": int(row["open_time"]),
+            "open": float(row["open"]),
+            "high": float(row["high"]),
+            "low": float(row["low"]),
+            "close": float(row["close"]),
+            "volume": float(row["volume"]),
+        }
+        try:
+            coll.update_one(
+                {"symbol": symbol, "interval": interval, "open_time": doc["open_time"]},
+                {"$set": doc},
+                upsert=True,
+            )
+        except Exception as e:
+            logging.warning(f"MongoDB upsert failed for {symbol} {interval}: {e}")
 
 
 ###############################################################################
@@ -44,49 +125,14 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
     First checks in-memory and Redis cache, then MongoDB, then Binance API.
     """
     cache_key = f"{symbol}:{interval}:{start_time}:{limit}"
-    # 1) Check in-memory cache ( debug fallback )
-    # if cache_key in _candle_cache:
-    #     logging.debug(f"Cache HIT (memory) for {cache_key}")
-    #     return _candle_cache[cache_key].copy()
 
-    # 2) Check Redis cache
-    try:
-        redis_client = Redis.from_url(settings.REDIS_BROKER_URL)
-        raw_json = redis_client.get(cache_key)
-        if raw_json:
-            logging.info(f"Cache HIT (Redis) for {cache_key}")
-            df = pd.read_json(raw_json)
-            _candle_cache[cache_key] = df
-            return df.copy()
-    except Exception as e:
-        logging.warning(f"Redis fetch failed for {cache_key}: {e}")
-        redis_client = None  # skip Redis caching if error
+    df, redis_client = _fetch_from_redis(cache_key)
+    if df is not None:
+        return df
 
-    # 3) Check MongoDB for stored candles
-    if mongo_sync_db is not None:
-        coll = mongo_sync_db["candles"]  # new collection for OHLCV data
-        query = {"symbol": symbol, "interval": interval}
-        if start_time is not None:
-            query["open_time"] = {"$gte": start_time}
-        # Fetch up to 'limit' candles
-        # If no start_time, get most recent by sorting desc
-        if start_time is None:
-            docs = list(coll.find(query).sort("open_time", -1).limit(limit))
-            docs.reverse()  # ascending by time
-        else:
-            docs = list(coll.find(query).sort("open_time", 1).limit(limit))
-        if docs and len(docs) >= limit:
-            df = pd.DataFrame(docs)
-            df = df.sort_values("open_time").reset_index(drop=True)
-            logging.info(f"Cache HIT (MongoDB) for {symbol} {interval} from {len(docs)} docs")
-            # Update caches
-            if redis_client:
-                try:
-                    redis_client.set(cache_key, df.to_json(), ex=3600)
-                except:
-                    pass
-            _candle_cache[cache_key] = df
-            return df
+    df = _fetch_from_mongo(symbol, interval, start_time, limit, redis_client, cache_key)
+    if df is not None:
+        return df
 
     # 4) Fallback: fetch from Binance API
     endpoint = f"{BASE_URL}/api/v3/klines"
@@ -116,32 +162,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.sort_values("open_time").reset_index(drop=True)
 
-    # Store fetched candles into MongoDB (upsert each candle)
-    if mongo_sync_db is not None:
-        coll = mongo_sync_db["candles"]
-        for _, row in df.iterrows():
-            doc = {
-                "symbol": symbol,
-                "interval": interval,
-                "open_time": int(row["open_time"]),
-                "open": float(row["open"]), "high": float(row["high"]),
-                "low": float(row["low"]), "close": float(row["close"]),
-                "volume": float(row["volume"])
-            }
-            try:
-                coll.update_one(
-                    {"symbol": symbol, "interval": interval, "open_time": doc["open_time"]},
-                    {"$set": doc},
-                    upsert=True
-                )
-            except Exception as e:
-                logging.warning(f"MongoDB upsert failed for {symbol} {interval}: {e}")
-    # Cache the result in Redis and memory
-    if redis_client is not None:
-        try:
-            redis_client.set(cache_key, df.to_json(), ex=3600)
-        except:
-            pass
-    _candle_cache[cache_key] = df
+    _upsert_mongo(symbol, interval, df)
+    _cache_result(cache_key, df, redis_client)
 
     return df

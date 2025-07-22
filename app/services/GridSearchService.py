@@ -13,6 +13,7 @@ class GridSearchService:
     def run_grid_search(strategy: dict, timeframe: str, tp_list: list, sl_list: list, add_buy_pct_list: list,
                         num_iterations: int, use_cache: bool, save_charts: bool,
                         start_date: Optional[str], symbols: list):
+        """Run a parameter grid search for the given strategy."""
         # Prepare strategy instance, including sub-strategies if any
         strategy_name = strategy["name"]
         # Construct params dict with possible 'strategies' list for ensemble
