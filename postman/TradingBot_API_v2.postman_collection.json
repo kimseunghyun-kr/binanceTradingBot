@@ -1,0 +1,592 @@
+{
+  "info": {
+    "name": "TradingBot API v2",
+    "description": "Enhanced cryptocurrency trading bot API with backtesting, GraphQL, and real-time streaming",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["metrics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"auth_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Backtest V2",
+      "item": [
+        {
+          "name": "Submit Backtest - Basic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"task_id\", jsonData.task_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"strategy_name\": \"PeakEMAReversalStrategy\",\n  \"strategy_params\": {\n    \"ema_period\": 20,\n    \"peak_threshold\": 0.02\n  },\n  \"symbols\": [\"BTC\", \"ETH\", \"BNB\"],\n  \"interval\": \"1h\",\n  \"num_iterations\": 100,\n  \"initial_capital\": 10000,\n  \"position_size_pct\": 5,\n  \"tp_ratio\": 0.1,\n  \"sl_ratio\": 0.05,\n  \"stream_progress\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Submit Backtest - With Symbol Filter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"strategy_name\": \"MomentumStrategy\",\n  \"strategy_params\": {\n    \"lookback_period\": 14\n  },\n  \"symbol_filter\": {\n    \"market_cap_min\": 1000000000,\n    \"market_cap_max\": 50000000000,\n    \"volume_min\": 10000000,\n    \"tags\": [\"defi\", \"layer1\"]\n  },\n  \"interval\": \"4h\",\n  \"num_iterations\": 200,\n  \"use_cache\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Submit Backtest - Custom Strategy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"strategy_name\": \"CustomStrategy\",\n  \"strategy_params\": {\n    \"param1\": 10,\n    \"param2\": 0.5\n  },\n  \"custom_strategy_code\": \"from entities.strategies.BaseStrategy import BaseStrategy\\nimport pandas as pd\\n\\nclass CustomStrategy(BaseStrategy):\\n    def __init__(self, param1=10, param2=0.5):\\n        super().__init__()\\n        self.param1 = param1\\n        self.param2 = param2\\n    \\n    def generate_signal(self, symbol, data, current_candle):\\n        # Custom logic here\\n        return 1 if current_candle['close'] > data['close'].mean() else 0\",\n  \"symbols\": [\"SOL\", \"AVAX\"],\n  \"interval\": \"1h\",\n  \"num_iterations\": 50\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get Backtest Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/status/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "status", "{{task_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Backtest Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/results/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "results", "{{task_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Backtest",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/cancel/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "cancel", "{{task_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Export Results - JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/export/{{task_id}}?format=json",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "export", "{{task_id}}"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Results - CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/export/{{task_id}}?format=csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "export", "{{task_id}}"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pool Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/backtest/pool/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "backtest", "pool", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GraphQL",
+      "item": [
+        {
+          "name": "Query Symbols",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { symbols(filter: { marketCapMin: 1000000000, volumeMin: 5000000 }, limit: 20) { symbol name marketCap volume24h priceChange24h tags sector } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "Query Symbol Stats",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { symbolStats(symbols: [\\\"BTC\\\", \\\"ETH\\\"], timeframe: \\\"24h\\\") { symbol high low volume volatility } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "Query Strategies",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { strategies(filter: { type: MOMENTUM }) { name description type parameters performance { winRate sharpeRatio maxDrawdown } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "Query Market Metrics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { marketMetrics(category: \\\"defi\\\") { totalMarketCap totalVolume24h btcDominance topGainers { symbol priceChange24h } topLosers { symbol priceChange24h } } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "Advanced Symbol Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { symbolUniverse(query: \\\"market_cap > 1B AND volume_24h > 10M AND sector = 'defi'\\\") { symbol name marketCap volume24h sector } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "Create Custom Strategy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation { createCustomStrategy(name: \\\"MyMomentumStrategy\\\", code: \\\"class MyMomentumStrategy(BaseStrategy):\\\\n    pass\\\", description: \\\"Custom momentum strategy\\\") { id name description } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            }
+          }
+        },
+        {
+          "name": "GraphQL Subscription Example",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"subscription { symbolUpdates(symbols: [\\\"BTC\\\", \\\"ETH\\\"]) { symbol price volume24h priceChange24h timestamp } }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "graphql"]
+            },
+            "description": "Note: This is a WebSocket subscription. Use a GraphQL client that supports subscriptions."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Symbols",
+      "item": [
+        {
+          "name": "Get All Symbols",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/symbols",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "symbols"]
+            }
+          }
+        },
+        {
+          "name": "Filter Symbols",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"min_market_cap\": 1000000000,\n  \"max_market_cap\": 50000000000,\n  \"min_volume\": 10000000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/symbols/filter",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "symbols", "filter"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Strategies",
+      "item": [
+        {
+          "name": "List Available Strategies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/strategies",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "strategies"]
+            }
+          }
+        },
+        {
+          "name": "Get Strategy Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v2/strategies/PeakEMAReversalStrategy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "strategies", "PeakEMAReversalStrategy"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grid Search",
+      "item": [
+        {
+          "name": "Submit Grid Search",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"strategy_name\": \"PeakEMAReversalStrategy\",\n  \"parameter_grid\": {\n    \"ema_period\": [10, 20, 30, 50],\n    \"peak_threshold\": [0.01, 0.02, 0.03]\n  },\n  \"symbols\": [\"BTC\", \"ETH\"],\n  \"interval\": \"1h\",\n  \"num_iterations\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/grid-search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "grid-search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analysis",
+      "item": [
+        {
+          "name": "Get Portfolio Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"backtest_id\": \"{{task_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v2/analyze/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v2", "analyze", "portfolio"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WebSocket Examples",
+      "item": [
+        {
+          "name": "WebSocket - Backtest Progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "ws://localhost:8000/api/v2/backtest/stream/{{task_id}}",
+              "protocol": "ws",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["api", "v2", "backtest", "stream", "{{task_id}}"]
+            },
+            "description": "WebSocket connection for streaming backtest progress. Use a WebSocket client to connect."
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
