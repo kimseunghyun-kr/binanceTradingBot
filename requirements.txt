@@ -1,50 +1,95 @@
-# Core API framework
+# Core Framework
 fastapi
-uvicorn[standard]           # For running FastAPI
-
-# Async database (SQL)
-sqlalchemy[asyncio]
-asyncpg                     # PostgreSQL driver
-databases
-
-# Database migration (SQL)
-alembic
-
-# NoSQL (MongoDB)
-pymongo                     # Synchronous MongoDB client
-motor                       # Async MongoDB client
-
-# Caching, task queue
-redis
-celery[redis]               # Celery with Redis broker
-
-# Config & validation
-python-dotenv
+uvicorn[standard]
 pydantic
 pydantic-settings
+python-multipart
 
-# Data handling
+# GraphQL
+strawberry-graphql[fastapi]
+
+# Database
+motor                # Async MongoDB
+pymongo             # Sync MongoDB (for Celery workers)
+redis
+asyncpg            # PostgreSQL async driver
+sqlalchemy[asyncio]
+databases
+alembic
+
+# Task Queue
+celery[redis]
+flower              # Celery monitoring
+
+# Security
+python-jose[cryptography]
+passlib[bcrypt]
+python-decouple
+slowapi             # Rate limiting
+
+# Data Processing
 pandas
 numpy
+numba              # JIT compilation for performance
+ta               # Technical indicators
 
-# Plotting
-matplotlib
-mplfinance
-
-# HTTP requests
+# HTTP Client
+httpx
+aiohttp
 requests
 
-# CLI tools (optional, legacy support)
-questionary
+# Docker
+docker
+
+# Plotting/Visualization
+matplotlib
+mplfinance
+plotly
+kaleido
+
+# Utilities
+python-dateutil
+pytz
+orjson          # Fast JSON
+ujson
+aiofiles
+uvloop             # Fast event loop
+
+# CLI Tools
 pyyaml
 schedule
-
-# Pretty CLI/log output (optional)
 rich
 
-# Testing
+# Development
 pytest
-httpx                       # Async HTTP client for API testing
+pytest-asyncio
+pytest-cov
+pytest-benchmark
+black
+flake8
+mypy
+pre-commit
+
+# Monitoring
+prometheus-client
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+
+# Documentation
+mkdocs
+mkdocs-material
 
 # Exchange API
 python-binance
+
+# Environment
+python-dotenv
+
+# CORS & Middleware
+fastapi-cors
+starlette
+
+# WebSocket
+websockets
+python-socketio

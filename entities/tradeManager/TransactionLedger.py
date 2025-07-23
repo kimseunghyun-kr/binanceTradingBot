@@ -6,7 +6,7 @@ from typing import Callable, Dict, List
 
 from FillRecord import FillRecord
 from Position import Position
-from entities.tradeManager.FillPolicy import FillPolicy, AggressiveMarketPolicy
+from entities.tradeManager.policies.FillPolicy import FillPolicy, AggressiveMarketPolicy
 from entities.tradeManager.TradeEvent import TradeEvent
 from entities.tradeManager.TradeEventType import TradeEventType
 

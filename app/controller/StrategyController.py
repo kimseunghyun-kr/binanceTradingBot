@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.core.db import database
+from app.core.init_services import database
 from app.services.StrategyService import StrategyService
 
 router = APIRouter(prefix="/strategies", tags=["Strategies"])

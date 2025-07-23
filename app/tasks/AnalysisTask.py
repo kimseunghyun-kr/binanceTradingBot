@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from app.core.celery_app import celery
-from app.core.db import mongo_sync_db
+from app.core.init_services import mongo_sync
 from app.services.AnalysisService import AnalysisService
 
 print("imported AnalysisTask")
@@ -25,9 +25,9 @@ def run_analysis_task(config: dict):
         logging.info("✅ No buy signals detected.")
     logging.info(f"Total symbols analyzed: {len(symbols)}, Buy signals: {len(yes_signals)}, No signals: {no_count}")
     # Optionally store the analysis result in DB (e.g., in Mongo for history)
-    if mongo_sync_db:
+    if mongo_sync:
         try:
-            mongo_sync_db["analysis_results"].insert_one({
+            mongo_sync["analysis_results"].insert_one({
                 "interval": interval,
                 "run_at": datetime.utcnow(),
                 "buy_signals": yes_signals,

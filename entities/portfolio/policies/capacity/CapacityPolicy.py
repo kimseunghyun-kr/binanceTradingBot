@@ -1,33 +1,8 @@
 from __future__ import annotations
-from typing import Protocol, List, Set
-from entities.tradeManager.TradeProposal import TradeProposal
-from entities.tradeManager.TradeEvent    import TradeEvent
+from entities.portfolio.policies.interfaces import CapacityPolicy
 
-
-class CapacityPolicy(Protocol):
-    """
-    Decide whether a *pending* TradeProposal may be enqueued.
-
-    Parameters
-    ----------
-    proposal   : the proposal being evaluated
-    now_ts     : orchestrator's current bar timestamp
-    pending_q  : entry TradeEvents already queued (min-heap)
-    open_syms  : symbols that currently have non-zero position
-
-    Return
-    ------
-    bool – True to admit, False to reject
-    """
-    def admit(
-        self,
-        proposal  : TradeProposal,
-        now_ts    : int,
-        pending_q : List[TradeEvent],
-        open_syms : Set[str],
-    ) -> bool: ...
 # ------------------------------------------------------------------ #
-class LegCapacity:
+class LegCapacity(CapacityPolicy):
     """Classic limit on total *entry legs*."""
     def __init__(self, max_legs: int = 5):
         self.max_legs = max_legs
@@ -42,7 +17,7 @@ class LegCapacity:
         return queued_legs + opens_now <= self.max_legs
 
 
-class SymbolCapacity:
+class SymbolCapacity(CapacityPolicy):
     """Limit on concurrent *symbols* with exposure."""
     def __init__(self, max_symbols: int = 5):
         self.max_symbols = max_symbols

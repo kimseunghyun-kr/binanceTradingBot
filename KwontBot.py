@@ -10,7 +10,7 @@ from app.controller import (SymbolController as symbols,
                             GridSearchController as gridSearch,
                             TaskController as tasks
                             )
-from app.core import db
+from app.core import init_services
 
 # Create FastAPI app
 app = FastAPI(

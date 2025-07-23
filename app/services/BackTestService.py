@@ -1,88 +1,183 @@
-import hashlib
-import json
-import logging
-from typing import Dict, Any
+"""
+BackTestServiceV2.py
+──────────────────────────────────────────────────────────────────────────
+FastAPI-side wrapper that spawns sandboxed orchestrator runs.
+Now *does not* embed symbol_data and forwards `parallel_symbols`.
+"""
 
-from app.core.db import redis_cache
+import hashlib, json, logging, traceback
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from app.core.init_services import redis_cache, get_mongo_client
+from app.core.pydanticConfig.settings import settings
+from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
+from app.services.orchestrator.OrchestratorService import OrchestratorService
 
 
-class BacktestService:
-    _cache: Dict[str, Dict[str, Any]] = {}
+class BackTestServiceV2:
 
-    @staticmethod
-    def generate_cache_key(symbols, interval, num_iterations, start_date, strategy_name,
-                           tp_ratio, sl_ratio, add_buy_pct, save_charts):
-        data = {
-            "symbols": sorted(symbols),
-            "interval": interval,
-            "num_iterations": num_iterations,
-            "start_date": start_date or "",
-            "strategy": strategy_name,
-            "tp": tp_ratio, "sl": sl_ratio, "add_buy_pct": add_buy_pct,
-            "save_charts": bool(save_charts)
-        }
-        key_str = json.dumps(data, sort_keys=True)
-        return hashlib.md5(key_str.encode()).hexdigest()
-
+    # ───────────────────────── public entrypoint ─────────────────────── #
     @classmethod
-    def run_backtest(cls, strategy_name: str, symbols, fetch_candles_func, interval,
-                     num_iterations=100, tp_ratio=0.1, sl_ratio=0.05, save_charts=False,
-                     add_buy_pct=5.0, start_date=None,
-                     use_cache: bool = True) -> Dict[str, Any]:
-        """Refactored: No simulation here—just fetches/prepares/caches and calls orchestrator."""
-        cache_key = cls.generate_cache_key(
-            symbols, interval, num_iterations, start_date, strategy_name,
-            tp_ratio, sl_ratio, add_buy_pct, save_charts
+    async def run_backtest(
+        cls,
+        strategy_name: str,
+        strategy_params: Dict[str, Any],
+        symbols: List[str],
+        interval: str = "1h",
+        num_iterations: int = 100,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        custom_strategy_code: Optional[str] = None,
+        parallel_symbols: int = 4,
+        use_cache: bool = True,
+        save_results: bool = True,
+        **kwargs,
+    ) -> Dict[str, Any]:
+
+        cache_key = cls._cache_key(
+            strategy_name, strategy_params, symbols, interval,
+            num_iterations, start_date, custom_strategy_code
         )
 
         if use_cache:
-            if redis_cache:
-                cached_json = redis_cache.get(cache_key)
-                if cached_json:
-                    logging.info(f"[BacktestService] Returning cached results from Redis for key {cache_key[:8]}...")
-                    return json.loads(cached_json)
-            if cache_key in cls._cache:
-                logging.info(
-                    f"[BacktestService] Using cached results for {strategy_name} {interval} on {len(symbols)} symbols.")
-                return cls._cache[cache_key]
+            cached = await cls._cache_get(cache_key)
+            if cached:
+                logging.info(f"Cache hit [{cache_key[:16]}]")
+                return cached
 
-        # --- Prepare data for orchestrator ---
-        symbol_data = {}
-        for sym in symbols:
-            df = fetch_candles_func(sym, interval, limit=num_iterations + 200)
-            symbol_data[sym] = df.to_json(orient="split")
+        orchestrator_input = OrchestratorInput(
+            strategy={"name": strategy_name, "params": strategy_params},
+            symbols=symbols,
+            interval=interval,
+            num_iterations=num_iterations,
+            start_date=start_date,
+            end_date=end_date,
+            custom_strategy_code=custom_strategy_code,
+            parallel_symbols=parallel_symbols,
+            **kwargs
+        )
 
-        # Pass all params, symbol_data, strategy_name (strategy code mounted in container)
-        orchestrator_input = {
-            "symbols": symbols,
+        strategy_code = custom_strategy_code or await cls._get_strategy_code(strategy_name)
+
+        try:
+            raw_result = await OrchestratorService.run_backtest(
+                strategy_code=strategy_code,
+                strategy_config=orchestrator_input.strategy.dict(),
+                symbols=symbols,
+                interval=interval,
+                num_iterations=num_iterations,
+                additional_params=orchestrator_input.dict(
+                    exclude={"strategy", "symbols", "interval", "num_iterations"}
+                ),
+            )
+
+            result = await cls._enrich(raw_result, orchestrator_input)
+
+            if use_cache:
+                await cls._cache_set(cache_key, result)
+            if save_results:
+                await cls._save_result(result)
+
+            return result
+
+        except Exception as e:
+            logging.error(f"Backtest failed: {e}\n{traceback.format_exc()}")
+            err_doc = {
+                "status": "failed",
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+                "input": orchestrator_input.dict(),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+            if save_results:
+                await cls._save_error(err_doc)
+            raise
+
+    # ───────────────────────── helper methods ─────────────────────────── #
+    @classmethod
+    async def _get_strategy_code(cls, name: str) -> str:
+        mongo = get_mongo_client()[settings.MONGO_DB]
+        doc = await mongo.strategies.find_one({"name": name})
+        if doc and "code" in doc:
+            return doc["code"]
+        path = f"entities/strategies/concreteStrategies/{name}.py"
+        try:
+            with open(path, "r") as f:
+                return f.read()
+        except FileNotFoundError:
+            raise ValueError(f"Strategy '{name}' not found")
+
+    # ----------------------------------------------------------- cache -- #
+    @classmethod
+    def _cache_key(
+        cls,
+        name: str, params: Dict[str, Any], symbols: List[str],
+        interval: str, iters: int, start: Optional[datetime],
+        custom_code: Optional[str],
+    ) -> str:
+        data = {
+            "strategy": name,
+            "params": params,
+            "symbols": sorted(symbols),
             "interval": interval,
-            "num_iterations": num_iterations,
-            "tp_ratio": tp_ratio,
-            "sl_ratio": sl_ratio,
-            "add_buy_pct": add_buy_pct,
-            "save_charts": save_charts,
-            "start_date": start_date,
-            "strategy_name": strategy_name,
-            "symbol_data": symbol_data
+            "iters": iters,
+            "start": start.isoformat() if start else None,
+            "code_hash": (hashlib.md5(custom_code.encode()).hexdigest()
+                          if custom_code else None),
         }
-        results = call_strategy_orchestrator(orchestrator_input)
-        if use_cache:
-            cls._cache[cache_key] = results
-            if redis_cache:
-                try:
-                    redis_cache.set(cache_key, json.dumps(results), ex=3600)
-                except Exception as e:
-                    logging.error(f"Redis caching failed: {e}")
-        return results
+        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
+    @classmethod
+    async def _cache_get(cls, key: str) -> Optional[Dict[str, Any]]:
+        if not redis_cache:
+            return None
+        try:
+            raw = redis_cache.get(f"backtest:v2:{key}")
+            return json.loads(raw) if raw else None
+        except Exception as e:
+            logging.warning(f"Redis get failed: {e}")
+            return None
 
-def call_strategy_orchestrator(input_config: dict):
-    """Spawn orchestrator as Docker container (stdin/stdout) or as a subprocess for local dev."""
-    import subprocess
-    proc = subprocess.Popen(
-        ["docker", "run", "--rm", "-i", "strategy_orchestrator_image"],  # Replace with your image name!
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE
-    )
-    out, _ = proc.communicate(json.dumps(input_config).encode())
-    return json.loads(out.decode())
+    @classmethod
+    async def _cache_set(cls, key: str, value: Dict[str, Any]):
+        if not redis_cache:
+            return
+        try:
+            await redis_cache.set(
+                f"backtest:v2:{key}",
+                json.dumps(value, default=str),
+                ex=7200,
+            )
+        except Exception as e:
+            logging.warning(f"Redis set failed: {e}")
+
+    # ----------------------------------------------------------- mongo -- #
+    @classmethod
+    async def _save_result(cls, doc: Dict[str, Any]):
+        await get_mongo_client()[settings.MONGO_DB].backtest_results.insert_one(
+            {**doc, "created_at": datetime.utcnow()}
+        )
+
+    @classmethod
+    async def _save_error(cls, doc: Dict[str, Any]):
+        await get_mongo_client()[settings.MONGO_DB].backtest_errors.insert_one(
+            {**doc, "created_at": datetime.utcnow()}
+        )
+
+    # -------------------------------------------------------- enrich ---- #
+    @classmethod
+    async def _enrich(cls, raw: Dict[str, Any], cfg: OrchestratorInput) -> Dict[str, Any]:
+        return {
+            **raw,
+            "metadata": {
+                "strategy": cfg.strategy.name,
+                "symbols": cfg.symbols,
+                "interval": cfg.interval,
+                "num_iterations": cfg.num_iterations,
+                "start_date": cfg.start_date.isoformat() if cfg.start_date else None,
+                "end_date": cfg.end_date.isoformat()   if cfg.end_date   else None,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+            "input_config": cfg.dict(),
+        }

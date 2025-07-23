@@ -4,10 +4,10 @@ from typing import Optional
 import pandas as pd
 from redis import Redis
 
-from app.core.db import mongo_sync_db  # MongoClient for persistence:contentReference[oaicite:11]{index=11}
+from app.core.init_services import mongo_sync  # MongoClient for persistence:contentReference[oaicite:11]{index=11}
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
-from app.pydanticConfig.settings import settings
+from app.core.pydanticConfig import settings
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
@@ -63,8 +63,8 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
         redis_client = None  # skip Redis caching if error
 
     # 3) Check MongoDB for stored candles
-    if mongo_sync_db is not None:
-        coll = mongo_sync_db["candles"]  # new collection for OHLCV data
+    if mongo_sync is not None:
+        coll = mongo_sync["candles"]  # new collection for OHLCV data
         query = {"symbol": symbol, "interval": interval}
         if start_time is not None:
             query["open_time"] = {"$gte": start_time}

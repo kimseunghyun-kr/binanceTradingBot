@@ -5,8 +5,8 @@ from pymongo import MongoClient
 
 from app.core.celery_app import celery
 from app.marketDataApi.binance import fetch_candles
-from app.pydanticConfig.settings import settings
-from app.services.BackTestService import BacktestService
+from app.core.pydanticConfig import settings
+from app.services.BackTestService import BackTestServiceV2
 from app.services.StrategyService import StrategyService
 
 # Initialize synchronous Mongo client for task context (Celery tasks run in separate process)
@@ -35,7 +35,7 @@ def run_backtest_task(config: dict):
         return {"error": str(e)}
 
     # Run backtest using BacktestService, providing the data fetch function
-    results = BacktestService.run_backtest(
+    results = BackTestServiceV2.run_backtest(
         strat,
         symbols=filtered_symbols,
         fetch_candles_func=fetch_candles,

@@ -1,22 +1,28 @@
+# app/core/celery_app.py
 from celery import Celery
 
-from app.pydanticConfig.settings import settings
+from app.core.pydanticConfig import settings
 
-celery = Celery("binanceTradingBot")
-celery.conf.broker_url = settings.REDIS_BROKER_URL
-celery.conf.result_backend = settings.CELERY_RESULT_BACKEND
-celery.conf.update(
-    task_serializer="json",
-    result_serializer="json",
-    accept_content=["json"],
-)
 
-# THIS is all you need for autodiscover:
-celery.autodiscover_tasks(['app.tasks'])
-print("imported celery with tasks")
-print(list(celery.tasks.keys()))
+def create_celery() -> Celery:
+    app = Celery("binanceTradingBot",
+                 broker=settings.REDIS_BROKER_URL,
+                 backend=settings.CELERY_RESULT_BACKEND)
 
-# For debug:
-import logging
+    app.conf.update(
+        task_serializer="json",
+        result_serializer="json",
+        accept_content=["json"],
+        task_soft_time_limit=settings.CELERY_TASK_SOFT_TIME_LIMIT,
+        task_time_limit=settings.CELERY_TASK_TIME_LIMIT,
+    )
 
-logging.info(f"Registered tasks: {list(celery.tasks.keys())}")
+    app.autodiscover_tasks(["app.tasks"])
+    return app
+
+
+celery = create_celery()
+
+# For debug
+import logging, pprint
+logging.info("Celery tasks loaded:\n%s", pprint.pformat(list(celery.tasks)))

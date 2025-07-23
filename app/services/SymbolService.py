@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 import requests
 
-from app.pydanticConfig.settings import settings
+from app.core.pydanticConfig import settings
 
 BINANCE_BASE_URL = "https://api.binance.com"
 CMC_BASE_URL = "https://pro-api.coinmarketcap.com"

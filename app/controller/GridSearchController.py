@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException
 
 from app.core import SymbolInitialize as symbol_utils
-from app.dto.BackTestAnalysisRequest import BacktestAnalysisRequest
 from app.dto.GridTestRequest import GridSearchRequest
 from app.dto.TaskSubmitResponse import TaskSubmitResponse
-from app.tasks.BackTestAnalysisTask import run_backtest_analysis_task
 from app.tasks.GridSearchTask import run_grid_search_task
 
 router = APIRouter(prefix="/backtest", tags=["Backtest"])
@@ -20,13 +18,3 @@ def start_grid_search(request: GridSearchRequest):
     async_result = run_grid_search_task.delay(payload)
     return {"task_id": async_result.id, "detail": "Task submitted"}
 
-
-@router.post("/analysis", response_model=TaskSubmitResponse)
-def start_backtest_analysis(request: BacktestAnalysisRequest):
-    symbol_list = request.symbols or symbol_utils.ANALYSIS_SYMBOLS
-    if not symbol_list:
-        raise HTTPException(status_code=400, detail="No symbols available for backtest+analysis.")
-    payload = request.model_dump()
-    payload["symbols"] = symbol_list
-    async_result = run_backtest_analysis_task.delay(payload)
-    return {"task_id": async_result.id, "detail": "Task submitted"}

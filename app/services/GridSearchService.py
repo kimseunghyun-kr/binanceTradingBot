@@ -4,7 +4,7 @@ from itertools import product
 from typing import Optional
 
 from app.marketDataApi.binance import fetch_candles
-from app.services.BackTestService import BacktestService
+from app.services.BackTestService import BackTestServiceV2
 from app.services.StrategyService import StrategyService
 
 
@@ -31,7 +31,7 @@ class GridSearchService:
         results = []
         strategy_instance = StrategyService.get_strategy_instance(strategy["name"], strategy.get("params", {}))
         for tp, sl, add_buy in combos:
-            result = BacktestService.run_backtest(
+            result = BackTestServiceV2.run_backtest(
                 strategy_instance, symbols, fetch_candles,
                 interval=timeframe, num_iterations=num_iterations,
                 tp_ratio=tp, sl_ratio=sl,

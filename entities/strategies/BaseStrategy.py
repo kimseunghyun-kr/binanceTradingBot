@@ -8,6 +8,18 @@ class BaseStrategy:
     Abstract base class for all strategies.
     """
 
+    # ─────────────── configuration helpers ─────────────── #
+
+    def work_units(self, symbols: List[str]) -> List[Dict[str, Any]]:
+        """
+        Return a list of jobs; orchestrator will call `decide()` once for
+        each job in parallel during proposal construction.
+
+        Default: one job per symbol.
+        """
+        return [{"symbols": [s]} for s in symbols]
+
+    # ─────────────── to implement ─────────────── #
     def filter_symbols(self, symbols_df: pd.DataFrame) -> List[str]:
         """
         (Optional) Return a subset of symbols for this strategy.

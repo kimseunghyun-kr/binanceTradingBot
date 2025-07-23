@@ -5,23 +5,13 @@ from typing import Protocol, List
 
 from entities.tradeManager.FillRecord import FillRecord
 from entities.tradeManager.TradeEvent import TradeEvent
-
-
-class FillPolicy(Protocol):
-    """
-    Decide how an incoming TradeEvent is filled against the order-book.
-    Implementations must yield one or more FillRecord objects whose
-    qty sum equals the *signed* TradeEvent.qty.
-    """
-
-    def fill(self, event: TradeEvent, book: "OrderBookSlice | None" = None
-             ) -> List[FillRecord]: ...
+from entities.tradeManager.policies.interfaces import FillPolicy
 
 
 # --------------------------------------------------------------------- #
 # 1) Default “aggressive market” – old behaviour (1:1 fill)
 # --------------------------------------------------------------------- #
-class AggressiveMarketPolicy:
+class AggressiveMarketPolicy(FillPolicy):
     def __init__(self, fee_model, slip_model):
         self._fee_model = fee_model
         self._slip_model = slip_model
@@ -50,14 +40,14 @@ class AggressiveMarketPolicy:
 # --------------------------------------------------------------------- #
 # 2) Book-walking VWAP depth policy (toy demo)
 # --------------------------------------------------------------------- #
-class VWAPDepthPolicy:
+class VWAPDepthPolicy(FillPolicy):
     def __init__(self, depth: int, fee_model, slip_model):
         self.depth = depth
         self.fee_model = fee_model
         self.slip_model = slip_model
 
     # ------------------------------------------------------------------ #
-    def fill(self, event: TradeEvent, book) -> List[FillRecord]:
+    def fill(self, event: TradeEvent, book: "OrderBookSlice | None" = None) -> List[FillRecord]:
         """
         Break the TradeEvent into N FillRecords; never mutates `event`.
         """

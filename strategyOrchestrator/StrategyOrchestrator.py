@@ -1,338 +1,248 @@
 """
 strategyOrchestrator.py
 ──────────────────────────────────────────────────────────────────────────
-Global-clock back-test driver with single-pass fee / slippage handling.
-
-Key design points
-─────────────────
-1.  **Global clock**All 1 h / 15m (daily/weekly) candles for every
-    symbol are visited.  `PortfolioManager.on_bar()` therefore evaluates unrealised
-    PnL, funding and exit events at the correct timestamps.
-
-2.  **Single-pass costs**`TradeProposal` emits *raw* prices.  Only the ledger
-    applies `fee_model(event)` and `slippage_model(event)` exactly once.
-
-3.  **Spot vs Perp** Driver picks `BasePortfolioManager` or `PerpPortfolioManager`
-    at runtime;
-
+• Parallel first-pass proposal generation (ThreadPool)
+• Serial second-pass WAL execution
+• Unified load_component() with Protocol enforcement
+• Reads OHLCV directly from read-only MongoDB
 """
+
 from __future__ import annotations
 
-import hashlib
-import importlib
-import json
-import logging
-import sys
-import time
-import traceback
-from types import SimpleNamespace
-from typing import Dict, List, Any, Callable
+import concurrent.futures as fut
+import hashlib, json, logging, sys, time
+from typing import Any, Dict, List, cast
 
 import pandas as pd
 
+# ─────────── domain objects & helpers ───────────────────────────────── #
 from entities.perpetuals.portfolio.PerpPortfolioManager import PerpPortfolioManager
-# ──────────────────────────────────────────────
-# Project-specific imports – EDIT IF PATHS DIFFER
-# ──────────────────────────────────────────────
-from entities.portfolio.BasePortfolioManager import BasePortfolioManager
-from entities.portfolio.capacity.CapacityPolicy import LegCapacity, SymbolCapacity
-# Fee / slippage helpers
-from entities.portfolio.fees.fees import (
-    static_fee_model,
-    per_symbol_fee_model,
-    random_slippage_model,
-)
-from entities.portfolio.sizingModel.SizingModel import fixed_fraction
+from entities.portfolio.BasePortfolioManager           import BasePortfolioManager
+from entities.strategies.BaseStrategy import BaseStrategy
 from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy,
 )
-from entities.tradeManager.FillPolicy import AggressiveMarketPolicy, VWAPDepthPolicy
-from entities.tradeManager.TradeProposal import TradeProposal
 from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
-from strategyOrchestrator.Pydantic_config import settings  # ← holds DB creds
 from strategyOrchestrator.repository.candleRepository import CandleRepository
+from strategyOrchestrator.Pydantic_config import settings
+
+# unified interfaces
+from entities.portfolio.policies.interfaces import (
+    EventCostModel, SizingModel, CapacityPolicy,
+)
+from entities.tradeManager.policies.interfaces import FillPolicy
+
+from entities.portfolio.policies.fees.fees import (
+    FEE_STATIC, FEE_PER_SYMBOL, SLIP_RANDOM, SLIP_ZERO,
+)
+from entities.portfolio.policies.capacity.CapacityPolicy import (
+    LegCapacity, SymbolCapacity,
+)
+from entities.tradeManager.policies.FillPolicy import (
+    AggressiveMarketPolicy, VWAPDepthPolicy,
+)
+from entities.portfolio.policies.sizingModel.SizingModel import fixed_fraction
+
+# loader
+from strategyOrchestrator.LoadComponent import load_component
 
 
-# ──────────────────────────────────────────────────────────────
-# Dynamic plug-in loader
-# ──────────────────────────────────────────────────────────────
-"""
-Users may pass arbitrary plug-ins via JSON, e.g.
 
-"strategy":        { "module": "user_code.my_rsi",      "class": "RSIStrategy",      "params": { "rsi_len": 14 } },
-"fill_policy":     { "module": "my_exec.vwap",          "class": "VWAPDepthPolicy",  "params": { "depth": 8    } },
-"capacity_policy": { "module": "entities.portfolio.capacity_policy",
-                     "class": "SymbolCapacity",         "params": { "max_symbols": 4 } },
-"sizing_model":    { "module": "entities.portfolio.sizing_model",
-                     "class": "fixed_fraction",         "params": { "frac": 0.5 } }
-"""
+# ─────────── built-in maps (all objects are callables) ──────────────── #
+FEE_MAP  = {"static": FEE_STATIC,
+            "per_symbol": FEE_PER_SYMBOL,
+            "__default__": FEE_STATIC}
 
-def _load_obj(spec: Dict[str, Any],
-              fallback: Dict[str, Any],
-              label: str):
-    """
-    Instantiate `{module,class,params}` OR built-in mapping entry.
-    """
-    if not spec:                            # empty → default
-        cls = fallback["__default__"]
-        return cls()
+SLIP_MAP = {"random": SLIP_RANDOM,
+            "zero":   SLIP_ZERO,
+            "__default__": SLIP_ZERO}
 
-    cls_name  = spec.get("class")
-    params    = spec.get("params",  {})
-    mod_path  = spec.get("module")
+FILL_MAP = {"AggressiveMarketPolicy": AggressiveMarketPolicy,
+            "VWAPDepthPolicy":        VWAPDepthPolicy,
+            "__default__":            AggressiveMarketPolicy}
 
-    # built-in?
-    if cls_name in fallback:
-        return fallback[cls_name](**params)
+CAP_MAP  = {"LegCapacity":    LegCapacity,
+            "SymbolCapacity": SymbolCapacity,
+            "__default__":    LegCapacity}
 
-    # dynamic import
-    try:
-        mod = importlib.import_module(mod_path)
-        cls = getattr(mod, cls_name)
-    except (ImportError, AttributeError) as exc:
-        raise ImportError(f"{label} plug-in not found: {exc}") from exc
-    return cls(**params)
+SIZE_MAP = {"fixed_fraction": fixed_fraction,
+            "__default__":    (lambda frac=1.0: fixed_fraction(frac))}
 
+STRAT_MAP = {"PeakEMAReversalStrategy": PeakEMAReversalStrategy,
+             "__default__": PeakEMAReversalStrategy}
 
-# ──────────────────────────────────────────────
-# Logging helpers
-# ──────────────────────────────────────────────
-def _get_logger() -> logging.Logger:
+# ─────────── logging helper ─────────────────────────────────────────── #
+def _log() -> logging.Logger:
     tag = hashlib.sha256(str(time.time()).encode()).hexdigest()[:8]
-    logger = logging.getLogger(f"Backtest_{tag}")
-    logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(
-        logging.Formatter(f"%(asctime)s [{tag}] %(levelname)s: %(message)s")
-    )
-    logger.addHandler(handler)
-    logger.propagate = False
-    return logger
+    lg  = logging.getLogger(f"Backtest_{tag}")
+    lg.setLevel(logging.INFO)
+    h = logging.StreamHandler(sys.stderr)
+    h.setFormatter(logging.Formatter(f"%(asctime)s [{tag}] %(levelname)s: %(message)s"))
+    lg.addHandler(h); lg.propagate = False
+    return lg
 
 
-# ──────────────────────────────────────────────
-# Fee / slippage model wrappers
-# ──────────────────────────────────────────────
-def _const_event_model(val: float) -> Callable:
-    return lambda _ev: float(val)
-
-
-def _wrap_meta(fn_meta: Callable[[Any, str], float]) -> Callable:
-    """
-    Adapt a legacy signature (meta, action) -> float
-    into the ledger‐expected (event) -> float.
-    """
-
-    def _inner(ev):
-        meta = SimpleNamespace(symbol=ev.meta["symbol"])
-        return fn_meta(meta, "entry")
-
-    return _inner
-
-
-# ──────────────────────────────────────────────
-# Trade-proposal generation
-# ──────────────────────────────────────────────
-def _precheck_df(
-        df: pd.DataFrame, need_cols: set[str], lookback: int, sym: str, log: logging.Logger
-) -> pd.DataFrame | None:
-    if df.empty or len(df) < lookback:
-        log.warning(f"{sym}: insufficient candles – {len(df)} rows")
-        return None
-    if not df["open_time"].is_monotonic_increasing:
-        df = df.sort_values("open_time").reset_index(drop=True)
-    if df[need_cols].isna().any().any():
-        log.warning(f"{sym}: NaNs in OHLCV")
-        return None
-    return df
-
-
-# ─────────── Build TradeProposals (now via Builder) ─────────── #
-def build_proposals(
-    symbols:   List[str],
-    interval:  str,
-    symbol_df: Dict[str, Any],
-    repo:      CandleRepository,
-    strategy,
-    lookback:  int,
-    num_iter:  int,
-    tp_ratio:  float,
-    sl_ratio:  float,
-    log:       logging.Logger,
-) -> List["TradeProposal"]:
+# ─────────── worker: build proposals for ONE job ─────────────────────── #
+def _proposals_for_job(job: Dict[str, Any], interval: str, repo: CandleRepository,
+                       strategy, lookback: int, num_iter: int,
+                       tp: float, sl: float) -> List:
+    syms = job["symbols"]
     need = {"open_time", "open", "high", "low", "close"}
+
+    # merge symbols’ candles horizontally
+    dfs = []
+    for s in syms:
+        df = repo.fetch_candles(s, interval, num_iter + lookback + 20, newest_first=True)
+        if df.empty or len(df) < lookback or df[need].isna().any().any():
+            return []
+        df = df.sort_values("open_time", ascending=True).reset_index(drop=True)
+        df.columns = pd.MultiIndex.from_product([[s], df.columns])
+        dfs.append(df)
+
+    merged = pd.concat(dfs, axis=1)
+    last, first = len(merged) - 1, max(lookback, len(merged) - num_iter)
+    detail_int  = "1h" if interval in {"1d", "1w"} else "15m"
     proposals: list = []
 
-    for sym in symbols:
+    for i in range(last, first - 1, -1):
+        window = merged.iloc[max(0, i - lookback + 1): i + 1]
         try:
-            df = pd.read_json(symbol_df[sym], orient="split")
-        except Exception as exc:
-            log.error(f"{sym}: failed to load JSON – {exc}")
+            dec = strategy.decide(window, interval, tp_ratio=tp, sl_ratio=sl)
+        except Exception:
+            continue
+        if dec.get("signal") != "BUY":
             continue
 
-        df = _precheck_df(df, need, lookback, sym, log)
-        if df is None: continue
+        entry_ts = int(window.index[-1])
+        det_df   = repo.fetch_candles(syms[0], detail_int, 2000, start_time=entry_ts)
+        if det_df.empty: continue
 
-        last_idx  = len(df) - 1
-        first_idx = max(lookback, len(df) - num_iter)
-
-        for i in range(last_idx, first_idx - 1, -1):
-            window = df.iloc[max(0, i - lookback + 1): i + 1].copy()
-
-            try:
-                dec = strategy.decide(window, interval,
-                                      tp_ratio=tp_ratio, sl_ratio=sl_ratio)
-            except Exception:
-                log.error(f"{sym}@{int(df['open_time'].iloc[i])}\n" + traceback.format_exc())
-                continue
-
-            if dec.get("signal") != "BUY":    # only demo LONG
-                continue
-
-            entry_ts  = int(df["open_time"].iloc[i])
-            detail_int = "1h" if interval in {"1d", "1w"} else "15m"
-            detail_df  = repo.fetch_candles(sym, detail_int, 2000, start_time=entry_ts)
-            if detail_df.empty:
-                log.warning(f"{sym}@{entry_ts}: no detail candles → skipped")
-                continue
-
-            # ---- Build proposal via DSL (single market leg) -------------
-            proposal = (
-                TradeProposalBuilder(sym, size=1.0, direction="LONG")
-                .scale_in(n=1, start_pct=0.0, step_pct=0.0, reference="open")
-                .bracket_exit(tp=tp_ratio, sl=sl_ratio)
-                # NEW: inject strategy-decided prices *before* build()
-                .set_entry_params(
-                    entry_price=float(dec["entry_price"]),
-                    tp_price=float(dec["tp_price"]),
-                    sl_price=float(dec["sl_price"]),
-                    entry_ts=entry_ts
-                )
-                .build(detail_df)
+        proposals.append(
+            TradeProposalBuilder(syms[0], size=1.0, direction="LONG")
+            .scale_in(1, 0.0, 0.0, "open")
+            .bracket_exit(tp = tp, sl = sl)
+            .set_entry_params(
+                entry_price=float(dec["entry_price"]),
+                tp_price=float(dec["tp_price"]),
+                sl_price=float(dec["sl_price"]),
+                entry_ts=entry_ts,
             )
+            .build(det_df)
+        )
 
-            proposals.append(proposal)
-
-    proposals.sort(key=lambda p: p.meta.entry_time)
-    log.info(f"Built {len(proposals)} proposals")
     return proposals
 
 
-# ──────────────────────────────────────────────
-# Global-clock back-test
-# ──────────────────────────────────────────────
-def run_backtest(cfg: Dict[str, Any], log: logging.Logger) -> Dict[str, Any]:
+# ─────────── orchestrator core ───────────────────────────────────────── #
+def run_backtest(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    lg = _log()
 
-    # ╭─ Config extraction ───────────────────────────────────────────╮
-    symbols      : List[str]      = cfg["symbols"]
-    interval     : str            = cfg["interval"]
-    symbol_json  : Dict[str, Any] = cfg["symbol_data"]
-    num_iter     : int            = cfg.get("num_iterations", 60)
-    market       : str            = cfg.get("market", "SPOT")
-    tp_ratio     : float          = cfg.get("tp_ratio", 2.0)
-    sl_ratio     : float          = cfg.get("sl_ratio", 1.0)
+    symbols   : list  = cfg["symbols"]
+    interval  : str   = cfg["interval"]
+    iters     : int   = cfg.get("num_iterations", 60)
+    tp_ratio  : float = cfg.get("tp_ratio", 2.0)
+    sl_ratio  : float = cfg.get("sl_ratio", 1.0)
+    workers   : int   = cfg.get("parallel_symbols", 4)
+    market    : str   = cfg.get("market", "SPOT")
 
+    # class
+    fill_pol_cls = load_component(  # ← return a *class*
+        cfg.get("fill_policy"),
+        FILL_MAP,
+        None,  # ← NO instantiation here
+        "fill_policy",
+    )
 
-    # ---------- fee / slip ----------
-    fee_cfg  = cfg.get("fee", 0.001)
-    slip_cfg = cfg.get("slippage", 0.0)
-    # ╰───────────────────────────────────────────────────────────────╯
+    # cost models --------------------------------------------------------
+    fee_model: EventCostModel = load_component(
+        cfg.get("fee_model"), FEE_MAP, EventCostModel, "fee_model"
+    )
+    slip_model: EventCostModel = load_component(
+        cfg.get("slippage_model"), SLIP_MAP, EventCostModel, "slippage"
+    )
 
-    fee_model  = (_const_event_model(fee_cfg) if isinstance(fee_cfg, (float,int))
-                  else _wrap_meta(per_symbol_fee_model) if fee_cfg=="per_symbol"
-                  else _wrap_meta(static_fee_model))
-    slip_model = (_const_event_model(slip_cfg) if isinstance(slip_cfg,(float,int))
-                  else _wrap_meta(random_slippage_model) if slip_cfg=="random"
-                  else _const_event_model(0.0))
+    # fill policy (class → instance) ------------------------------------
+    fill_cls = load_component(cfg.get("fill_policy"), FILL_MAP, None, "fill_policy")
+    fill_pol: FillPolicy = cast(FillPolicy, fill_cls(fee_model, slip_model))
 
-    # ---------- plug-ins ----------
-    STRAT_MAP = {"PeakEMAReversalStrategy": PeakEMAReversalStrategy,
-                 "__default__": PeakEMAReversalStrategy}
-    FILL_MAP  = {"AggressiveMarketPolicy": AggressiveMarketPolicy,
-                 "VWAPDepthPolicy":        VWAPDepthPolicy,
-                 "__default__":            AggressiveMarketPolicy}
-    CAP_MAP   = {"LegCapacity": LegCapacity,
-                 "SymbolCapacity": SymbolCapacity,
-                 "__default__":    LegCapacity}
-    SIZE_MAP  = {"fixed_fraction": fixed_fraction,
-                 "__default__":    (lambda frac=1.0: fixed_fraction(frac))}
-
-    strategy         = _load_obj(cfg.get("strategy",        {}), STRAT_MAP, "strategy")
-    fill_policy      = _load_obj(cfg.get("fill_policy",     {}), FILL_MAP,  "fill_policy")
-    capacity_policy  = _load_obj(cfg.get("capacity_policy", {}), CAP_MAP,   "capacity_policy")
-    sizing_model     = _load_obj(cfg.get("sizing_model",    {}), SIZE_MAP,  "sizing_model")
-
-    # give fee / slip fn to fill_policy if it supports them
-    if hasattr(fill_policy, "fee_model"):
-        fill_policy.fee_model  = fee_model
-    if hasattr(fill_policy, "slip_model"):
-        fill_policy.slip_model = slip_model
+    # other plug-ins (instances) ----------------------------------------
+    cap_pol: CapacityPolicy = load_component(
+        cfg.get("capacity_policy"), CAP_MAP, CapacityPolicy, "capacity_policy"
+    )
+    size_mod: SizingModel = load_component(
+        cfg.get("sizing_model"), SIZE_MAP, SizingModel, "sizing_model"
+    )
+    strategy: BaseStrategy = load_component(
+        cfg.get("strategy"), STRAT_MAP, BaseStrategy, "strategy"
+    )
 
     lookback = strategy.get_required_lookback()
-    repo     = CandleRepository(settings.MONGO_URI, settings.MONGO_DB)
+    repo = CandleRepository(settings.MONGO_URI, settings.MONGO_DB, read_only=True)
 
-    # ---------- build proposals ----------
-    props = build_proposals(symbols, interval, symbol_json, repo,
-                            strategy, lookback, num_iter,
-                            tp_ratio, sl_ratio, log)
+    # job list (pairs/baskets) ------------------------------------------
+    jobs = strategy.work_units(symbols)
 
-    # ---------- choose portfolio manager ----------
-    PMClass = PerpPortfolioManager if market=="PERP" else BasePortfolioManager
-    pm = PMClass(
+    # parallel proposal build
+    proposals: list = []
+    with fut.ThreadPoolExecutor(max_workers=workers) as pool:
+        fut_to_job = {
+            pool.submit(_proposals_for_job, j, interval, repo,
+                        strategy, lookback, iters, tp_ratio, sl_ratio): j
+            for j in jobs
+        }
+        for f in fut.as_completed(fut_to_job):
+            try: proposals.extend(f.result())
+            except Exception as e: lg.error(f"worker err: {e}")
+
+    proposals.sort(key=lambda p: p.meta.entry_time)
+    lg.info(f"Proposals built: {len(proposals)}")
+
+    # portfolio
+    PM = PerpPortfolioManager if market == "PERP" else BasePortfolioManager
+    pm = PM(
         initial_cash    = 100_000,
         fee_model       = fee_model,
         slippage_model  = slip_model,
-        fill_policy     = fill_policy,
-        capacity_policy = capacity_policy,
-        sizing_model    = sizing_model,
+        fill_policy     = fill_pol,
+        capacity_policy = cap_pol,
+        sizing_model    = size_mod,
     )
 
-    # ---------- global timeline ----------
+    # timeline
     detail_int = "1h" if interval in {"1d","1w"} else "15m"
-    detail_candles = {s: repo.fetch_candles(s, detail_int, 10_000)
-                      for s in symbols}
-    timeline = sorted({int(r.open_time)
-                       for df in detail_candles.values()
-                       for r in df.itertuples()})
-    close_map = {(s,int(r.open_time)): float(r.close)
-                 for s,df in detail_candles.items()
-                 for r in df.itertuples()}
+    d_candles  = {s: repo.fetch_candles(s, detail_int, 10_000) for s in symbols}
+    timeline   = sorted({int(r.open_time)
+                         for df in d_candles.values() for r in df.itertuples()})
+    price_map  = {(s, int(r.open_time)): float(r.close)
+                  for s, df in d_candles.items() for r in df.itertuples()}
 
-    # ---------- main loop ----------
     pidx = 0
     for ts in timeline:
-        while pidx < len(props) and props[pidx].meta.entry_time <= ts:
-            pm.try_execute(props[pidx], now_ts=ts)
+        while pidx < len(proposals) and proposals[pidx].meta.entry_time <= ts:
+            pm.try_execute(proposals[pidx], now_ts=ts)
             pidx += 1
-        prices = {s: close_map[(s,ts)] for s in symbols if (s,ts) in close_map}
+        prices = {s: price_map[(s, ts)]
+                  for s in symbols if (s, ts) in price_map}
         pm.on_bar(ts, prices)
 
     if timeline:
-        pm.on_bar(timeline[-1]+1, {})   # flush
+        pm.on_bar(timeline[-1] + 1, {})
 
-    result = pm.get_results()
-    result.update({
+    res = pm.get_results()
+    res.update({
         "symbol_count": len(symbols),
-        "market": market,
         "interval": interval,
         "strategy": strategy.__class__.__name__,
+        "parallel_symbols": workers,
     })
-    return result
+    return res
 
-# ──────────────────────────────────────────────
-# CLI entry-point
-# ──────────────────────────────────────────────
-def main():
-    logger = _get_logger()
+
+# ─────────── CLI: stdin JSON → stdout JSON ───────────────────────────── #
+if __name__ == "__main__":
     try:
         cfg = json.loads(sys.stdin.read())
     except json.JSONDecodeError:
-        logger.error("Invalid JSON on stdin")
-        sys.exit(1)
+        print(json.dumps({"status":"failed","error":"invalid JSON"})); sys.exit(1)
 
-    output = run_backtest(cfg, logger)
-    print(json.dumps(output, default=str))
-
-
-if __name__ == "__main__":
-    main()
+    print(json.dumps(run_backtest(cfg), default=str))

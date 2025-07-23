@@ -3,8 +3,8 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.controller.BacktestController import TaskSubmitResponse
 from app.core import SymbolInitialize as symbol_utils
+from app.dto.TaskSubmitResponse import TaskSubmitResponse
 from app.tasks.AnalysisTask import run_analysis_task
 
 router = APIRouter(prefix="", tags=["Analysis"])
