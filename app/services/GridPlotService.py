@@ -2,7 +2,7 @@
 
 import itertools
 
-from app.services.BackTestService import BacktestService
+from app.services.BackTestService import BackTestServiceV2 as BacktestService
 from app.utils.plot_results import plot_grid_search_3d
 
 

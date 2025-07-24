@@ -6,8 +6,9 @@ from typing import Protocol
 
 from pymongo import MongoClient
 
-from strategyOrchestrator.Pydantic_config import settings
+from app.core.pydanticConfig.settings import get_settings
 
+settings = get_settings()
 
 class FundingProvider(Protocol):
     def get_rate(self, symbol: str, ts: int) -> float: ...

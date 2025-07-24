@@ -14,15 +14,11 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Any, List, Optional, AsyncGenerator
-from collections import deque
 
 import docker
-from docker.errors import DockerException
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.core.config import settings
-from app.core.init_services import get_mongo_client, redis_cache
-from app.core.mongodb_config import mongodb_config
+from app.core.db.mongodb_config import mongodb_config
 
 logger = logging.getLogger(__name__)
 

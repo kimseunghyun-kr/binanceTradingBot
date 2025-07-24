@@ -15,6 +15,7 @@ from typing import Any, Dict, List, cast
 
 import pandas as pd
 
+from app.core.pydanticConfig import settings
 # ─────────── domain objects & helpers ───────────────────────────────── #
 from entities.perpetuals.portfolio.PerpPortfolioManager import PerpPortfolioManager
 from entities.portfolio.BasePortfolioManager           import BasePortfolioManager
@@ -24,7 +25,6 @@ from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
 )
 from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
 from strategyOrchestrator.repository.candleRepository import CandleRepository
-from strategyOrchestrator.Pydantic_config import settings
 
 # unified interfaces
 from entities.portfolio.policies.interfaces import (

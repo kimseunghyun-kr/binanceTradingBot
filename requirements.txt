@@ -1,50 +1,52 @@
 # Core Framework
-fastapi
-uvicorn[standard]
-pydantic
-pydantic-settings
+fastapi~=0.112.2
+uvicorn[standard]~=0.35.0
+pydantic~=2.11.7
+pydantic-settings~=2.6.1
 python-multipart
 
 # GraphQL
-strawberry-graphql[fastapi]
+strawberry-graphql[fastapi]~=0.278.0
 
 # Database
-motor                # Async MongoDB
-pymongo             # Sync MongoDB (for Celery workers)
-redis
+motor~=3.7.1
+pymongo~=4.13.0
+redis~=3.5.3
 asyncpg            # PostgreSQL async driver
 sqlalchemy[asyncio]
-databases
+databases~=0.9.0
 alembic
 
 # Task Queue
-celery[redis]
+celery[redis]~=4.4.0
+vine
 flower              # Celery monitoring
 
 # Security
 python-jose[cryptography]
-passlib[bcrypt]
+passlib[bcrypt]~=1.7.4
 python-decouple
-slowapi             # Rate limiting
+slowapi~=0.1.9
+jwt
 
 # Data Processing
-pandas
-numpy
+pandas~=2.1.4
+numpy~=1.26.3
 numba              # JIT compilation for performance
 ta               # Technical indicators
 
 # HTTP Client
 httpx
 aiohttp
-requests
+requests~=2.32.3
 
 # Docker
-docker
+docker~=7.1.0
 
 # Plotting/Visualization
 matplotlib
-mplfinance
-plotly
+mplfinance~=0.12.9b7
+plotly~=6.0.1
 kaleido
 
 # Utilities
@@ -84,11 +86,11 @@ mkdocs-material
 python-binance
 
 # Environment
-python-dotenv
+python-dotenv~=1.1.0
 
 # CORS & Middleware
 fastapi-cors
-starlette
+starlette~=0.38.2
 
 # WebSocket
 websockets

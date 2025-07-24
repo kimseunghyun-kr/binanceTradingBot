@@ -1,8 +1,9 @@
 # app/core/celery_app.py
 from celery import Celery
 
-from app.core.pydanticConfig import settings
+from app.core.pydanticConfig.settings import get_settings
 
+settings = get_settings()
 
 def create_celery() -> Celery:
     app = Celery("binanceTradingBot",
@@ -10,11 +11,11 @@ def create_celery() -> Celery:
                  backend=settings.CELERY_RESULT_BACKEND)
 
     app.conf.update(
+        broker_url=settings.REDIS_BROKER_URL,
+        result_backend=settings.CELERY_RESULT_BACKEND,
         task_serializer="json",
         result_serializer="json",
         accept_content=["json"],
-        task_soft_time_limit=settings.CELERY_TASK_SOFT_TIME_LIMIT,
-        task_time_limit=settings.CELERY_TASK_TIME_LIMIT,
     )
 
     app.autodiscover_tasks(["app.tasks"])

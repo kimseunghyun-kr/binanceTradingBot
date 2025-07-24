@@ -10,13 +10,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.core.init_services import redis_cache, get_mongo_client
-from app.core.pydanticConfig.settings import settings
+from app.core.pydanticConfig.settings import get_settings
 from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
 from app.services.orchestrator.OrchestratorService import OrchestratorService
 
+settings = get_settings()
 
 class BackTestServiceV2:
-
     # ───────────────────────── public entrypoint ─────────────────────── #
     @classmethod
     async def run_backtest(

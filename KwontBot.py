@@ -11,6 +11,7 @@ from app.controller import (SymbolController as symbols,
                             TaskController as tasks
                             )
 from app.core import init_services
+from app.core.init_services import data_service
 
 # Create FastAPI app
 app = FastAPI(
@@ -33,6 +34,8 @@ app.include_router(symbols.router)
 app.include_router(gridSearch.router)
 
 app.include_router(tasks.router)
+
+app.data_service = data_service
 
 
 # Startup and shutdown events for DB connections

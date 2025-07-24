@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.core import celery_app
-from app.core.pydanticConfig import settings
+from app.core.pydanticConfig.settings import get_settings
 from app.core.security import get_current_user
 from app.services.orchestrator.OrchestratorPoolService import orchestrator_pool
 from app.tasks.BackTestTask import run_backtest_task
@@ -21,7 +21,7 @@ from app.tasks.BackTestTask import run_backtest_task
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/backtest", tags=["Backtest V2"])
-
+settings = get_settings()
 
 class BacktestRequestV2(BaseModel):
     """Enhanced backtest request with custom strategy support."""
@@ -214,7 +214,7 @@ async def stream_backtest_progress(
 
     try:
         # Get MongoDB client
-        from app.core.mongodb_config import mongodb_config
+        from app.core.db.mongodb_config import mongodb_config
         db = mongodb_config.get_master_client()[settings.MONGO_DB]
 
         # Stream progress from MongoDB
@@ -277,7 +277,7 @@ async def get_backtest_results(
         user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Get full backtest results."""
-    from app.core.mongodb_config import mongodb_config
+    from app.core.db.mongodb_config import mongodb_config
     db = mongodb_config.get_master_client()[settings.MONGO_DB]
 
     result = await db.backtest_results.find_one({"task_id": task_id})
@@ -331,7 +331,7 @@ async def export_backtest_results(
     - excel: Excel workbook with multiple sheets
     - pdf: PDF report
     """
-    from app.core.mongodb_config import mongodb_config
+    from app.core.db.mongodb_config import mongodb_config
     db = mongodb_config.get_master_client()[settings.MONGO_DB]
 
     result = await db.backtest_results.find_one({"task_id": task_id})

@@ -6,11 +6,11 @@ Implements security features including authentication, rate limiting, and CORS.
 
 import time
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Callable
 from functools import wraps
+from typing import Optional, Dict, Any, Callable
 
-import jwt
-from fastapi import HTTPException, Security, Depends, Request, Response
+from jwt import jwt
+from fastapi import HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from slowapi import Limiter
@@ -18,20 +18,23 @@ from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from app.core.pydanticConfig.settings import settings
+from app.core.pydanticConfig.settings import get_settings
+
+cfg = get_settings()
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT configuration
 security = HTTPBearer()
-SECRET_KEY = settings.SECRET_KEY or "your-secret-key-here"
+SECRET_KEY = cfg.SECRET_KEY or "your-secret-key-here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 # Rate limiter
 limiter = Limiter(key_func=get_remote_address)
+
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -191,7 +194,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
 
 def require_api_key(api_key: str = Security(HTTPBearer())):
     """Validate API key for certain endpoints."""
-    if api_key.credentials != settings.API_KEY:
+    if api_key.credentials != cfg.API_KEY:
         raise HTTPException(
             status_code=401,
             detail="Invalid API key"
@@ -260,7 +263,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Check content length
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > settings.MAX_REQUEST_SIZE:
+        if content_length and int(content_length) > cfg.MAX_REQUEST_SIZE:
             return JSONResponse(
                 status_code=413,
                 content={"detail": "Request entity too large"}
@@ -282,9 +285,9 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 # CORS configuration
 def get_cors_config():
     """Get CORS configuration based on environment."""
-    if settings.ENVIRONMENT == "production":
+    if cfg.ENVIRONMENT == "production":
         return {
-            "allow_origins": settings.ALLOWED_ORIGINS,
+            "allow_origins": cfg.ALLOWED_ORIGINS,
             "allow_credentials": True,
             "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["*"],
@@ -309,7 +312,7 @@ class APIKeyManager:
         """Validate API key and return associated metadata."""
         # In production, this would check against database
         # For now, simple validation
-        if api_key == settings.API_KEY:
+        if api_key == cfg.API_KEY:
             return {
                 "client_id": "default",
                 "rate_limit": "1000/hour",
