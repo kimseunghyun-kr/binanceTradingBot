@@ -23,6 +23,69 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/backtest", tags=["Backtest V2"])
 
 
+@router.post("/submit-test", response_model=BacktestResponse)
+async def submit_backtest_test(
+        request: BacktestRequestV2
+) -> BacktestResponse:
+    """
+    Test endpoint for backtest submission without authentication.
+    """
+    # Use a dummy user for testing
+    user = {"user_id": "test_user", "username": "test"}
+    
+    try:
+        # Resolve symbols
+        if request.symbols:
+            symbols = request.symbols
+        else:
+            # Default to a few popular symbols for testing
+            symbols = ["BTCUSDT", "ETHUSDT"]
+
+        # Prepare task payload
+        task_payload = {
+            "user_id": user["user_id"],
+            "strategy_name": request.strategy_name,
+            "strategy_params": request.strategy_params,
+            "symbols": symbols,
+            "interval": request.interval,
+            "num_iterations": request.num_iterations,
+            "start_date": request.start_date,
+            "end_date": request.end_date,
+            "custom_strategy_code": request.custom_strategy_code,
+            "use_cache": request.use_cache,
+            "save_results": request.save_results,
+            "stream_progress": request.stream_progress,
+            "initial_capital": request.initial_capital,
+            "position_size_pct": request.position_size_pct,
+            "max_positions": request.max_positions,
+            "tp_ratio": request.tp_ratio,
+            "sl_ratio": request.sl_ratio,
+            "fee_model": request.fee_model,
+            "slippage_model": request.slippage_model,
+            "fill_policy": request.fill_policy
+        }
+
+        # Submit to Celery
+        async_result = run_backtest_task.delay(task_payload)
+
+        # Prepare response
+        response = BacktestResponse(
+            task_id=async_result.id,
+            status="submitted",
+            message=f"Backtest submitted for {len(symbols)} symbols"
+        )
+
+        # Add WebSocket URL if streaming requested
+        if request.stream_progress:
+            response.websocket_url = f"/api/v2/backtest/stream/{async_result.id}"
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Failed to submit backtest: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class BacktestRequestV2(BaseModel):
     """Enhanced backtest request with custom strategy support."""
     strategy_name: str = Field(..., description="Strategy name")

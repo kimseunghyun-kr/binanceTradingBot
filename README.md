@@ -1,135 +1,328 @@
 # Binance Trading Bot — FastAPI + Celery Backtesting Platform
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-async-green) ![Celery](https://img.shields.io/badge/Celery-5.x-yellow)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg) ![FastAPI](https://img.shields.io/badge/FastAPI-async-green) ![Celery](https://img.shields.io/badge/Celery-5.x-yellow) ![Docker](https://img.shields.io/badge/Docker-orchestration-blue)
 
 ## Overview
 
-This project is a robust, modular backtesting platform for trading strategies. It combines **FastAPI** for web-based
-orchestration and **Celery** for distributed and asynchronous execution of computationally heavy backtest tasks. It is
-designed for flexibility, developer productivity, and scaling to large symbol universes (e.g., Binance USDT pairs).
+This project is a robust, modular backtesting platform for trading strategies on Binance. It features a microservices architecture with **FastAPI** for REST API endpoints, **Celery** for distributed task processing, **Docker** for strategy sandboxing, and **MongoDB/Redis** for data persistence.
 
-> **⚠️ Project status:**
+> **⚠️ Project Status: Early Development**
 >
-> This project is **not even pre-alpha** and is currently in its **first development iteration**. Many features are
-> planned, but only core Celery task orchestration and the controller-service pipeline are confirmed to function at a
-> basic level. Symbol query/filtering and core business logic are **not production-ready nor tested**.
+> Core functionality is working but still in active development. The controller-service architecture has been refactored and basic backtesting is functional.
 
-* **Technology stack:** Python, FastAPI, Celery, Redis, MongoDB, Pydantic, Pandas
-* **Key features:**
+### Technology Stack
+* **Backend:** Python 3.10+, FastAPI, Celery
+* **Databases:** MongoDB (primary), Redis (cache/broker), PostgreSQL (optional)
+* **Container:** Docker (strategy sandboxing)
+* **Libraries:** Pandas, NumPy, Pydantic, Motor (async MongoDB)
 
-    * Submit and track custom trading strategy backtests over HTTP
-    * Fully async background workers (Celery)
-    * Symbol universe can be filtered, queried, or set dynamically (**symbol query feature under development**)
-    * Swagger UI for interactive exploration and manual runs
-    * Debug-friendly: run everything locally, debug in PyCharm/VSCode
-    * Modular strategy/service design for easy extension
+### Key Features
+* ✅ **V2 Architecture:** Enhanced controller-service pattern with clean separation of concerns
+* ✅ **Async Processing:** Celery-based task queue for long-running backtests
+* ✅ **Strategy Sandboxing:** Docker-based isolation for custom strategy execution
+* ✅ **Real-time Progress:** WebSocket support for streaming backtest progress
+* ✅ **Multi-Asset Support:** Synchronized backtesting across multiple trading pairs
+* ✅ **Flexible Exit Strategies:** Support for TP/SL with crossing policies
+* ✅ **REST API:** Full Swagger/OpenAPI documentation
+* 🚧 **GraphQL API:** Query interface for advanced filtering (in development)
+
+## Architecture Overview
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   FastAPI   │────▶│   Service   │────▶│   Celery    │
+│ Controller  │     │    Layer    │     │    Tasks    │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   MongoDB   │     │    Redis    │     │   Docker    │
+│   (Data)    │     │   (Cache)   │     │ (Sandbox)   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
 
 ## Features & Project Status
 
-* **Confirmed Working:**
+### ✅ Working Features
+* **V2 Backtest Controller:** Enhanced endpoints with authentication and streaming
+* **Celery Task System:** Async task processing with progress tracking
+* **Service Layer:** Business logic with Docker orchestration support
+* **MongoDB Integration:** Data persistence with master-slave architecture
+* **Strategy Execution:** Multiple built-in strategies (PeakEmaReversal, Momentum, Ensemble)
+* **Test Endpoints:** Authentication-free endpoints for development
 
-    * Celery background task system
-    * Controller → Service pipeline (`backtest.py` endpoint end-to-end call)
-* **Under Development:**
+### 🚧 In Development
+* **GraphQL API:** Advanced symbol filtering and queries
+* **Production Authentication:** Full JWT-based auth system
+* **Advanced Analytics:** Performance metrics and visualization
+* **Live Trading:** Real-time trading execution (planned)
 
-    * Symbol query/advanced filtering (currently not production ready)
-    * Core business logic for strategies/backtest results (business computation NOT verified)
+## Quick Start
 
-## Usage Quickstart
+### Prerequisites
 
-### 1. Install dependencies
+* Python 3.10+
+* Docker (for strategy sandboxing)
+* Redis (message broker)
+* MongoDB (data storage)
+
+### 1. Clone and Install
 
 ```bash
+git clone https://github.com/yourusername/binanceTradingBot.git
+cd binanceTradingBot
 pip install -r requirements.txt
 ```
 
-* Requires Python 3.10+
-* Make sure Redis and MongoDB are running locally (default configs)
-
-### 2. Configure Environment
-
-* Copy `.env.example` or set up your `.env`, `.env.development`, `.env.production` as needed
-* Edit API keys and settings in `app/pydanticConfig/settings.py` or your `.env` files
-
-### 3. Start API Server
+### 2. Start Required Services
 
 ```bash
-python run_local.py
+# Using Docker
+docker-compose up -d redis mongodb
+
+# Or manually
+docker run -d -p 6379:6379 redis:latest
+docker run -d -p 27017:27017 mongo:latest
 ```
 
-* FastAPI will load at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+### 3. Configure Environment
 
-### 4. Start Celery Worker(s)
+Create a `.env` file based on `.env.example`:
 
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+Key settings:
+- `MONGO_URI`: MongoDB connection string
+- `REDIS_BROKER_URL`: Redis URL for Celery
+- `SECRET_KEY`: JWT secret (for production)
+- `API_KEY`: API authentication key
+
+### 4. Start the Application
+
+**Terminal 1 - API Server:**
+```bash
+python run_local.py
+# API docs available at http://localhost:8000/docs
+```
+
+**Terminal 2 - Celery Worker:**
 ```bash
 python worker.py
 ```
 
-* For debugging, run `worker.py` in PyCharm/VSCode with breakpoints
-* Worker logs appear in `logs/worker.log`
+### 5. Run Your First Backtest
 
-### 5. Submit a Backtest
+**Option 1: Using the test script**
+```bash
+python test_backtest.py
+```
 
-* Use the Swagger UI or Postman:
+**Option 2: Direct API call**
+```bash
+curl -X POST http://localhost:8000/backtest/submit-test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy_name": "peak_ema_reversal",
+    "strategy_params": {"tp_ratio": 0.1, "sl_ratio": 0.05},
+    "symbols": ["BTCUSDT", "ETHUSDT"],
+    "interval": "1h",
+    "num_iterations": 100
+  }'
+```
 
-    * `/backtest` to start a job (returns a `task_id`)
-    * `/tasks/{task_id}` to get result/status
-* Symbol filtering/query feature is under development (currently only static symbol set supported)
+**Option 3: Using Swagger UI**
+1. Open http://localhost:8000/docs
+2. Navigate to `/backtest/submit-test`
+3. Try it out with sample parameters
 
-### 6. Debugging
+### 6. Check Results
 
-* Worker breakpoints are triggered **only in the Celery worker**
-* Stack traces and errors show in the worker's log or console
-* If a task hangs, restart the worker
+```bash
+# Get task status
+curl http://localhost:8000/backtest/status/{task_id}
 
-## Advanced Usage (Planned)
+# Get full results
+curl http://localhost:8000/backtest/results/{task_id}
+```
 
-### Symbol Selection & Querying
+## API Endpoints
 
-* `symbols`: List of explicit trading pairs (e.g., `["BTCUSDT", "ETHUSDT"]`)
-* `symbol_query`: (Planned) SQL-like or sandboxed Python filter — **not yet working**
-* Defaults to all filtered/allowed symbols (`ANALYSIS_SYMBOLS`)
+### Backtest V2 Endpoints
 
-### Debugging in IDE
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|--------------|
+| POST | `/backtest/submit` | Submit backtest with auth | Yes |
+| POST | `/backtest/submit-test` | Submit backtest (test) | No |
+| GET | `/backtest/status/{task_id}` | Get task status | Yes |
+| GET | `/backtest/results/{task_id}` | Get full results | Yes |
+| WS | `/backtest/stream/{task_id}` | Stream progress | No |
+| POST | `/backtest/cancel/{task_id}` | Cancel running backtest | Yes |
+| GET | `/backtest/export/{task_id}` | Export results | Yes |
 
-* Place breakpoints in worker or service code
-* Run `worker.py` in debug mode
-* Submit tasks from Swagger/Postman to trigger code
+### Other Endpoints
 
-## Directory Structure
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/symbols/binance` | Get all USDT pairs |
+| GET | `/symbols/cmc` | Filter by market cap |
+| GET | `/strategies` | List all strategies |
+| POST | `/strategies/upload` | Upload custom strategy |
+| GET | `/tasks/{task_id}` | Generic task status |
+
+## Configuration
+
+### Strategy Configuration (`app/inputconfig/config.yml`)
+
+```yaml
+strategy:
+  name: peak_ema_reversal
+  params:
+    tp_ratio: 0.1
+    sl_ratio: 0.05
+
+backtest:
+  timeframe: 1h
+  num_iterations: 100
+  initial_capital: 10000
+  position_size_pct: 5.0
+```
+
+### Environment Variables
+
+See `app/core/pydanticConfig/settings.py` for all available settings:
+
+- **Database:** `MONGO_URI`, `REDIS_BROKER_URL`, `POSTGRES_DSN`
+- **API Keys:** `BINANCE_API_KEY`, `COINMARKETCAP_API_KEY`
+- **Security:** `SECRET_KEY`, `API_KEY`, `ALLOWED_ORIGINS`
+- **Performance:** `ORCHESTRATOR_POOL_SIZE`, `BACKTEST_MAX_SYMBOLS`
+
+## Project Structure
 
 ```
-.
+binanceTradingBot/
 ├── app/
-│   ├── core/
-│   │   └── celery_app.py          # Celery app & autodiscover
-│   ├── pydanticConfig/
-│   │   └── settings.py           # Config, .env logic
-│   ├── tasks/
-│   │   ├── __init__.py           # Imports all task modules
-│   │   ├── BackTestTask.py       # Main backtest task
-│   │   └── ...                   # Other tasks
-│   ├── services/
-│   │   └── ...                   # Strategy, backtest, utils
-│   └── ...
-├── worker.py                     # Entrypoint for Celery worker
-├── run_local.py                  # Entrypoint for FastAPI server
-└── requirements.txt
+│   ├── controller/          # FastAPI endpoints (V2 architecture)
+│   │   ├── BacktestController.py    # V2 backtest endpoints
+│   │   ├── StrategyController.py    # Strategy management
+│   │   └── SymbolController.py      # Symbol filtering
+│   ├── services/           # Business logic layer
+│   │   ├── BackTestService.py       # V2 backtest service
+│   │   ├── OrchestratorService.py   # Docker orchestration
+│   │   └── StrategyService.py       # Strategy factory
+│   ├── tasks/              # Celery async tasks
+│   │   └── BackTestTask.py          # Backtest execution
+│   ├── core/               # Core configuration
+│   │   ├── celery_app.py            # Celery setup
+│   │   ├── mongodb_config.py        # MongoDB master-slave
+│   │   ├── security.py              # Auth & middleware
+│   │   └── pydanticConfig/          # Settings management
+│   └── marketDataApi/      # External API integrations
+├── entities/               # Domain models (DO NOT MODIFY)
+│   ├── strategies/         # Trading strategies
+│   ├── portfolio/          # Portfolio management
+│   └── tradeManager/       # Trade execution
+├── StrategyOrchestrator/   # Docker sandbox (DO NOT MODIFY)
+├── test_backtest.py        # Test script
+├── run_local.py           # FastAPI entry point
+├── worker.py              # Celery worker entry point
+└── docker-compose.yml     # Service orchestration
 ```
+
+## Development Guide
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov
+
+# Run specific test
+pytest tests/test_backtest.py
+```
+
+### Code Quality
+
+```bash
+# Format code
+black .
+
+# Type checking
+mypy .
+
+# Linting
+flake8
+```
+
+### Debugging Tips
+
+1. **API Debugging:**
+   - Use FastAPI's automatic `/docs` for testing endpoints
+   - Check logs in `logs/app.log`
+
+2. **Celery Debugging:**
+   - Run worker with `--loglevel=DEBUG`
+   - Set breakpoints in task code
+   - Check MongoDB for task progress
+
+3. **Docker Debugging:**
+   - Check orchestrator logs: `docker logs <container_id>`
+   - Monitor pool status: `GET /backtest/pool/status`
 
 ## Troubleshooting
 
-* **Tasks not running:** Ensure both server and worker are up, and that `ANALYSIS_SYMBOLS` is populated
-* **KeyError or missing task:** Check `app/tasks/__init__.py` imports all task modules; restart worker
-* **No breakpoints hit:** Remember: worker code (not API server) runs the backtest logic
-* **Pending/long tasks:** Some error paths are not robust; check worker log and consider a restart
+| Issue | Solution |
+|-------|----------|
+| Connection refused | Ensure MongoDB/Redis are running |
+| Task not found | Restart Celery worker |
+| Strategy not found | Check strategy exists in `entities/strategies/` |
+| Authentication error | Use `/submit-test` endpoint for testing |
+| Docker errors | Ensure Docker daemon is running |
 
-## Feedback & Contribution
+## Docker Deployment
 
-* MVP quality: PRs and feedback are welcome!
-* Robust error handling, more endpoints, and richer strategy libraries planned
-* See `Developer Quickstart` section above (or `README.KR.md` for Korean)
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Scale workers
+docker-compose up -d --scale worker=3
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow PEP 8 style guide
+- Add type hints to all functions
+- Write tests for new features
+- Update documentation
+- Don't modify `entities/` or `StrategyOrchestrator/` without discussion
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with FastAPI, Celery, and Docker
+- Inspired by professional trading systems
+- Community contributions welcome!
 
 ---
 
-Happy backtesting!
+**Happy Trading! 🚀**

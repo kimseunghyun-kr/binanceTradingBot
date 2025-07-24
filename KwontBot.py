@@ -4,13 +4,14 @@ import os
 from fastapi import FastAPI
 
 from app.controller import (SymbolController as symbols,
-                            BacktestController as backtest,
+                            BacktestController as backtest_v2,
                             StrategyController as strategies,
                             AnalyzeController as analyze,
                             GridSearchController as gridSearch,
                             TaskController as tasks
                             )
 from app.core import init_services
+from app.core.init_services import database, mongo_async
 
 # Create FastAPI app
 app = FastAPI(
@@ -26,12 +27,11 @@ logging.basicConfig(filename="logs/app.log",
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Include API routers
-app.include_router(backtest.router)
+app.include_router(backtest_v2.router)
 app.include_router(analyze.router)
 app.include_router(strategies.router)
 app.include_router(symbols.router)
 app.include_router(gridSearch.router)
-
 app.include_router(tasks.router)
 
 
@@ -39,9 +39,9 @@ app.include_router(tasks.router)
 @app.on_event("startup")
 async def on_startup():
     # Connect to PostgreSQL if configured
-    if db.database:
+    if database:
         try:
-            await db.database.connect()
+            await database.connect()
             logging.info("PostgreSQL connected.")
         except Exception as e:
             logging.error(f"Failed to connect to PostgreSQL: {e}")
@@ -49,10 +49,10 @@ async def on_startup():
         logging.info("PostgreSQL not configured. Skipping DB connection.")
     # (MongoDB uses motor which connects on first operation, no explicit connect needed)
     # We could test Mongo connection here if desired:
-    if db.mongo_client:
+    if mongo_async:
         try:
             # Ping MongoDB
-            await db.mongo_client.server_info()
+            await mongo_async.server_info()
             logging.info("MongoDB connection verified.")
         except Exception as e:
             logging.error(f"Failed to connect to MongoDB: {e}")
@@ -61,10 +61,10 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     # Disconnect from PostgreSQL
-    if db.database:
-        await db.database.disconnect()
+    if database:
+        await database.disconnect()
         logging.info("PostgreSQL disconnected.")
     # Close MongoDB connection
-    if db.mongo_client:
-        db.mongo_client.close()
+    if mongo_async:
+        mongo_async.close()
         logging.info("MongoDB client closed.")
