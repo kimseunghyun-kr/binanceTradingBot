@@ -63,8 +63,13 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field("change-me", env="SECRET_KEY")
     ENVIRONMENT: str = Field("development", env="ENVIRONMENT")
     MAX_REQUEST_SIZE: int = Field(5_000_000, env="MAX_REQUEST_SIZE")
-    ALLOWED_ORIGINS: list[str] = Field([], env="ALLOWED_ORIGINS")
+    ALLOWED_ORIGINS: str = Field("*", env="ALLOWED_ORIGINS")  # Comma-separated list
     API_KEY: Optional[str] = Field(None, env="API_KEY")
+    RATE_LIMIT_PER_MINUTE: int = Field(100, env="RATE_LIMIT_PER_MINUTE")
+    
+    # MongoDB Authentication
+    MONGODB_USERNAME: Optional[str] = Field(None, env="MONGODB_USERNAME")
+    MONGODB_PASSWORD: Optional[str] = Field(None, env="MONGODB_PASSWORD")
 
     class Config:
         env_file = DOTENV_FILE
@@ -84,6 +89,31 @@ class Settings(BaseSettings):
     @property
     def mongo_slave_uri(self) -> str | None:
         return self.MONGO_URI_SLAVE or None
+    
+    # Property aliases for compatibility
+    @property
+    def master_mongodb_uri(self) -> str:
+        return self.MONGO_URI_MASTER
+    
+    @property
+    def mongo_db(self) -> str:
+        return self.MONGO_DB
+    
+    @property
+    def mongodb_username(self) -> Optional[str]:
+        return self.MONGODB_USERNAME
+    
+    @property
+    def mongodb_password(self) -> Optional[str]:
+        return self.MONGODB_PASSWORD
+    
+    @property
+    def allowed_origins(self) -> str:
+        return self.ALLOWED_ORIGINS
+    
+    @property
+    def rate_limit_per_minute(self) -> int:
+        return self.RATE_LIMIT_PER_MINUTE
 
 # Accessor for DI / caching
 @lru_cache(maxsize=1)

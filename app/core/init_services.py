@@ -1,70 +1,120 @@
 # app/core/init_services.py
+"""
+Service initialization module - provides global access to database clients and services.
+This module is being refactored to use mongodb_config for proper master-slave separation.
+"""
 import logging
-from typing import cast
+from typing import Optional, cast
 
 from databases import Database
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import MongoClient
+from pymongo.database import Database as PyMongoDatabase
 from redis import Redis
 
+from app.core.db.mongodb_config import MongoDBConfig
 from app.core.pydanticConfig.settings import get_settings
 from app.services.marketDataService.DataServices import DataService
 from app.services.marketDataService.adapters.binance_provider import BinanceProvider
 from app.services.marketDataService.adapters.cmc_provider import CMCProvider
 
-# ───── Mongo -----------------------------------------------------------
-mongo_async: AsyncIOMotorClient | None = None
-mongo_sync:  MongoClient | None = None
-mongo_db_async = mongo_db_sync = None
-data_service = DataService([BinanceProvider(), CMCProvider()])
+logger = logging.getLogger(__name__)
 
-cfg = get_settings()
-if cfg.mongo_uri:
-    mongo_async = AsyncIOMotorClient(cfg.mongo_uri)
-    mongo_sync  = MongoClient(cfg.mongo_uri)
+# ───── Global instances ─────────────────────────────────────────────────
+mongodb_config: Optional[MongoDBConfig] = None
+postgres_database: Optional[Database] = None
+redis_cache: Optional[Redis] = None
+data_service: DataService = DataService([BinanceProvider(), CMCProvider()])
 
-    mongo_db_async = mongo_async[cfg.MONGO_DB]
-    mongo_db_sync  = mongo_sync[cfg.MONGO_DB]
+# ───── Initialization ───────────────────────────────────────────────────
+def initialize_services():
+    """
+    Initialize all services. Should be called once at application startup.
+    Note: MongoDB initialization is now handled by mongodb_config in KwontBot.py
+    """
+    global postgres_database, redis_cache
+    
+    cfg = get_settings()
+    
+    # ───── Postgres ────────────────────────────────────────────────────
+    if cfg.POSTGRES_DSN:
+        postgres_database = Database(cfg.POSTGRES_DSN)
+        logger.info("[Postgres] configured")
+    
+    # ───── Redis ───────────────────────────────────────────────────────
+    try:
+        redis_cache = Redis.from_url(cfg.REDIS_BROKER_URL, decode_responses=True)
+        redis_cache.ping()  # Test connection
+        logger.info("[Redis] connected")
+    except Exception as e:
+        logger.error(f"Redis connection error: {e}")
+        redis_cache = None
 
-    mongo_db_sync["candles"].create_index(
-        [("symbol", 1), ("interval", 1), ("open_time", 1)], unique=True
-    )
-    logging.info("[Mongo] connected")
+# ───── MongoDB Access Functions ─────────────────────────────────────────
+def set_mongodb_config(config: MongoDBConfig):
+    """Set the global MongoDB configuration. Called by KwontBot.py during startup."""
+    global mongodb_config
+    mongodb_config = config
 
-# ───── Postgres --------------------------------------------------------
-database: Database | None = None
-if cfg.POSTGRES_DSN:
-    database = Database(cfg.POSTGRES_DSN)
-    logging.info("[Postgres] configured")
+def get_mongodb_config() -> MongoDBConfig:
+    """Get the global MongoDB configuration."""
+    if mongodb_config is None:
+        raise RuntimeError("MongoDB config not initialized. Ensure KwontBot.py has started properly.")
+    return mongodb_config
 
-# ───── Redis -----------------------------------------------------------
-redis_cache: Redis | None = None
-try:
-    redis_cache = Redis.from_url(cfg.REDIS_BROKER_URL, decode_responses=True)
-    logging.info("[Redis] connected")
-except Exception as e:
-    logging.error(f"Redis error: {e}")
+async def get_master_db_async() -> AsyncIOMotorDatabase:
+    """Get async MongoDB master database (for writes)."""
+    config = get_mongodb_config()
+    return await config.get_master_db_async()
 
+async def get_read_db_async() -> AsyncIOMotorDatabase:
+    """Get async MongoDB read-only database (for reads in API layer)."""
+    config = get_mongodb_config()
+    return await config.get_read_db_async()
 
+def get_master_db_sync() -> PyMongoDatabase:
+    """Get sync MongoDB master database (for writes)."""
+    config = get_mongodb_config()
+    return config.get_master_db_sync()
+
+def get_read_db_sync() -> PyMongoDatabase:
+    """Get sync MongoDB read-only database (for reads)."""
+    config = get_mongodb_config()
+    return config.get_read_db_sync()
+
+# ───── Legacy compatibility functions ───────────────────────────────────
 def get_mongo_client() -> AsyncIOMotorClient:
     """
-    Return the global **ASYNC** Mongo client.
-
-    Raises if the client is still None (e.g. settings missing or
-    init_services not imported at application start-up).
+    Legacy: Return the async MongoDB client.
+    Deprecated: Use get_master_db_async() or get_read_db_async() instead.
     """
-    if mongo_async is None:
-        raise RuntimeError("Mongo async client not initialised")
-    return cast(AsyncIOMotorClient, mongo_async)
-
+    config = get_mongodb_config()
+    return config.master_client_async
 
 def get_mongo_sync() -> MongoClient:
-    """Return the global **SYNC** Mongo client."""
-    if mongo_sync is None:
-        raise RuntimeError("Mongo sync client not initialised")
-    return cast(MongoClient, mongo_sync)
+    """
+    Legacy: Return the sync MongoDB client.
+    Deprecated: Use get_master_db_sync() or get_read_db_sync() instead.
+    """
+    config = get_mongodb_config()
+    return config.master_client_sync
 
-def get_redis_cache():
-    """Return the global **REDIS** redis client."""
-    return cast(Redis, redis_cache)
+# ───── Other services ───────────────────────────────────────────────────
+def get_postgres_db() -> Database:
+    """Get PostgreSQL database connection."""
+    if postgres_database is None:
+        raise RuntimeError("PostgreSQL not configured")
+    return postgres_database
 
+def get_redis_cache() -> Redis:
+    """Get Redis cache connection."""
+    if redis_cache is None:
+        raise RuntimeError("Redis not configured or connection failed")
+    return redis_cache
+
+def get_data_service() -> DataService:
+    """Get the data service instance."""
+    return data_service
+
+# Initialize services on module import (except MongoDB which is handled by KwontBot.py)
+initialize_services()

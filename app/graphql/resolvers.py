@@ -13,8 +13,10 @@ from typing import List, Optional, Dict, Any, AsyncGenerator
 from motor.motor_asyncio import AsyncIOMotorClient
 import pandas as pd
 
-from app.core.init_services import get_mongo_client
-from app.core.pydanticConfig.settings import settings
+from app.core.init_services import get_read_db_async, get_master_db_async, get_data_service
+from app.core.pydanticConfig.settings import get_settings
+
+settings = get_settings()
 from app.graphql.types import (
     Symbol, SymbolFilter, SymbolStats,
     Strategy, StrategyFilter, StrategyPerformance,
@@ -34,8 +36,8 @@ class SymbolResolver:
             offset: int = 0
     ) -> List[Symbol]:
         """Get symbols with flexible filtering."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use read-only database for queries
+        db = await get_read_db_async()
 
         # Build MongoDB query
         query = {}
@@ -109,7 +111,8 @@ class SymbolResolver:
 
         for symbol in symbols:
             # Fetch candle data
-            df = await DataService.get_candles(
+            data_service = get_data_service()
+            df = await data_service.get_candles(
                 symbol=symbol,
                 interval=interval,
                 limit=100
@@ -155,8 +158,8 @@ class SymbolResolver:
         # This is a simplified implementation - in production, use a proper parser
         mongo_query = SymbolResolver._parse_query_to_mongo(query)
 
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use read-only database for queries
+        db = await get_read_db_async()
 
         cursor = db.symbols.find(mongo_query).limit(1000)
 
@@ -201,8 +204,8 @@ class SymbolResolver:
             custom_data: Optional[Dict[str, Any]] = None
     ) -> Symbol:
         """Update symbol metadata."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use master database for writes
+        db = await get_master_db_async()
 
         update_doc = {}
         if tags is not None:
@@ -268,8 +271,8 @@ class StrategyResolver:
             filter: Optional[StrategyFilter] = None
     ) -> List[Strategy]:
         """Get available strategies."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use read-only database for queries
+        db = await get_read_db_async()
 
         query = {}
 
@@ -346,8 +349,8 @@ class StrategyResolver:
             parameters: Optional[Dict[str, Any]] = None
     ) -> Strategy:
         """Create a new custom strategy."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use master database for writes
+        db = await get_master_db_async()
 
         # Validate strategy code (basic validation)
         if "class" not in code or "BaseStrategy" not in code:
@@ -391,8 +394,8 @@ class BacktestResolver:
             offset: int = 0
     ) -> List[BacktestResult]:
         """Get backtest results."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use read-only database for queries
+        db = await get_read_db_async()
 
         query = {}
 
@@ -489,8 +492,8 @@ class MarketResolver:
             category: Optional[str] = None
     ) -> MarketMetrics:
         """Get overall market metrics."""
-        mongo_client = get_mongo_client()
-        db = mongo_client[settings.MONGO_DB]
+        # Use read-only database for queries
+        db = await get_read_db_async()
 
         # Aggregate market data
         pipeline = []

@@ -9,7 +9,7 @@ import hashlib, json, logging, traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.init_services import redis_cache, get_mongo_client
+from app.core.init_services import get_redis_cache, get_master_db_async
 from app.core.pydanticConfig.settings import get_settings
 from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
 from app.services.orchestrator.OrchestratorService import OrchestratorService
@@ -97,8 +97,8 @@ class BackTestServiceV2:
     # ───────────────────────── helper methods ─────────────────────────── #
     @classmethod
     async def _get_strategy_code(cls, name: str) -> str:
-        mongo = get_mongo_client()[settings.MONGO_DB]
-        doc = await mongo.strategies.find_one({"name": name})
+        mongo_db = await get_master_db_async()
+        doc = await mongo_db.strategies.find_one({"name": name})
         if doc and "code" in doc:
             return doc["code"]
         path = f"entities/strategies/concreteStrategies/{name}.py"
@@ -130,9 +130,8 @@ class BackTestServiceV2:
 
     @classmethod
     async def _cache_get(cls, key: str) -> Optional[Dict[str, Any]]:
-        if not redis_cache:
-            return None
         try:
+            redis_cache = get_redis_cache()
             raw = redis_cache.get(f"backtest:v2:{key}")
             return json.loads(raw) if raw else None
         except Exception as e:
@@ -141,10 +140,9 @@ class BackTestServiceV2:
 
     @classmethod
     async def _cache_set(cls, key: str, value: Dict[str, Any]):
-        if not redis_cache:
-            return
         try:
-            await redis_cache.set(
+            redis_cache = get_redis_cache()
+            redis_cache.set(
                 f"backtest:v2:{key}",
                 json.dumps(value, default=str),
                 ex=7200,
@@ -155,13 +153,15 @@ class BackTestServiceV2:
     # ----------------------------------------------------------- mongo -- #
     @classmethod
     async def _save_result(cls, doc: Dict[str, Any]):
-        await get_mongo_client()[settings.MONGO_DB].backtest_results.insert_one(
+        mongo_db = await get_master_db_async()
+        await mongo_db.backtest_results.insert_one(
             {**doc, "created_at": datetime.utcnow()}
         )
 
     @classmethod
     async def _save_error(cls, doc: Dict[str, Any]):
-        await get_mongo_client()[settings.MONGO_DB].backtest_errors.insert_one(
+        mongo_db = await get_master_db_async()
+        await mongo_db.backtest_errors.insert_one(
             {**doc, "created_at": datetime.utcnow()}
         )
 

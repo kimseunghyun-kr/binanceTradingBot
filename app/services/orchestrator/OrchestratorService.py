@@ -21,11 +21,10 @@ from docker.errors import DockerException, ImageNotFound
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
-from app.core.init_services import get_redis_cache
+from app.core.init_services import get_redis_cache, get_mongodb_config
 from app.core.pydanticConfig.settings import get_settings
 
 settings = get_settings()
-redis_cache = get_redis_cache()
 
 class OrchestratorService:
     """
@@ -239,13 +238,16 @@ class OrchestratorService:
     @classmethod
     def _get_read_only_mongo_uri(cls) -> str:
         """Get read-only MongoDB connection string for containers."""
-        # Parse existing URI and create read-only user connection
-        # In production, this would be a separate read-only user
-        base_uri = settings.MONGO_URI
-
-        # For now, return the same URI but containers will only have read access
-        # In production, create a read-only user in MongoDB
-        return base_uri
+        try:
+            mongodb_config = get_mongodb_config()
+            return mongodb_config.get_read_only_uri()
+        except RuntimeError:
+            # Fallback if MongoDB config not initialized yet
+            # This might happen during testing or in special circumstances
+            logging.warning("MongoDB config not initialized, using fallback URI")
+            if settings.MONGO_URI_SLAVE:
+                return settings.MONGO_URI_SLAVE
+            return settings.MONGO_URI_MASTER
 
     @classmethod
     def _generate_run_id(
@@ -268,10 +270,8 @@ class OrchestratorService:
     @classmethod
     def _get_cached_result(cls, run_id: str) -> Optional[Dict[str, Any]]:
         """Get cached result from Redis."""
-        if not redis_cache:
-            return None
-
         try:
+            redis_cache = get_redis_cache()
             cached = redis_cache.get(f"orchestrator:{run_id}")
             if cached:
                 return json.loads(cached)
@@ -283,10 +283,8 @@ class OrchestratorService:
     @classmethod
     def _cache_result(cls, run_id: str, result: Dict[str, Any]):
         """Cache result in Redis with TTL."""
-        if not redis_cache:
-            return
-
         try:
+            redis_cache = get_redis_cache()
             redis_cache.set(
                 f"orchestrator:{run_id}",
                 json.dumps(result),
