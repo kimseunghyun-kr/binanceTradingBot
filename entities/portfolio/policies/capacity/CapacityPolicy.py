@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from entities.portfolio.policies.interfaces import CapacityPolicy
+
 
 # ------------------------------------------------------------------ #
 class LegCapacity(CapacityPolicy):

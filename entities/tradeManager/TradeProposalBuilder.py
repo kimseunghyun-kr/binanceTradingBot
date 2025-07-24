@@ -1,10 +1,12 @@
 # entities/tradeProposal/TradeProposalBuilder.py
 from __future__ import annotations
+
 from typing import List, Callable, Union
+
 import pandas as pd
 
-from .TradeMeta      import TradeMeta
-from .TradeProposal  import TradeProposal
+from .TradeMeta import TradeMeta
+from .TradeProposal import TradeProposal
 from .orders.OrderLeg import OrderLeg
 
 PriceRef = Union[str, Callable[[pd.Series], float]]

@@ -8,9 +8,12 @@ signature is as good as a subclass.
 """
 
 from __future__ import annotations
+
 from typing import Protocol, List, Set
-from entities.tradeManager.TradeMeta   import TradeMeta
-from entities.tradeManager.TradeEvent  import TradeEvent
+
+from entities.tradeManager.TradeEvent import TradeEvent
+from entities.tradeManager.TradeMeta import TradeMeta
+
 
 # ───────────────────────────────── cost models ───────────────────────── #
 

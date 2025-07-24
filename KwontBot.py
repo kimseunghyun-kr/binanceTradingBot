@@ -13,12 +13,10 @@ from app.controller import (SymbolController as symbols,
                             TaskController as tasks
                             )
 from app.core.db.mongodb_config import MongoDBConfig
+from app.core.pydanticConfig.settings import get_settings
 from app.core.security import (
-    SecurityConfig, 
-    setup_security_middleware,
     RateLimitMiddleware
 )
-from app.core.pydanticConfig.settings import get_settings
 from app.graphql.index import graphql_app
 
 # Logging configuration: write logs to file (and console if needed)
@@ -99,8 +97,7 @@ app = FastAPI(
 )
 
 # Setup security middleware
-security_config = SecurityConfig()
-setup_security_middleware(app, security_config)
+# TODO
 
 # Add CORS middleware after security
 app.add_middleware(

@@ -10,7 +10,11 @@ strategyOrchestrator.py
 from __future__ import annotations
 
 import concurrent.futures as fut
-import hashlib, json, logging, sys, time
+import hashlib
+import json
+import logging
+import sys
+import time
 from typing import Any, Dict, List, cast
 
 import pandas as pd
@@ -18,35 +22,30 @@ import pandas as pd
 from app.core.pydanticConfig import settings
 # ─────────── domain objects & helpers ───────────────────────────────── #
 from entities.perpetuals.portfolio.PerpPortfolioManager import PerpPortfolioManager
-from entities.portfolio.BasePortfolioManager           import BasePortfolioManager
+from entities.portfolio.BasePortfolioManager import BasePortfolioManager
+from entities.portfolio.policies.capacity.CapacityPolicy import (
+    LegCapacity, SymbolCapacity,
+)
+from entities.portfolio.policies.fees.fees import (
+    FEE_STATIC, FEE_PER_SYMBOL, SLIP_RANDOM, SLIP_ZERO,
+)
+# unified interfaces
+from entities.portfolio.policies.interfaces import (
+    EventCostModel, SizingModel, CapacityPolicy,
+)
+from entities.portfolio.policies.sizingModel.SizingModel import fixed_fraction
 from entities.strategies.BaseStrategy import BaseStrategy
 from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy,
 )
 from entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
-from strategyOrchestrator.repository.candleRepository import CandleRepository
-
-# unified interfaces
-from entities.portfolio.policies.interfaces import (
-    EventCostModel, SizingModel, CapacityPolicy,
-)
-from entities.tradeManager.policies.interfaces import FillPolicy
-
-from entities.portfolio.policies.fees.fees import (
-    FEE_STATIC, FEE_PER_SYMBOL, SLIP_RANDOM, SLIP_ZERO,
-)
-from entities.portfolio.policies.capacity.CapacityPolicy import (
-    LegCapacity, SymbolCapacity,
-)
 from entities.tradeManager.policies.FillPolicy import (
     AggressiveMarketPolicy, VWAPDepthPolicy,
 )
-from entities.portfolio.policies.sizingModel.SizingModel import fixed_fraction
-
+from entities.tradeManager.policies.interfaces import FillPolicy
 # loader
 from strategyOrchestrator.LoadComponent import load_component
-
-
+from strategyOrchestrator.repository.candleRepository import CandleRepository
 
 # ─────────── built-in maps (all objects are callables) ──────────────── #
 FEE_MAP  = {"static": FEE_STATIC,

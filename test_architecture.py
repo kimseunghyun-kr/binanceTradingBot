@@ -4,9 +4,8 @@ Test script to verify the architecture is working correctly.
 Tests MongoDB master-slave separation, GraphQL queries, and basic API endpoints.
 """
 import asyncio
+
 import httpx
-import json
-from datetime import datetime
 
 # Test configuration
 BASE_URL = "http://localhost:8000"

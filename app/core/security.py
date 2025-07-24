@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 from functools import wraps
 from typing import Optional, Dict, Any, Callable
 
-from jwt import jwt
 from fastapi import HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jwt import jwt
 from passlib.context import CryptContext
 from slowapi import Limiter
 from slowapi.util import get_remote_address

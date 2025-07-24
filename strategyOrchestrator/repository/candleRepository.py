@@ -5,6 +5,7 @@ from typing import Optional
 import pandas as pd
 from pymongo import MongoClient, ASCENDING, DESCENDING
 
+
 class CandleRepository:
     def __init__(self, mongo_uri: str, db_name: str, read_only: bool = False):
         self._client = MongoClient(mongo_uri, tz_aware=True)

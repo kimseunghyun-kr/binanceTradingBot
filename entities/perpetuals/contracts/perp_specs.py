@@ -7,8 +7,9 @@ from typing import Dict, Any
 
 from pymongo import MongoClient
 
-from strategyOrchestrator.Pydantic_config import settings
+from app.core.pydanticConfig.settings import get_settings
 
+settings = get_settings()
 
 @dataclass(frozen=True)
 class PerpSpec:

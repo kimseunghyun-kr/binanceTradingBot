@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 from datetime import datetime
-from typing import Sequence, Protocol, TypedDict
+from typing import Sequence, Protocol
 
 import pandas as pd
+
 
 class IDataProvider(Protocol):
     name: str

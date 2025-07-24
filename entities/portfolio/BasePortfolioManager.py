@@ -1,13 +1,14 @@
 # entities/portfolio/BasePortfolioManager.py
 from __future__ import annotations
+
 import heapq
 from typing import Dict, Any, Callable, List, Optional, Set
 
-from entities.portfolio.TradeLogEntry   import TradeLogEntry
+from entities.portfolio.TradeLogEntry import TradeLogEntry
 from entities.portfolio.policies.capacity.CapacityPolicy import CapacityPolicy, LegCapacity
 from entities.portfolio.policies.fees.fees import static_fee_model
 from entities.portfolio.policies.interfaces import SizingModel
-from entities.tradeManager.TradeEvent   import TradeEvent
+from entities.tradeManager.TradeEvent import TradeEvent
 from entities.tradeManager.TradeProposal import TradeProposal
 from entities.tradeManager.TransactionLedger import TransactionLedger
 

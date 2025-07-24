@@ -1,10 +1,12 @@
 # app/adapters/binance_provider.py
 from __future__ import annotations
+
 from datetime import datetime
 
 import pandas as pd
 
 from app.marketDataApi.binance import fetch_candles, get_valid_binance_symbols
+
 
 class BinanceProvider:
     """Adapter that conforms to IDataProvider."""

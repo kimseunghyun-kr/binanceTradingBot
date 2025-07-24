@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from app.core.celery_app import celery
-from app.core.init_services import mongo_sync
+from app.core.init_services import get_master_db_sync
 from app.services.AnalysisService import AnalysisService
 
 print("imported AnalysisTask")
@@ -14,6 +14,7 @@ def run_analysis_task(config: dict):
     Celery task to perform market analysis on given symbols and interval.
     Logs and (optionally) stores the summary of signals.
     """
+    mongo_sync = get_master_db_sync()
     interval = config.get("interval", "1d")
     symbols = config.get("symbols", [])
     yes_signals, no_count = AnalysisService.analyze_symbols(symbols, interval=interval)

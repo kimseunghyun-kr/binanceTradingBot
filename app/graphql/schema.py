@@ -4,22 +4,21 @@ GraphQL Schema for TradingBot
 Provides flexible querying capabilities for symbols, strategies, and backtests.
 """
 
-import strawberry
-from datetime import datetime
 from typing import List, Optional, Dict, Any
-import json
 
-from app.graphql.types import (
-    Symbol, SymbolFilter, SymbolStats,
-    Strategy, StrategyFilter,
-    BacktestResult, BacktestFilter,
-    MarketMetrics
-)
+import strawberry
+
 from app.graphql.resolvers import (
     SymbolResolver,
     StrategyResolver,
     BacktestResolver,
     MarketResolver
+)
+from app.graphql.types import (
+    Symbol, SymbolFilter, SymbolStats,
+    Strategy, StrategyFilter,
+    BacktestResult, BacktestFilter,
+    MarketMetrics
 )
 
 

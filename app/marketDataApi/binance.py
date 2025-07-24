@@ -4,15 +4,14 @@ from typing import Optional
 import pandas as pd
 from redis import Redis
 
-from app.core.init_services import mongo_sync, \
-    get_mongo_sync  # MongoClient for persistence:contentReference[oaicite:11]{index=11}
+from app.core.init_services import get_master_db_sync
+from app.core.pydanticConfig import settings
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
-from app.core.pydanticConfig import settings
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
-
+mongo_sync = get_master_db_sync()
 
 ###############################################################################
 # GET VALID BINANCE SYMBOLS
@@ -44,7 +43,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
     Fetch OHLCV candles for the given symbol/interval.
     First checks in-memory and Redis cache, then MongoDB, then Binance API.
     """
-    mongo_sync_db = get_mongo_sync()
+    mongo_sync_db = get_master_db_sync()
 
     cache_key = f"{symbol}:{interval}:{start_time}:{limit}"
     # 1) Check in-memory cache ( debug fallback )

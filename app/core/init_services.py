@@ -4,7 +4,7 @@ Service initialization module - provides global access to database clients and s
 This module is being refactored to use mongodb_config for proper master-slave separation.
 """
 import logging
-from typing import Optional, cast
+from typing import Optional
 
 from databases import Database
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase

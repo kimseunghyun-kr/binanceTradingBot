@@ -16,12 +16,13 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional, AsyncGenerator
 
 import docker
+from pymongo import CursorType
 
-from app.core.config import settings
 from app.core.db.mongodb_config import mongodb_config
+from app.core.pydanticConfig.settings import get_settings
 
 logger = logging.getLogger(__name__)
-
+settings = get_settings()
 
 @dataclass
 class ContainerInfo:

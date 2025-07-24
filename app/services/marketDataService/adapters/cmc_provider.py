@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from app.marketDataApi.coinmarketcap import fetch_coinmarketcap_coins_multi_pages
 
+
 class CMCProvider:
     name = "CMC"
 

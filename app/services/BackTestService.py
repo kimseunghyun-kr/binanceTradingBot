@@ -5,7 +5,10 @@ FastAPI-side wrapper that spawns sandboxed orchestrator runs.
 Now *does not* embed symbol_data and forwards `parallel_symbols`.
 """
 
-import hashlib, json, logging, traceback
+import hashlib
+import json
+import logging
+import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 

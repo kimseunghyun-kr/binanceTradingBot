@@ -7,7 +7,7 @@ class RiskAwarePortfolioManager(BasePortfolioManager):
 
     def total_notional(self) -> float:
         """Sum of |qty| × mark price over all open positions."""
-        return sum(abs(p.qty) * p.avg_px for p in self.positions.values())
+        return sum(abs(p.qty) * p.avg_px for p in self.tm.positions.values() if p.qty > 0)
 
     # override ----------------------------------------------------------------
     def risk_ok(self, proposal) -> bool:

@@ -10,16 +10,13 @@ import hashlib
 import json
 import logging
 import os
-import subprocess
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 import docker
 from docker.errors import DockerException, ImageNotFound
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
 
 from app.core.init_services import get_redis_cache, get_mongodb_config
 from app.core.pydanticConfig.settings import get_settings
@@ -202,13 +199,9 @@ class OrchestratorService:
 
             except Exception as e:
                 logging.error(f"Container execution failed for run {run_id}: {e}")
-                raise
             finally:
                 # Ensure container is removed
-                try:
-                    container.remove(force=True)
-                except:
-                    pass
+                container.remove(force=True)
 
     @classmethod
     def _prepare_input_config(

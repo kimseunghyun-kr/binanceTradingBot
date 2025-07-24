@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends, Request
 from strawberry.fastapi import GraphQLRouter
 from strawberry.subscriptions import GRAPHQL_TRANSPORT_WS_PROTOCOL, GRAPHQL_WS_PROTOCOL
 
-from app.graphql.schema import schema
 from app.core.security import get_current_user
+from app.graphql.schema import schema
 
 
 # Create GraphQL app with authentication

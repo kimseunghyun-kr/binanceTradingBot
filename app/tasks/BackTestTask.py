@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from app.core.celery_app import celery
-from app.core.init_services import get_master_db_sync, get_redis_cache
+from app.core.init_services import get_master_db_sync
 from app.services.BackTestService import BackTestServiceV2
 
 logger = logging.getLogger(__name__)

@@ -3,6 +3,7 @@
 GraphQL application entry point - configures and exports the GraphQL app.
 """
 from strawberry.fastapi import GraphQLRouter
+
 from .schema import schema
 
 # Create GraphQL app router

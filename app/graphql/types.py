@@ -4,10 +4,11 @@ GraphQL Type Definitions
 Strawberry type definitions for GraphQL schema.
 """
 
-import strawberry
 from datetime import datetime
-from typing import List, Optional, Dict, Any
 from enum import Enum
+from typing import List, Optional, Dict, Any
+
+import strawberry
 
 
 @strawberry.enum

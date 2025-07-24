@@ -5,15 +5,10 @@ Resolver implementations for GraphQL queries, mutations, and subscriptions.
 """
 
 import asyncio
-import json
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any, AsyncGenerator
 
-from motor.motor_asyncio import AsyncIOMotorClient
-import pandas as pd
-
-from app.core.init_services import get_read_db_async, get_master_db_async, get_data_service
+from app.core.init_services import get_read_db_async, get_master_db_async, get_data_service, get_mongo_client
 from app.core.pydanticConfig.settings import get_settings
 
 settings = get_settings()
@@ -245,7 +240,7 @@ class SymbolResolver:
         while True:
             for symbol in symbols:
                 # Fetch latest data
-                mongo_client = get_mongo_client()
+                mongo_client = get_read_db_async()
                 db = mongo_client[settings.MONGO_DB]
 
                 doc = await db.symbols.find_one({"symbol": symbol})

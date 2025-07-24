@@ -1,7 +1,7 @@
 # entities/execution/fill_policy.py
 from __future__ import annotations
 
-from typing import Protocol, List
+from typing import List
 
 from entities.tradeManager.FillRecord import FillRecord
 from entities.tradeManager.TradeEvent import TradeEvent
