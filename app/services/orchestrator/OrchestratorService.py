@@ -21,10 +21,11 @@ from docker.errors import DockerException, ImageNotFound
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
+from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 
 settings = get_settings()
-redis_cache = settings.get("redis_cache")
+redis_cache = get_redis_cache()
 
 class OrchestratorService:
     """

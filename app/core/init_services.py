@@ -63,3 +63,8 @@ def get_mongo_sync() -> MongoClient:
     if mongo_sync is None:
         raise RuntimeError("Mongo sync client not initialised")
     return cast(MongoClient, mongo_sync)
+
+def get_redis_cache():
+    """Return the global **REDIS** redis client."""
+    return cast(Redis, redis_cache)
+
