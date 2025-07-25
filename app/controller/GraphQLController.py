@@ -46,7 +46,7 @@ def _make_graphql_router( context_getter ) :
 graphql_app = _make_graphql_router(get_context)
 
 # Create protected GraphQL router (requires authentication)
-protected_graphql_app = _make_graphql_router(get_context_with_auth())
+protected_graphql_app = _make_graphql_router(get_context_with_auth)
 
 # Create API router
 router = APIRouter(prefix="/graphql", tags=["GraphQL"])

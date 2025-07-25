@@ -160,6 +160,7 @@ def _build_task_payload ( request: BacktestRequestV2,
         "slippage_model": request.slippage_model,
         "fill_policy": request.fill_policy
     }
+    return task_payload
 
 
 @router.get("/status/{task_id}")
@@ -237,7 +238,7 @@ async def stream_backtest_progress(
 
         while True:
             try:
-                async for doc in cursor:
+                for doc in cursor:
                     # Send progress update
                     await websocket.send_json({
                         "type": "progress",

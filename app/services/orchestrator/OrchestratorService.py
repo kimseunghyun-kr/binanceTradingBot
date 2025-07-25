@@ -144,7 +144,8 @@ class OrchestratorService:
             "command": ["python", "StrategyOrchestrator.py"],
             "environment": {
                 "MONGO_URI": mongo_read_only,
-                "MONGO_DB": settings.MONGO_DB,
+                "MONGO_DB_APP": settings.MONGO_DB_APP,
+                "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV,
                 "RUN_ID": run_id,
                 "PYTHONUNBUFFERED": "1",
             },
