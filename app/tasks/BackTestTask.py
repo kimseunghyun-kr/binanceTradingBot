@@ -3,6 +3,7 @@
 Celery task for running backtests asynchronously.
 Uses the sandboxed OrchestratorService to execute strategies.
 """
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
@@ -32,7 +33,7 @@ def _extract_config(cfg: Dict[str, Any]):
 
 
 @celery.task(name="app.tasks.BackTestTask.run_backtest_task", bind=True)
-async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
+def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
     """
     Celery task to execute a backtest asynchronously.
     
@@ -92,7 +93,7 @@ async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         )
         
         # Run backtest using the service
-        result = await BackTestServiceV2.run_backtest(
+        result = asyncio.run(BackTestServiceV2.run_backtest(
             strategy_name=strategy_name,
             strategy_params=strategy_params,
             symbols=symbols,
@@ -104,7 +105,7 @@ async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
             parallel_symbols=parallel_symbols,
             use_cache=use_cache,
             save_results=save_results
-        )
+        ))
         
         # Update progress
         self.update_state(

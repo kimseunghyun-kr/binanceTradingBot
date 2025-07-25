@@ -1,6 +1,7 @@
 # app/adapters/binance_provider.py
 from __future__ import annotations
 
+from asyncio import get_running_loop
 from datetime import datetime
 
 import pandas as pd
@@ -24,8 +25,17 @@ class BinanceProvider:
         start: datetime | None = None,
         limit: int = 1000,
     ) -> pd.DataFrame:
+        loop = get_running_loop()
         start_ms = int(start.timestamp() * 1000) if start else None
-        return fetch_candles(symbol, interval, limit=limit, start_time=start_ms)
+        # run sync network call in a thread so we don't block other coroutines
+        return await loop.run_in_executor(
+            None,  # default ThreadPoolExecutor
+            fetch_candles,
+            symbol,
+            interval,
+            limit,
+            start_ms,
+        )
 
     async def fetch_funding(self, *a, **kw):
         raise NotImplementedError("Binance spot has no funding; use Perp provider")

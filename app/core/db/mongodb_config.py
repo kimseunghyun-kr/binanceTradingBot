@@ -5,16 +5,12 @@ Centralised MongoDB connection manager (master / slave, read-only URI).
 from __future__ import annotations
 
 import logging
-import os
-import secrets
-import string
 from datetime import datetime
 from typing import Dict, Optional
 from urllib.parse import quote_plus, urlparse, urlunparse
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient, ReadPreference
-from pymongo.errors import OperationFailure
 
 from app.core.pydanticConfig.settings import get_settings
 
@@ -98,41 +94,47 @@ class MongoDBConfig:
     # ------------------------------------------------------------------ #
     @classmethod
     def _setup_ro_user(cls) -> None:
-        """Create the back-test read-only user if it doesn't exist."""
-        try:
-            admin = cls._master_async.admin  # type: ignore[attr-defined]
+        """
+        Create (once) or reuse the read-only user used by back-test containers.
+        Runs synchronously so `initialize()` remains sync.
+        """
+        admin = cls._master_sync.admin  # sync PyMongo client
 
-            info = admin.command("usersInfo", "backtest_readonly")
-            if info.get("users"):
-                return
+        if admin.command("usersInfo", "backtest_readonly")["users"]:
+            return  # already exists
 
-            pwd = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-            admin.command(
-                "createUser",
-                "backtest_readonly",
-                pwd=pwd,
-                roles=[{"role": "read", "db": cfg.db_app}],
-            )
-            logging.info("[MongoDB] created read-only user")
-        except OperationFailure as exc:
-            logging.warning("[MongoDB] could not create RO user: %s", exc)
+        pwd = get_settings().MONGO_USER_PWD
+        if not pwd:  # first process ever
+            raise ValueError("MONGO_USER_PWD is required")
+
+        admin.command(
+            "createUser",
+            "backtest_readonly",
+            pwd=pwd,
+            roles=[{"role": "read", "db": cfg.db_app},
+                   {"role": "read", "db": cfg.db_ohlcv},
+                   {"role": "read", "db": cfg.db_perp},
+                   ],
+        )
+        logging.info("[MongoDB] created read-only user")
 
     @classmethod
-    def _make_ro_uri(cls) -> str:
+    def _make_ro_uri(cls, * , default_db: str = "admin") -> str:
         uri = cfg.mongo_slave_uri or cfg.mongo_master_uri
         parsed = urlparse(uri)
 
         if cfg.MONGO_AUTH_ENABLED:
             user = quote_plus("backtest_readonly")
-            pw   = quote_plus(os.getenv("MONGO_READONLY_PASSWORD", "readonly_password_123"))
+            pw   = quote_plus(cfg.MONGO_USER_PWD)
             netloc = f"{user}:{pw}@{parsed.hostname}"
             if parsed.port:
                 netloc += f":{parsed.port}"
         else:
             netloc = parsed.netloc
 
-        query = "readPreference=secondaryPreferred&maxStalenessSeconds=90"
-        return urlunparse((parsed.scheme, netloc, f"/{cfg.db_app}", "", query, ""))
+            # authSource stays 'admin' because that’s where the user is defined
+            query = "authSource=admin&readPreference=secondaryPreferred&maxStalenessSeconds=90"
+            return urlunparse((parsed.scheme, netloc, f"/{default_db}", "", query, ""))
 
     # ------------------------------------------------------------------ #
     # public getters

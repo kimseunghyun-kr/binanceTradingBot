@@ -28,5 +28,11 @@ class DataService:
         return symbols
 
     # OHLCV -----------------------------------------------------------------------------
-    async def get_ohlcv(self, symbol: str, interval: str, start: datetime | None = None, **kw) -> pd.DataFrame:
-        return await self.providers["Binance"].fetch_ohlcv(symbol, interval, start=start, **kw)
+    async def get_ohlcv(self, symbol: str, interval: str,
+                        start: datetime | None = None, provider: str = "Binance",  **kw) -> pd.DataFrame:
+        try:
+            p = self.providers[provider]  # validate & pick
+        except KeyError:
+            raise KeyError(f"Unknown provider '{provider}'. Known: {list(self.providers)}")
+
+        return await p.fetch_ohlcv(symbol, interval, start=start, **kw)
