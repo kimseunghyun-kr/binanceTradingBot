@@ -27,8 +27,8 @@ class CandleRepository:
         db_name: str | None = None,
     ) -> None:
         cfg = get_settings()
-        uri = mongo_uri or cfg.mongo_uri                       # ← slave when sandbox
-        db  = db_name or cfg.MONGO_DB
+        uri = mongo_uri or cfg.mongo_slave_uri                       # ← slave when sandbox
+        db  = db_name or cfg.MONGODB_OHLCV
 
         # Enforce secondaryPreferred even if caller passed a primary URI
         self._client = MongoClient(
@@ -68,6 +68,10 @@ class CandleRepository:
             data.reverse()
 
         df = pd.DataFrame(data)
+
+        # this is meant to update the timestamp in the mongo -> open_time field in the df
+        # this is only meant as a temporary solution, to be redoing schema or something later
+
         if not df.empty and "timestamp" in df.columns:
             df["open_time"] = df["timestamp"].astype("int64")        # speed
             df.drop(columns="timestamp", inplace=True)

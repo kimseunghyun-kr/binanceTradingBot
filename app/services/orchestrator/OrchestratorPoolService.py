@@ -18,7 +18,7 @@ from typing import Dict, Any, List, Optional, AsyncGenerator
 import docker
 from pymongo import CursorType
 
-from app.core.db.mongodb_config import mongodb_config
+from app.core.init_services import mongodb_config
 from app.core.pydanticConfig.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -140,7 +140,7 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
     @classmethod
     async def _setup_result_collection(cls):
         """Setup MongoDB collection for result streaming."""
-        db = mongodb_config.get_master_client()[settings.MONGO_DB]
+        db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
         # Create capped collection for real-time updates
         try:
@@ -186,7 +186,7 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
             name=container_name,
             environment={
                 "MONGO_URI": mongo_read_uri,
-                "MONGO_DB": settings.MONGO_DB,
+                "MONGO_DB_APP": settings.MONGO_DB_APP,
                 "CONTAINER_INDEX": str(index),
                 "PYTHONUNBUFFERED": "1"
             },
@@ -355,7 +355,7 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
     @classmethod
     async def _update_progress(cls, run_id: str, progress_data: Dict[str, Any]):
         """Update progress in MongoDB."""
-        db = mongodb_config.get_master_client()[settings.MONGO_DB]
+        db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
         await db.backtest_progress.insert_one({
             'run_id': run_id,
@@ -366,7 +366,7 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
     @classmethod
     async def _stream_progress(cls, run_id: str) -> AsyncGenerator[Dict[str, Any], None]:
         """Stream progress updates from MongoDB."""
-        db = mongodb_config.get_master_client()[settings.MONGO_DB]
+        db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
         # Create tailable cursor
         cursor = db.backtest_progress.find(
@@ -386,7 +386,7 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
     @classmethod
     async def _save_result(cls, run_id: str, result: Dict[str, Any]):
         """Save final result to MongoDB."""
-        db = mongodb_config.get_master_client()[settings.MONGO_DB]
+        db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
         await db.backtest_results.insert_one({
             'run_id': run_id,

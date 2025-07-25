@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Optional
@@ -10,112 +11,99 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 # ─────────────────────────────────────────────────────────────
-# 1️⃣  Pick the dotenv file based on PROFILE (dev / prod / staging …)
-#    The file is optional; env vars always override.
+# Pick dotenv file based on PROFILE (dev / prod / staging …)
 # ─────────────────────────────────────────────────────────────
 PROFILE = os.getenv("PROFILE", "development")
 DOTENV_FILE = f".env.{PROFILE}" if Path(f".env.{PROFILE}").exists() else ".env"
-load_dotenv(dotenv_path=DOTENV_FILE, override=False)
+load_dotenv(DOTENV_FILE, override=False)
 
 # ─────────────────────────────────────────────────────────────
-# 2️⃣  Settings
+# Settings
 # ─────────────────────────────────────────────────────────────
 class Settings(BaseSettings):
-    """Single source of truth for configuration."""
+    """
+    Canonical configuration object.
 
-    # Execution layer: API server vs sandbox container
-    KWONTBOT_MODE: Literal["main", "sandbox"] = Field(
-        "main", env="KWONTBOT_MODE"
-    )
+    Environment variables always override the .env file.
+    """
 
-    # Deployment profile: dev, prod, staging – read‑only
-    PROFILE: str = PROFILE  # exported for convenience
+    # —--- Runtime layer ---—
+    KWONTBOT_MODE: Literal["main", "sandbox"] = Field("main", env="KWONTBOT_MODE")
+    PROFILE: str = PROFILE
 
-    # MongoDB
-    MONGO_URI_MASTER: str = Field(
-        "mongodb://localhost:27017",
-        env=["MONGO_URI_MASTER", "MONGO_URI"]
-    )
+    # —--- MongoDB URIs ---—
+    MONGO_URI_MASTER: str = Field("mongodb://localhost:27017", env="MONGO_URI_MASTER")
     MONGO_URI_SLAVE: Optional[str] = Field(None, env="MONGO_URI_SLAVE")
-    MONGO_DB: str = Field("trading", env="MONGO_DB")
-
-    # in Settings(...)
     MONGO_AUTH_ENABLED: bool = Field(False, env="MONGO_AUTH_ENABLED")
 
-    # Redis / Celery
+    # —--- Databases (logical split) ---—
+    MONGO_DB_APP:   str = Field("trading",    env="MONGO_DB_APP")    # default
+    MONGO_DB_OHLCV: Optional[str] = Field(None, env="MONGO_DB_OHLCV")
+    MONGO_DB_PERP:  Optional[str] = Field(None, env="MONGO_DB_PERP")
+
+    # —--- Redis / Celery ---—
     REDIS_BROKER_URL: str = Field("redis://localhost:6379/0", env="REDIS_BROKER_URL")
     CELERY_RESULT_BACKEND: str = Field("redis://localhost:6379/0", env="CELERY_RESULT_BACKEND")
 
-    # Postgres (if used elsewhere)
+    # —--- Optional Postgres ---—
     POSTGRES_DSN: Optional[str] = Field(None, env="POSTGRES_DSN")
 
-    # —‑‑‑ Exchange & Data provider keys ‑‑‑—
+    # —--- External API keys (omitted for brevity) ---—
     BINANCE_API_KEY: Optional[str] = Field(None, env="BINANCE_API_KEY")
     BINANCE_API_SECRET: Optional[str] = Field(None, env="BINANCE_API_SECRET")
     COINMARKETCAP_API_KEY: Optional[str] = Field(None, env="COINMARKETCAP_API_KEY")
 
-    # —‑‑‑ External End‑points (override in env when required) ‑‑‑—
-    BINANCE_BASE_URL: str = Field("https://api.binance.com", env="BINANCE_BASE_URL")
-    CMC_BASE_URL: str = Field("https://pro-api.coinmarketcap.com", env="CMC_BASE_URL")
-    CMC_PAGE_SIZE: int = Field(5000, env="CMC_PAGE_SIZE")
-
-    # —‑‑‑ Security related stuff. to be changed later ‑‑‑—
+    # —--- Misc ---—
     SECRET_KEY: str = Field("change-me", env="SECRET_KEY")
-    ENVIRONMENT: str = Field("development", env="ENVIRONMENT")
-    MAX_REQUEST_SIZE: int = Field(5_000_000, env="MAX_REQUEST_SIZE")
-    ALLOWED_ORIGINS: str = Field("*", env="ALLOWED_ORIGINS")  # Comma-separated list
-    API_KEY: Optional[str] = Field(None, env="API_KEY")
+    ALLOWED_ORIGINS: str = Field("*", env="ALLOWED_ORIGINS")
     RATE_LIMIT_PER_MINUTE: int = Field(100, env="RATE_LIMIT_PER_MINUTE")
-    
-    # MongoDB Authentication
-    MONGODB_USERNAME: Optional[str] = Field(None, env="MONGODB_USERNAME")
-    MONGODB_PASSWORD: Optional[str] = Field(None, env="MONGODB_PASSWORD")
 
     class Config:
         env_file = DOTENV_FILE
         case_sensitive = False
 
-    # Helper: choose URI according to mode
+    # —--- Convenience helpers ---—
     @property
-    def mongo_uri(self) -> str:
-        if self.KWONTBOT_MODE == "sandbox" and self.MONGO_URI_SLAVE:
-            return self.MONGO_URI_SLAVE
+    def mongo_master_uri(self) -> str:            # primary always exists
         return self.MONGO_URI_MASTER
 
     @property
-    def mongo_master_uri(self) -> str:
-        return self.MONGO_URI_MASTER
+    def mongo_slave_uri(self) -> str | None:      # may be unset
+        return self.MONGO_URI_SLAVE
 
     @property
-    def mongo_slave_uri(self) -> str | None:
-        return self.MONGO_URI_SLAVE or None
-    
-    # Property aliases for compatibility
-    @property
-    def master_mongodb_uri(self) -> str:
-        return self.MONGO_URI_MASTER
-    
-    @property
-    def mongo_db(self) -> str:
-        return self.MONGO_DB
-    
-    @property
-    def mongodb_username(self) -> Optional[str]:
-        return self.MONGODB_USERNAME
-    
-    @property
-    def mongodb_password(self) -> Optional[str]:
-        return self.MONGODB_PASSWORD
-    
-    @property
-    def allowed_origins(self) -> str:
-        return self.ALLOWED_ORIGINS
-    
-    @property
-    def rate_limit_per_minute(self) -> int:
-        return self.RATE_LIMIT_PER_MINUTE
+    def mongo_uri(self) -> str:                   # generic helper
+        return self.MONGO_URI_SLAVE if self.KWONTBOT_MODE == "sandbox" and self.MONGO_URI_SLAVE else self.MONGO_URI_MASTER
 
-# Accessor for DI / caching
-@lru_cache(maxsize=1)
+    # Logical database names ------------------------------------------------
+    @property
+    def db_app(self) -> str:
+        return self.MONGO_DB_APP
+
+    @property
+    def db_ohlcv(self) -> str:
+        return self.MONGO_DB_OHLCV or self.MONGO_DB_APP
+
+    @property
+    def db_perp(self) -> str:
+        return self.MONGO_DB_PERP or self.MONGO_DB_APP
+
+    # ---- hard-fail if someone accesses removed legacy attrs --------------
+    def __getattr__(self, item):
+        if item in {"MONGO_DB", "mongo_db"}:
+            raise AttributeError(
+                "'MONGO_DB' is removed.  Use settings.db_app / db_ohlcv / db_perp."
+            )
+        if item == "MONGO_URI":
+            warnings.warn(
+                "MONGO_URI is removed.  Use mongo_master_uri / mongo_slave_uri / mongo_uri.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return self.mongo_master_uri
+        raise AttributeError(item)
+
+
+@lru_cache(1)
 def get_settings() -> Settings:
-    return Settings()  # type: ignore[arg-type]
+    return Settings()

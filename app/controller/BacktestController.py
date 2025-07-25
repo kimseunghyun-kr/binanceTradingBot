@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.core import celery_app
+from app.core.init_services import mongodb_config
 from app.core.pydanticConfig.settings import get_settings
 from app.core.security import get_current_user
 from app.services.orchestrator.OrchestratorPoolService import orchestrator_pool
@@ -214,8 +215,7 @@ async def stream_backtest_progress(
 
     try:
         # Get MongoDB client
-        from app.core.db.mongodb_config import mongodb_config
-        db = mongodb_config.get_master_client()[settings.MONGO_DB]
+        db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
         # Stream progress from MongoDB
         from pymongo import CursorType
@@ -277,8 +277,7 @@ async def get_backtest_results(
         user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Get full backtest results."""
-    from app.core.db.mongodb_config import mongodb_config
-    db = mongodb_config.get_master_client()[settings.MONGO_DB]
+    db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
     result = await db.backtest_results.find_one({"task_id": task_id})
 
@@ -331,8 +330,7 @@ async def export_backtest_results(
     - excel: Excel workbook with multiple sheets
     - pdf: PDF report
     """
-    from app.core.db.mongodb_config import mongodb_config
-    db = mongodb_config.get_master_client()[settings.MONGO_DB]
+    db = mongodb_config.get_master_client()[settings.MONGO_DB_APP]
 
     result = await db.backtest_results.find_one({"task_id": task_id})
 

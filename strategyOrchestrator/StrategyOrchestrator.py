@@ -219,7 +219,7 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
     # ─── data bootstrap ────────────────────────────────────────────────
     lookback = strategy.get_required_lookback()
     settings = get_settings()
-    repo = CandleRepository(settings.mongo_uri, settings.MONGO_DB)  # always slave / read-only
+    repo = CandleRepository(settings.mongo_slave_uri, settings.MONGO_DB)  # always slave / read-only
     jobs = strategy.work_units(symbols)
 
     # ─── parallel proposal generation ───────────────────────────────────

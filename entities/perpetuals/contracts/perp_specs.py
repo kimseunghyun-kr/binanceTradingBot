@@ -34,7 +34,7 @@ class PerpSpec:
 
 # ---------- singleton loader (read-only) -------------------------------
 _client = MongoClient(settings.MONGO_URI)
-_specs_c = _client[settings.MONGO_DB]["perp_specs"]
+_specs_c = _client[settings.MONGODB_PERP]["perp_specs"]
 
 PERP_SPECS: Dict[str, PerpSpec] = {
     d["symbol"]: PerpSpec.from_doc(d) for d in _specs_c.find({})
