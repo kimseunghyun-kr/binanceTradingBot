@@ -80,53 +80,9 @@ async def submit_backtest(
     4. Returns task ID and optional WebSocket URL for streaming
     """
     try:
-        # Resolve symbols
-        if request.symbols:
-            symbols = request.symbols
-        elif request.symbol_filter:
-            # Use GraphQL resolver to get symbols
-            from app.graphql.resolvers import SymbolResolver
-            from app.graphql.types import SymbolFilter
+        symbols = await _resolve_symbols(request)
 
-            filter_obj = SymbolFilter(**request.symbol_filter)
-            symbol_objects = await SymbolResolver.get_symbols(filter_obj, limit=100)
-            symbols = [s.symbol for s in symbol_objects]
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Either symbols or symbol_filter must be provided"
-            )
-
-        if not symbols:
-            raise HTTPException(
-                status_code=400,
-                detail="No symbols found matching criteria"
-            )
-
-        # Prepare task payload
-        task_payload = {
-            "user_id": user["user_id"],
-            "strategy_name": request.strategy_name,
-            "strategy_params": request.strategy_params,
-            "symbols": symbols,
-            "interval": request.interval,
-            "num_iterations": request.num_iterations,
-            "start_date": request.start_date,
-            "end_date": request.end_date,
-            "custom_strategy_code": request.custom_strategy_code,
-            "use_cache": request.use_cache,
-            "save_results": request.save_results,
-            "stream_progress": request.stream_progress,
-            "initial_capital": request.initial_capital,
-            "position_size_pct": request.position_size_pct,
-            "max_positions": request.max_positions,
-            "tp_ratio": request.tp_ratio,
-            "sl_ratio": request.sl_ratio,
-            "fee_model": request.fee_model,
-            "slippage_model": request.slippage_model,
-            "fill_policy": request.fill_policy
-        }
-
+        task_payload = _build_task_payload(request, user, symbols)
         # Submit to Celery
         async_result = run_backtest_task.delay(task_payload)
 
@@ -150,6 +106,60 @@ async def submit_backtest(
     except Exception as e:
         logger.error(f"Failed to submit backtest: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _resolve_symbols(request):
+    # Resolve symbols
+    if request.symbols:
+        symbols = request.symbols
+    elif request.symbol_filter:
+        # Use GraphQL resolver to get symbols
+        from app.graphql.resolvers import SymbolResolver
+        from app.graphql.types import SymbolFilter
+
+        filter_obj = SymbolFilter(**request.symbol_filter)
+        symbol_objects = await SymbolResolver.get_symbols(filter_obj, limit=100)
+        symbols = [s.symbol for s in symbol_objects]
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Either symbols or symbol_filter must be provided"
+        )
+    if not symbols:
+        raise HTTPException(
+            status_code=400,
+            detail="No symbols found matching criteria"
+        )
+    return symbols
+
+
+def _build_task_payload ( request: BacktestRequestV2,
+                              user: Dict[str, Any], symbols: List[str]
+                              ) -> Dict[str, Any]:
+    """Convert the request data into the Celery payload."""
+    # Prepare task payload
+    task_payload = {
+        "user_id": user["user_id"],
+        "strategy_name": request.strategy_name,
+        "strategy_params": request.strategy_params,
+        "symbols": symbols,
+        "interval": request.interval,
+        "num_iterations": request.num_iterations,
+        "start_date": request.start_date,
+        "end_date": request.end_date,
+        "custom_strategy_code": request.custom_strategy_code,
+        "use_cache": request.use_cache,
+        "save_results": request.save_results,
+        "stream_progress": request.stream_progress,
+        "initial_capital": request.initial_capital,
+        "position_size_pct": request.position_size_pct,
+        "max_positions": request.max_positions,
+        "tp_ratio": request.tp_ratio,
+        "sl_ratio": request.sl_ratio,
+        "fee_model": request.fee_model,
+        "slippage_model": request.slippage_model,
+        "fill_policy": request.fill_policy
+    }
 
 
 @router.get("/status/{task_id}")

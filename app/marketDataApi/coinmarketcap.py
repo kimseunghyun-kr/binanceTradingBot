@@ -5,6 +5,29 @@ from app.marketDataApi.apiconfig.config import CMC_BASE_URL, CMC_PAGE_SIZE, CMC_
 from app.marketDataApi.utils import retry_request
 
 
+def _fetch_page(start_val: int, idx: int) -> List[dict]:
+    """Fetch a single page from CoinMarketCap."""
+
+    logging.info(f"Fetching page {idx + 1}, start={start_val}...")
+    url = f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest"
+    params = {
+        "start": str(start_val),
+        "limit": str(CMC_PAGE_SIZE),
+        "convert": "USD",
+    }
+    headers = {
+        "Accepts": "application/json",
+        "X-CMC_PRO_API_KEY": CMC_API_KEY,
+    }
+
+    resp = retry_request(url, method="GET", params=params, headers=headers, timeout=30)
+    if resp is None:
+        logging.warning(f"Could not get page {idx + 1}, stopping.")
+        return []
+
+    data = resp.json()
+    return data.get("data", [])
+
 ###############################################################################
 # FETCH MULTIPLE PAGES FROM COINMARKETCAP
 ###############################################################################
@@ -18,25 +41,7 @@ def fetch_coinmarketcap_coins_multi_pages(
 
     for page_index in range(max_pages):
         start_val = page_index * CMC_PAGE_SIZE + 1
-        logging.info(f"Fetching page {page_index + 1}, start={start_val}...")
-        url = f"{CMC_BASE_URL}/v1/cryptocurrency/listings/latest"
-        params = {
-            "start": str(start_val),
-            "limit": str(CMC_PAGE_SIZE),
-            "convert": "USD"
-        }
-        headers = {
-            "Accepts": "application/json",
-            "X-CMC_PRO_API_KEY": CMC_API_KEY
-        }
-
-        resp = retry_request(url, method="GET", params=params, headers=headers, timeout=30)
-        if resp is None:
-            logging.warning(f"Could not get page {page_index + 1}, stopping.")
-            break
-
-        data = resp.json()
-        page_coins = data.get("data", [])
+        page_coins = _fetch_page(start_val, page_index)
         if not page_coins:
             logging.info("Empty data returned — no more coins, sir.")
             break

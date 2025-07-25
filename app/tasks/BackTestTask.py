@@ -13,6 +13,23 @@ from app.services.BackTestService import BackTestServiceV2
 
 logger = logging.getLogger(__name__)
 
+def _extract_config(cfg: Dict[str, Any]):
+    """Return typed values from the task configuration."""
+
+    return (
+        cfg.get("strategy_name"),
+        cfg.get("strategy_params", {}),
+        cfg.get("symbols", []),
+        cfg.get("interval", "1h"),
+        cfg.get("num_iterations", 100),
+        cfg.get("start_date"),
+        cfg.get("end_date"),
+        cfg.get("custom_strategy_code"),
+        cfg.get("parallel_symbols", 4),
+        cfg.get("use_cache", True),
+        cfg.get("save_results", True),
+    )
+
 
 @celery.task(name="app.tasks.BackTestTask.run_backtest_task", bind=True)
 async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
@@ -47,17 +64,19 @@ async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         )
         
         # Extract configuration
-        strategy_name = config.get("strategy_name")
-        strategy_params = config.get("strategy_params", {})
-        symbols = config.get("symbols", [])
-        interval = config.get("interval", "1h")
-        num_iterations = config.get("num_iterations", 100)
-        start_date = config.get("start_date")
-        end_date = config.get("end_date")
-        custom_strategy_code = config.get("custom_strategy_code")
-        parallel_symbols = config.get("parallel_symbols", 4)
-        use_cache = config.get("use_cache", True)
-        save_results = config.get("save_results", True)
+        (
+            strategy_name,
+            strategy_params,
+            symbols,
+            interval,
+            num_iterations,
+            start_date,
+            end_date,
+            custom_strategy_code,
+            parallel_symbols,
+            use_cache,
+            save_results,
+        ) = _extract_config(config)
         
         # Validate inputs
         if not strategy_name and not custom_strategy_code:

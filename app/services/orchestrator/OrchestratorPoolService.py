@@ -179,17 +179,12 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
         container_name = f"orchestrator_pool_{index}_{uuid.uuid4().hex[:8]}"
 
         # Get read-only MongoDB URI
-        mongo_read_uri = MongoDBConfig.get_read_only_uri()
+        env = cls._container_env(index)
 
         container = cls._docker_client.containers.create(
             image=cls._image_name,
             name=container_name,
-            environment={
-                "MONGO_URI": mongo_read_uri,
-                "MONGO_DB_APP": settings.MONGO_DB_APP,
-                "CONTAINER_INDEX": str(index),
-                "PYTHONUNBUFFERED": "1"
-            },
+            environment=env,
             mem_limit="2g",
             cpu_quota=100000,
             stdin_open=True,
@@ -382,6 +377,18 @@ CMD ["python", "-m", "uvloop", "ConcurrentStrategyOrchestrator.py"]
                     'progress': doc.get('progress', 0),
                     'timestamp': doc.get('timestamp')
                 }
+
+    @classmethod
+    def _container_env(cls, index: int) -> Dict[str, Any]:
+        """Return environment variables for orchestrator containers."""
+
+        mongo_read_uri = MongoDBConfig.get_read_only_uri()
+        return {
+            "MONGO_URI": mongo_read_uri,
+            "MONGO_DB_APP": settings.MONGO_DB_APP,
+            "CONTAINER_INDEX": str(index),
+            "PYTHONUNBUFFERED": "1",
+        }
 
     @classmethod
     async def _save_result(cls, run_id: str, result: Dict[str, Any]):

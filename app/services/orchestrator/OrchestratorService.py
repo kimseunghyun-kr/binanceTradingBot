@@ -132,6 +132,37 @@ class OrchestratorService:
 
         return result
 
+
+    @classmethod
+    def _container_config(cls, strategy_file: str, run_id: str) -> Dict[str, Any]:
+        """Build the Docker container configuration."""
+
+        mongo_read_only = cls._get_read_only_mongo_uri()
+
+        return {
+            "image": cls._image_name,
+            "command": ["python", "StrategyOrchestrator.py"],
+            "environment": {
+                "MONGO_URI": mongo_read_only,
+                "MONGO_DB": settings.MONGO_DB,
+                "RUN_ID": run_id,
+                "PYTHONUNBUFFERED": "1",
+            },
+            "volumes": {
+                strategy_file: {
+                    "bind": "/orchestrator/user_strategies/user_strategy.py",
+                    "mode": "ro",
+                }
+            },
+            "mem_limit": "2g",
+            "cpu_quota": 100000,
+            "remove": True,
+            "detach": False,
+            "stdin_open": True,
+            "stdout": True,
+            "stderr": True,
+        }
+
     @classmethod
     def _run_container(
             cls,
@@ -146,33 +177,8 @@ class OrchestratorService:
             with open(strategy_file, 'w') as f:
                 f.write(strategy_code)
 
-            # Prepare MongoDB read-only connection string
-            mongo_read_only = cls._get_read_only_mongo_uri()
-
             # Container configuration
-            container_config = {
-                "image": cls._image_name,
-                "command": ["python", "StrategyOrchestrator.py"],
-                "environment": {
-                    "MONGO_URI": mongo_read_only,
-                    "MONGO_DB": settings.MONGO_DB,
-                    "RUN_ID": run_id,
-                    "PYTHONUNBUFFERED": "1"
-                },
-                "volumes": {
-                    strategy_file: {
-                        "bind": "/orchestrator/user_strategies/user_strategy.py",
-                        "mode": "ro"
-                    }
-                },
-                "mem_limit": "2g",
-                "cpu_quota": 100000,  # 1 CPU
-                "remove": True,
-                "detach": False,
-                "stdin_open": True,
-                "stdout": True,
-                "stderr": True
-            }
+            container_config = cls._container_config(strategy_file, run_id)
 
             try:
                 # Create and start container

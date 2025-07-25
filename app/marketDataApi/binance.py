@@ -4,14 +4,20 @@ from typing import Optional
 import pandas as pd
 from redis import Redis
 
-from app.core.init_services import master_db_app_sync
-from app.core.pydanticConfig import settings
+from app.core.init_services import master_db_app_sync, get_redis_cache
 from app.marketDataApi.apiconfig.config import BASE_URL
 from app.marketDataApi.utils import retry_request
 
 # In-memory cache (simple LRU could be added)
 _candle_cache = {}
 mongo_sync = master_db_app_sync()
+
+def _cache_to_redis(client: Redis, key: str, df: pd.DataFrame) -> None:
+    "Helper to store a DataFrame in a Redis cache"
+    try :
+        client.set(key, df.to_json(), ex = 3600)
+    except Exception as e :
+        pass
 
 ###############################################################################
 # GET VALID BINANCE SYMBOLS
@@ -53,7 +59,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
 
     # 2) Check Redis cache
     try:
-        redis_client = Redis.from_url(settings.REDIS_BROKER_URL)
+        redis_client = get_redis_cache()
         raw_json = redis_client.get(cache_key)
         if raw_json:
             logging.info(f"Cache HIT (Redis) for {cache_key}")
@@ -83,10 +89,7 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
             logging.info(f"Cache HIT (MongoDB) for {symbol} {interval} from {len(docs)} docs")
             # Update caches
             if redis_client:
-                try:
-                    redis_client.set(cache_key, df.to_json(), ex=3600)
-                except:
-                    pass
+                _cache_to_redis(redis_client, cache_key, df)
             _candle_cache[cache_key] = df
             return df
 
@@ -139,11 +142,8 @@ def fetch_candles(symbol: str, interval: str, limit=100, start_time: Optional[in
             except Exception as e:
                 logging.warning(f"MongoDB upsert failed for {symbol} {interval}: {e}")
     # Cache the result in Redis and memory
-    if redis_client is not None:
-        try:
-            redis_client.set(cache_key, df.to_json(), ex=3600)
-        except:
-            pass
+    if redis_client :
+        _cache_to_redis(redis_client, cache_key, df)
     _candle_cache[cache_key] = df
 
     return df

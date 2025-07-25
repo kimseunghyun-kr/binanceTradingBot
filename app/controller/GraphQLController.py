@@ -31,26 +31,22 @@ async def get_context_with_auth(
         "user": user
     }
 
+def _make_graphql_router( context_getter ) :
+    return GraphQLRouter(
+        schema=schema,
+        context_get=context_getter,
+        subscription_protocol= [
+            GRAPHQL_WS_PROTOCOL,
+            GRAPHQL_TRANSPORT_WS_PROTOCOL
+        ],
+    )
+
 
 # Create GraphQL router
-graphql_app = GraphQLRouter(
-    schema,
-    context_getter=get_context,
-    subscription_protocols=[
-        GRAPHQL_TRANSPORT_WS_PROTOCOL,
-        GRAPHQL_WS_PROTOCOL,
-    ],
-)
+graphql_app = _make_graphql_router(get_context)
 
 # Create protected GraphQL router (requires authentication)
-protected_graphql_app = GraphQLRouter(
-    schema,
-    context_getter=get_context_with_auth,
-    subscription_protocols=[
-        GRAPHQL_TRANSPORT_WS_PROTOCOL,
-        GRAPHQL_WS_PROTOCOL,
-    ],
-)
+protected_graphql_app = _make_graphql_router(get_context_with_auth())
 
 # Create API router
 router = APIRouter(prefix="/graphql", tags=["GraphQL"])

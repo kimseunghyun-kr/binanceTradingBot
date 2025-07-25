@@ -21,6 +21,34 @@ settings = get_settings()
 
 class BackTestServiceV2:
     # ───────────────────────── public entrypoint ─────────────────────── #
+
+    @classmethod
+    async def _fetch_strategy_code(
+            cls, name: str, custom_code: Optional[str]
+    ) -> str:
+        """Return either the provided custom code or code fetched from DB."""
+
+        if custom_code:
+            return custom_code
+        return await cls._get_strategy_code(name)
+
+    @classmethod
+    async def _run_orchestrator(
+            cls, cfg: OrchestratorInput, code: str
+    ) -> Dict[str, Any]:
+        """Execute orchestrator and return raw result."""
+
+        return await OrchestratorService.run_backtest(
+            strategy_code=code,
+            strategy_config=cfg.strategy.dict(),
+            symbols=cfg.symbols,
+            interval=cfg.interval,
+            num_iterations=cfg.num_iterations,
+            additional_params=cfg.dict(
+                exclude={"strategy", "symbols", "interval", "num_iterations"}
+            ),
+        )
+
     @classmethod
     async def run_backtest(
         cls,
@@ -58,22 +86,13 @@ class BackTestServiceV2:
             end_date=end_date,
             custom_strategy_code=custom_strategy_code,
             parallel_symbols=parallel_symbols,
-            **kwargs
+            **kwargs,
         )
 
-        strategy_code = custom_strategy_code or await cls._get_strategy_code(strategy_name)
+        strategy_code = await cls._fetch_strategy_code(strategy_name, custom_strategy_code)
 
         try:
-            raw_result = await OrchestratorService.run_backtest(
-                strategy_code=strategy_code,
-                strategy_config=orchestrator_input.strategy.dict(),
-                symbols=symbols,
-                interval=interval,
-                num_iterations=num_iterations,
-                additional_params=orchestrator_input.dict(
-                    exclude={"strategy", "symbols", "interval", "num_iterations"}
-                ),
-            )
+            raw_result = await cls._run_orchestrator(orchestrator_input, strategy_code)
 
             result = await cls._enrich(raw_result, orchestrator_input)
 
