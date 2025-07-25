@@ -42,9 +42,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Custom rate limiting middleware with different limits per endpoint.
     """
 
-    def __init__(self, app, default_limit: str = "100/minute"):
+    def __init__(self, app, default_limit_per_minute: int = 100):
         super().__init__(app)
-        self.default_limit = default_limit
+        self.default_limit_per_minute = default_limit_per_minute
         self.endpoint_limits = {
             "/backtest": "10/minute",
             "/grid-search": "5/minute",
@@ -59,7 +59,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Get endpoint-specific limit
         path = request.url.path
-        limit = self.default_limit
+        limit = self.default_limit_per_minute
         for endpoint, endpoint_limit in self.endpoint_limits.items():
             if path.startswith(endpoint):
                 limit = endpoint_limit
@@ -77,19 +77,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
 
-    def _check_rate_limit(self, client_ip: str, path: str, limit: str) -> bool:
+    def _check_rate_limit(self, client_ip: str, path: str, count : int) -> bool:
         """Check if request is within rate limit."""
-        # Parse limit (e.g., "100/minute")
-        count, period = limit.split("/")
-        count = int(count)
-
-        # Convert period to seconds
-        period_seconds = {
-            "second": 1,
-            "minute": 60,
-            "hour": 3600,
-            "day": 86400
-        }.get(period, 60)
+        period_seconds = 60
 
         # Get current timestamp
         current_time = time.time()

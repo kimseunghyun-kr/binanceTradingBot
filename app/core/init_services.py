@@ -153,11 +153,11 @@ def get_redis_cache() -> Redis:
 data_service = DataService([
     BinanceProvider(
       redis_client = get_redis_cache(),
-      mongo_sync   = master_db_app_sync(),
+      mongo_async   = master_db_app_async(),
     ),
     CMCProvider(
-      redis_client = get_redis_cache(),
-      mongo_sync   = master_db_app_sync(),
+        redis_client = get_redis_cache(),
+        mongo_async   = master_db_app_async(),
     ),
 ])
 

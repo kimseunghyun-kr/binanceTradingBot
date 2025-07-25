@@ -6,9 +6,10 @@ Strawberry type definitions for GraphQL schema.
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Any
 
 import strawberry
+from strawberry.scalars import JSON
 
 
 @strawberry.enum
@@ -93,7 +94,7 @@ class SymbolStats:
     volatility: float
     sharpe_ratio: Optional[float] = None
     correlation_btc: Optional[float] = None
-    technical_indicators: Optional[Dict[str, float]] = None
+    technical_indicators: Optional[JSON] = None
 
 
 @strawberry.type
@@ -120,7 +121,7 @@ class Strategy:
     name: str
     description: Optional[str] = None
     type: StrategyType
-    parameters: Dict[str, Any]
+    parameters: JSON
     required_indicators: List[str] = strawberry.field(default_factory=list)
     performance: Optional[StrategyPerformance] = None
     created_at: datetime

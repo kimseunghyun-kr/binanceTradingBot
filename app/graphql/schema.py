@@ -4,9 +4,10 @@ GraphQL Schema for TradingBot
 Provides flexible querying capabilities for symbols, strategies, and backtests.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 import strawberry
+from strawberry.scalars import JSON
 
 from app.graphql.resolvers import (
     SymbolResolver,
@@ -213,7 +214,7 @@ class Mutation:
         name: str,
         code: str,
         description: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None
+        parameters: Optional[JSON] = None
     ) -> Strategy:
         """
         Create a custom strategy.
@@ -244,7 +245,7 @@ class Mutation:
         symbol: str,
         tags: Optional[List[str]] = None,
         sector: Optional[str] = None,
-        custom_data: Optional[Dict[str, Any]] = None
+        custom_data: Optional[JSON] = None
     ) -> Symbol:
         """
         Update symbol metadata.

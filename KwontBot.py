@@ -10,6 +10,8 @@ from app.core.pydanticConfig.settings import get_settings
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import open_pools, close_pools, get_redis_cache
 from app.core.security import RateLimitMiddleware
+from contextlib import asynccontextmanager
+
 
 # ─── logging -----------------------------------------------------------
 os.makedirs("logs", exist_ok=True)
@@ -29,6 +31,7 @@ def create_app() -> FastAPI:
     cfg = get_settings()
 
     # Lifespan context to open/close pools
+    @asynccontextmanager
     async def lifespan(app: FastAPI):
         log.info("🔧 FastAPI startup: opening pools...")
         await open_pools()
@@ -66,7 +69,7 @@ def create_app() -> FastAPI:
         if get_redis_cache():
             app.add_middleware(
                 RateLimitMiddleware,
-                requests_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
+                default_limit_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
             )
         else:
             log.warning(" Rate-limiting disabled – Redis not reachable")
