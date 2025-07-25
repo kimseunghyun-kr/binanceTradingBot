@@ -9,7 +9,9 @@ Important:
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import os
 from functools import lru_cache
 from typing import Literal, Optional, TypedDict
 
@@ -26,7 +28,9 @@ from app.services.marketDataService.adapters.cmc_provider import CMCProvider
 
 log = logging.getLogger(__name__)
 cfg = get_settings()
-MongoDBConfig.initialize()   # make sure pools exist
+# Avoid double-initialisation under uvicorn --reload (the "reloader" process)
+if os.getenv("RUN_MAIN") == "true" or os.getenv("RUN_MAIN") is None:
+    MongoDBConfig.initialize()   # make sure pools exist
 
 # ─────────────────────────────────────────────────────────────
 # Global singletons (Postgres / Redis / external feeds)
@@ -44,7 +48,8 @@ try:
     redis_cache.ping()
     log.info("[Redis] connected")
 except Exception as exc:  # pragma: no cover
-    log.error("Redis connection error: %s", exc)
+    # Do not crash at import-time; just disable rate-limit later.
+    log.warning("Redis unavailable – rate-limit middleware will be disabled: %s", exc)
     redis_cache = None
 
 
@@ -83,11 +88,12 @@ def mongo_db(role: Role, flavour: Flavour, logical: Logical) -> SyncDatabase | A
             client = MongoDBConfig.get_slave_client()
 
     # pick DB name -------------------------------------------------------
-    name = {
+    LOGICAL_TO_DB: dict[Logical, str] = {
         "app": cfg.db_app,
         "ohlcv": cfg.db_ohlcv or cfg.db_app,
         "perp": cfg.db_perp or cfg.db_app,
-    }[logical]
+    }
+    name = LOGICAL_TO_DB[logical]
 
     db = client[name]  # type: ignore[index]
 
@@ -107,7 +113,13 @@ def master_db_app_async() -> AsyncIOMotorDatabase:
 
 
 def master_db_app_sync() -> SyncDatabase:
-    return mongo_db("master", "sync", "app")   # type: ignore[return-value]
+    # Guard: prevent usage from an async context
+    if asyncio.get_running_loop().is_running():
+        raise RuntimeError(
+            "master_db_app_sync() called inside an async context – "
+            "use master_db_app_async() instead."
+        )
+    return mongo_db("master", "sync", "app")  # type: ignore[return-value]
 
 
 def slave_db_app_sync() -> SyncDatabase:
@@ -141,3 +153,17 @@ def get_redis_cache() -> Redis:
 
 def get_data_service() -> DataService:
     return data_service
+
+# ─────────────────────────────────────────────────────────────
+# Optional pool lifecycle helpers (imported by FastAPI entrypoint)
+# ─────────────────────────────────────────────────────────────
+async def open_pools() -> None:
+    if postgres_db:
+        await postgres_db.connect()
+
+def close_pools() -> None:
+    MongoDBConfig.close()
+    if postgres_db:
+        import anyio; anyio.run(postgres_db.disconnect)  # safe in sync shutdown
+    if redis_cache:
+        redis_cache.close()

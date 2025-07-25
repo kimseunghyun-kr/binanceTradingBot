@@ -13,8 +13,14 @@ from app.controller import (
     GridSearchController as grid_search,
     TaskController as tasks,
 )
+
+from app.core.init_services import (
+    get_redis_cache,
+    open_pools,
+    close_pools,
+)
+
 from app.core.db.mongodb_config import MongoDBConfig
-from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 from app.core.security import RateLimitMiddleware
 from app.graphql.index import graphql_app
@@ -37,6 +43,9 @@ MongoDBConfig.initialize()      # build pools
 async def lifespan(app: FastAPI):
     log.info("🔧 FastAPI startup")
 
+    # ── startup ────────────────────────────────────────────
+    await open_pools()
+
     # expose pools & settings to routes
     app.mongo_async = MongoDBConfig.get_master_client()
     app.mongo_sync  = MongoDBConfig.get_master_client_sync()
@@ -47,7 +56,7 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
-        MongoDBConfig.close()
+        close_pools()
         log.info("FastAPI shutdown")
 
 
@@ -67,10 +76,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(
-    RateLimitMiddleware,
-    requests_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
-)
+
+# Rate-limit only if Redis is up
+if get_redis_cache():
+    app.add_middleware(
+        RateLimitMiddleware,
+        requests_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
+    )
+else:
+    log.warning("⚠️  Rate-limiting disabled – Redis not reachable")
 
 # ─── routers -----------------------------------------------------------
 app.include_router(backtest.router,   prefix="/backtest",  tags=["Backtest"])
@@ -84,8 +98,10 @@ app.mount("/graphql", graphql_app)
 # ─── health check ------------------------------------------------------
 @app.get("/health", tags=["Meta"])
 async def health_check():
-    return {
-        "status": "healthy",
-        "mongodb": "connected" if MongoDBConfig.get_master_client() else "disconnected",
-        "version": "alpha",
-    }
+    try:
+        await MongoDBConfig.get_master_client().admin.command("ping")
+        mongo_state = "connected"
+    except Exception:
+        mongo_state = "error"
+
+    return {"status": "healthy", "mongodb": mongo_state, "version": "alpha"}

@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     MONGO_DB_PERP:  Optional[str] = Field(None, env="MONGO_DB_PERP")
 
     # —--- MONGODB USER PASSWORD ---—
-    MONGO_DB_USER_PW: str = Field(None, env="MONGO_DB_USER_PW")  # default
+    MONGO_USER_PW: str = Field(None, env="MONGO_USER_PW")  # default
 
     # —--- Redis / Celery ---—
     REDIS_BROKER_URL: str = Field("redis://localhost:6379/0", env="REDIS_BROKER_URL")

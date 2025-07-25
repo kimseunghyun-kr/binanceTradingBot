@@ -103,9 +103,9 @@ class MongoDBConfig:
         if admin.command("usersInfo", "backtest_readonly")["users"]:
             return  # already exists
 
-        pwd = get_settings().MONGO_USER_PWD
+        pwd = get_settings().MONGO_USER_PW
         if not pwd:  # first process ever
-            raise ValueError("MONGO_USER_PWD is required")
+            raise ValueError("MONGO_USER_PW is required")
 
         admin.command(
             "createUser",
@@ -119,22 +119,24 @@ class MongoDBConfig:
         logging.info("[MongoDB] created read-only user")
 
     @classmethod
-    def _make_ro_uri(cls, * , default_db: str = "admin") -> str:
-        uri = cfg.mongo_slave_uri or cfg.mongo_master_uri
-        parsed = urlparse(uri)
+    def _make_ro_uri(cls, *, default_db: str = "admin") -> str:
+        uri_in = cfg.mongo_slave_uri or cfg.mongo_master_uri
+        parsed = urlparse(uri_in)
 
         if cfg.MONGO_AUTH_ENABLED:
             user = quote_plus("backtest_readonly")
-            pw   = quote_plus(cfg.MONGO_USER_PWD)
-            netloc = f"{user}:{pw}@{parsed.hostname}"
+            pwd = quote_plus(cfg.MONGO_USER_PW)
+            netloc = f"{user}:{pwd}@{parsed.hostname}"
             if parsed.port:
                 netloc += f":{parsed.port}"
         else:
             netloc = parsed.netloc
 
-            # authSource stays 'admin' because that’s where the user is defined
-            query = "authSource=admin&readPreference=secondaryPreferred&maxStalenessSeconds=90"
-            return urlunparse((parsed.scheme, netloc, f"/{default_db}", "", query, ""))
+        query = (
+            "authSource=admin&readPreference=secondaryPreferred"
+            "&maxStalenessSeconds=90"
+        )
+        return urlunparse((parsed.scheme, netloc, f"/{default_db}", "", query, ""))
 
     # ------------------------------------------------------------------ #
     # public getters
