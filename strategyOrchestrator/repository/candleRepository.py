@@ -7,6 +7,7 @@ from typing import Optional
 
 import pandas as pd
 from pymongo import ASCENDING, DESCENDING, MongoClient
+
 from app.core.pydanticConfig.settings import get_settings
 
 

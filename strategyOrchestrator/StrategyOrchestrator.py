@@ -16,13 +16,11 @@ import logging
 import sys
 import time
 from functools import partial
-from typing import Any, Dict, List, Sequence, cast
+from typing import Any, Sequence, cast
 
 import pandas as pd
 
-from app.core.pydanticConfig import settings
 from app.core.pydanticConfig.settings import get_settings
-
 # ────────── domain objects & helpers ────────────────────────────────────
 from entities.perpetuals.portfolio.PerpPortfolioManager import (
     PerpPortfolioManager,
@@ -54,7 +52,6 @@ from entities.tradeManager.policies.FillPolicy import (
     VWAPDepthPolicy,
 )
 from entities.tradeManager.policies.interfaces import FillPolicy
-
 from strategyOrchestrator.LoadComponent import load_component
 from strategyOrchestrator.repository.candleRepository import CandleRepository
 

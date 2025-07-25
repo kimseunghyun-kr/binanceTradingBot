@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from app.core.celery_app import celery
-from app.core.init_services import master_db_app_sync
 from app.services.BackTestService import BackTestServiceV2
 
 logger = logging.getLogger(__name__)
@@ -34,6 +33,8 @@ def _extract_config(cfg: Dict[str, Any]):
 
 @celery.task(name="app.tasks.BackTestTask.run_backtest_task", bind=True)
 def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    from app.core.init_services import master_db_app_sync
+
     """
     Celery task to execute a backtest asynchronously.
     
@@ -176,6 +177,8 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
 
 @celery.task(name="app.tasks.BackTestTask.get_task_status")
 def get_task_status(task_id: str) -> Dict[str, Any]:
+    from app.core.init_services import master_db_app_sync
+
     """
     Get the status of a backtest task.
     
@@ -215,6 +218,8 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
 
 @celery.task(name="app.tasks.BackTestTask.cleanup_old_tasks")
 def cleanup_old_tasks(days: int = 30) -> Dict[str, int]:
+    from app.core.init_services import master_db_app_sync
+
     """
     Clean up old task records from the database.
     

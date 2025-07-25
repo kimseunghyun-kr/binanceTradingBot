@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 from functools import wraps
 from typing import Optional, Dict, Any, Callable
 
+import jwt
 from fastapi import HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jwt import jwt
 from passlib.context import CryptContext
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -182,7 +182,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials",

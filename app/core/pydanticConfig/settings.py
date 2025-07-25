@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = Field("redis://localhost:6379/0", env="CELERY_RESULT_BACKEND")
 
     # —--- Optional Postgres ---—
-    POSTGRES_DSN: Optional[str] = Field(None, env="POSTGRES_DSN")
+    POSTGRES_DSN: Optional[str] = Field( None, env="POSTGRES_DSN")
 
     # —--- External API keys (omitted for brevity) ---—
     BINANCE_API_KEY: Optional[str] = Field(None, env="BINANCE_API_KEY")

@@ -37,7 +37,6 @@ if os.getenv("RUN_MAIN") == "true" or os.getenv("RUN_MAIN") is None:
 # ─────────────────────────────────────────────────────────────
 postgres_db: Optional[Database] = None
 redis_cache: Optional[Redis] = None
-data_service = DataService([BinanceProvider(), CMCProvider()])
 
 if cfg.POSTGRES_DSN:
     postgres_db = Database(cfg.POSTGRES_DSN)
@@ -150,6 +149,17 @@ def get_redis_cache() -> Redis:
         raise RuntimeError("Redis not configured")
     return redis_cache
 
+
+data_service = DataService([
+    BinanceProvider(
+      redis_client = get_redis_cache(),
+      mongo_sync   = master_db_app_sync(),
+    ),
+    CMCProvider(
+      redis_client = get_redis_cache(),
+      mongo_sync   = master_db_app_sync(),
+    ),
+])
 
 def get_data_service() -> DataService:
     return data_service
