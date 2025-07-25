@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.core.init_services import get_master_db_async
+from app.core.init_services import master_db_app_async
 from app.services.StrategyService import StrategyService
 
 router = APIRouter(prefix="/strategies", tags=["Strategies"])
@@ -16,7 +16,7 @@ class StrategyInfo(BaseModel):
     description: str
 
 
-mongo_sync_db = get_master_db_async()
+mongo_sync_db = master_db_app_async()
 
 @router.get("", response_model=List[StrategyInfo])
 async def list_strategies():

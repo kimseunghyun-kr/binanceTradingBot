@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from app.core.celery_app import celery
-from app.core.init_services import get_master_db_sync
+from app.core.init_services import master_db_app_sync
 from app.services.BackTestService import BackTestServiceV2
 
 logger = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         # Store task result reference
         if save_results:
             try:
-                db = get_master_db_sync()
+                db = master_db_app_sync()
                 task_doc = {
                     "task_id": task_id,
                     "type": "backtest",
@@ -137,7 +137,7 @@ async def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         
         # Store failure in database
         try:
-            db = get_master_db_sync()
+            db = master_db_app_sync()
             task_doc = {
                 "task_id": task_id,
                 "type": "backtest",
@@ -170,7 +170,7 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
         task = celery.AsyncResult(task_id)
         
         # Get additional info from database
-        db = get_master_db_sync()
+        db = master_db_app_sync()
         task_doc = db.tasks.find_one({"task_id": task_id})
         
         status_info = {
@@ -205,7 +205,7 @@ def cleanup_old_tasks(days: int = 30) -> Dict[str, int]:
         Dictionary with cleanup statistics
     """
     try:
-        db = get_master_db_sync()
+        db = master_db_app_sync()
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         
         # Delete old task records

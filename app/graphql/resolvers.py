@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 from typing import List, Optional, Dict, Any, AsyncGenerator
 
-from app.core.init_services import get_read_db_async, get_master_db_async, get_data_service, get_mongo_client
+from app.core.init_services import get_data_service, slave_db_app_sync, master_db_app_async
 from app.core.pydanticConfig.settings import get_settings
 
 settings = get_settings()
@@ -32,7 +32,7 @@ class SymbolResolver:
     ) -> List[Symbol]:
         """Get symbols with flexible filtering."""
         # Use read-only database for queries
-        db = await get_read_db_async()
+        db = await slave_db_app_sync()
 
         # Build MongoDB query
         query = {}
@@ -154,7 +154,7 @@ class SymbolResolver:
         mongo_query = SymbolResolver._parse_query_to_mongo(query)
 
         # Use read-only database for queries
-        db = await get_read_db_async()
+        db = await slave_db_app_sync()
 
         cursor = db.symbols.find(mongo_query).limit(1000)
 
@@ -200,7 +200,7 @@ class SymbolResolver:
     ) -> Symbol:
         """Update symbol metadata."""
         # Use master database for writes
-        db = await get_master_db_async()
+        db = await master_db_app_async()
 
         update_doc = {}
         if tags is not None:
@@ -240,7 +240,7 @@ class SymbolResolver:
         while True:
             for symbol in symbols:
                 # Fetch latest data
-                mongo_client = get_read_db_async()
+                mongo_client = slave_db_app_sync()
                 db = mongo_client[settings.MONGO_DB]
 
                 doc = await db.symbols.find_one({"symbol": symbol})
@@ -267,7 +267,7 @@ class StrategyResolver:
     ) -> List[Strategy]:
         """Get available strategies."""
         # Use read-only database for queries
-        db = await get_read_db_async()
+        db = await slave_db_app_sync()
 
         query = {}
 
@@ -345,7 +345,7 @@ class StrategyResolver:
     ) -> Strategy:
         """Create a new custom strategy."""
         # Use master database for writes
-        db = await get_master_db_async()
+        db = await master_db_app_async()
 
         # Validate strategy code (basic validation)
         if "class" not in code or "BaseStrategy" not in code:
@@ -390,7 +390,7 @@ class BacktestResolver:
     ) -> List[BacktestResult]:
         """Get backtest results."""
         # Use read-only database for queries
-        db = await get_read_db_async()
+        db = await slave_db_app_sync()
 
         query = {}
 
@@ -488,7 +488,7 @@ class MarketResolver:
     ) -> MarketMetrics:
         """Get overall market metrics."""
         # Use read-only database for queries
-        db = await get_read_db_async()
+        db = await slave_db_app_sync()
 
         # Aggregate market data
         pipeline = []

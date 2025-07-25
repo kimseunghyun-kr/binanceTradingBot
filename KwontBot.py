@@ -14,9 +14,7 @@ from app.controller import (
     TaskController as tasks,
 )
 from app.core.db.mongodb_config import MongoDBConfig
-from app.core.init_services import (
-    _init_external_services,   # already called on import, safe idempotent
-)
+from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 from app.core.security import RateLimitMiddleware
 from app.graphql.index import graphql_app
@@ -33,7 +31,6 @@ log = logging.getLogger(__name__)
 # ─── global config ------------------------------------------------------
 cfg = get_settings()
 MongoDBConfig.initialize()      # build pools
-_init_external_services()       # Postgres / Redis
 
 # ─── lifespan ----------------------------------------------------------
 @asynccontextmanager
@@ -44,6 +41,7 @@ async def lifespan(app: FastAPI):
     app.mongo_async = MongoDBConfig.get_master_client()
     app.mongo_sync  = MongoDBConfig.get_master_client_sync()
     app.mongo_ro_uri = MongoDBConfig.get_read_only_uri()
+    app.redis = get_redis_cache()
     app.settings = cfg
 
     try:

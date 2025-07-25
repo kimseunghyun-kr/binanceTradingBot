@@ -1,14 +1,21 @@
 """
-Initialise Redis, Postgres, external data-feeds.
-Mongo pools come from MongoDBConfig (single source of truth).
+Initialise Redis, Postgres, and expose Mongo DB handles via small factories.
+
+Important:
+    • Mongo connection pools live exclusively in MongoDBConfig.
+    • Each call to db_factory(...) returns *the same* Database object
+      (cached internally), so you can call it anywhere without worrying.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from functools import lru_cache
+from typing import Literal, Optional, TypedDict
 
 from databases import Database
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.database import Database as SyncDatabase
 from redis import Redis
 
 from app.core.db.mongodb_config import MongoDBConfig
@@ -19,49 +26,107 @@ from app.services.marketDataService.adapters.cmc_provider import CMCProvider
 
 log = logging.getLogger(__name__)
 cfg = get_settings()
-MongoDBConfig.initialize()
+MongoDBConfig.initialize()   # make sure pools exist
 
-# ─── global singletons --------------------------------------------------
+# ─────────────────────────────────────────────────────────────
+# Global singletons (Postgres / Redis / external feeds)
+# ─────────────────────────────────────────────────────────────
 postgres_db: Optional[Database] = None
 redis_cache: Optional[Redis] = None
 data_service = DataService([BinanceProvider(), CMCProvider()])
 
-# ─── bootstrap ----------------------------------------------------------
-def _init_external_services() -> None:
-    global postgres_db, redis_cache
+if cfg.POSTGRES_DSN:
+    postgres_db = Database(cfg.POSTGRES_DSN)
+    log.info("[Postgres] configured")
 
-    # Postgres -----------------------------------------------------------
-    if cfg.POSTGRES_DSN:
-        postgres_db = Database(cfg.POSTGRES_DSN)
-        log.info("[Postgres] configured")
-
-    # Redis --------------------------------------------------------------
-    try:
-        redis_cache = Redis.from_url(cfg.REDIS_BROKER_URL, decode_responses=True)
-        redis_cache.ping()
-        log.info("[Redis] connected")
-    except Exception as exc:  # pragma: no cover
-        log.error("Redis connection error: %s", exc)
-        redis_cache = None
+try:
+    redis_cache = Redis.from_url(cfg.REDIS_BROKER_URL, decode_responses=True)
+    redis_cache.ping()
+    log.info("[Redis] connected")
+except Exception as exc:  # pragma: no cover
+    log.error("Redis connection error: %s", exc)
+    redis_cache = None
 
 
-_init_external_services()
-
-# ─── public helpers -----------------------------------------------------
-from motor.motor_asyncio import AsyncIOMotorDatabase
-from pymongo.database import Database as SyncDatabase
-
-
-def master_db_async() -> AsyncIOMotorDatabase:
-    """Primary DB handle (async, read-write)."""
-    return MongoDBConfig.master_async()[cfg.db_app]
+# ─────────────────────────────────────────────────────────────
+# MongoDB factory helpers
+# ─────────────────────────────────────────────────────────────
+Role = Literal["master", "slave"]     # PRIMARY vs secondaryPreferred
+Flavour = Literal["async", "sync"]    # Motor vs blocking PyMongo
+Logical = Literal["app", "ohlcv", "perp"]
 
 
-def slave_db_sync() -> SyncDatabase:
-    """Secondary-preferred DB handle (sync, read-only)."""
-    return MongoDBConfig.slave_sync()[cfg.db_app]
+class _CacheKey(TypedDict):
+    role: Role
+    flavour: Flavour
+    logical: Logical
 
 
+@lru_cache(maxsize=None)
+def mongo_db(role: Role, flavour: Flavour, logical: Logical) -> SyncDatabase | AsyncIOMotorDatabase:
+    """
+    Universal factory:
+
+        mongo_db("master", "async", "app")  -> AsyncIOMotorDatabase
+        mongo_db("slave",  "sync",  "ohlcv") -> pymongo.database.Database
+
+    The result is cached, so subsequent calls are free.
+    """
+    # pick pool ----------------------------------------------------------
+    if role == "master":
+        client = MongoDBConfig.get_master_client() if flavour == "async" else MongoDBConfig.get_master_client_sync()
+    else:  # slave
+        if flavour == "async":
+            # Motor has no concept of secondaryPreferred per-op; reuse master but pass read_pref later
+            client = MongoDBConfig.get_master_client()
+        else:
+            client = MongoDBConfig.get_slave_client()
+
+    # pick DB name -------------------------------------------------------
+    name = {
+        "app": cfg.db_app,
+        "ohlcv": cfg.db_ohlcv or cfg.db_app,
+        "perp": cfg.db_perp or cfg.db_app,
+    }[logical]
+
+    db = client[name]  # type: ignore[index]
+
+    # Motor secondary read_pref tweak (only when async+slave)
+    if role == "slave" and flavour == "async":
+        from pymongo import ReadPreference
+        db = db.with_options(read_preference=ReadPreference.SECONDARY_PREFERRED)
+
+    return db
+
+
+# ─────────────────────────────────────────────────────────────
+# Convenience wrappers used most often
+# ─────────────────────────────────────────────────────────────
+def master_db_app_async() -> AsyncIOMotorDatabase:
+    return mongo_db("master", "async", "app")  # type: ignore[return-value]
+
+
+def master_db_app_sync() -> SyncDatabase:
+    return mongo_db("master", "sync", "app")   # type: ignore[return-value]
+
+
+def slave_db_app_sync() -> SyncDatabase:
+    return mongo_db("slave", "sync", "app")    # type: ignore[return-value]
+
+def master_db_ohlcv_async() -> AsyncIOMotorDatabase:
+    return mongo_db("master", "async", "ohlcv")  # type: ignore[return-value]
+
+
+def master_db_ohlcv_sync() -> SyncDatabase:
+    return mongo_db("master", "sync", "ohlcv")   # type: ignore[return-value]
+
+
+def slave_db_ohlcv_sync() -> SyncDatabase:
+    return mongo_db("slave", "sync", "ohlcv")    # type: ignore[return-value]
+
+# ─────────────────────────────────────────────────────────────
+# Still expose Redis/Postgres/DataService
+# ─────────────────────────────────────────────────────────────
 def get_postgres_db() -> Database:
     if postgres_db is None:
         raise RuntimeError("PostgreSQL not configured")
@@ -76,14 +141,3 @@ def get_redis_cache() -> Redis:
 
 def get_data_service() -> DataService:
     return data_service
-
-
-# --- legacy shims (soft deprecation) -----------------------------------
-def get_mongo_client():
-    """Deprecated.  Use master_db_async() / slave_db_sync()."""
-    return MongoDBConfig.master_async()
-
-
-def get_mongo_sync():
-    """Deprecated.  Use master_db_async() / slave_db_sync()."""
-    return MongoDBConfig.master_sync()

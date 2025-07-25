@@ -82,11 +82,11 @@ class Settings(BaseSettings):
 
     @property
     def db_ohlcv(self) -> str:
-        return self.MONGO_DB_OHLCV or self.MONGO_DB_APP
+        return self.MONGO_DB_OHLCV
 
     @property
     def db_perp(self) -> str:
-        return self.MONGO_DB_PERP or self.MONGO_DB_APP
+        return self.MONGO_DB_PERP
 
     # ---- hard-fail if someone accesses removed legacy attrs --------------
     def __getattr__(self, item):

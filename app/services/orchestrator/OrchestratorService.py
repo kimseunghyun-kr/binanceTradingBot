@@ -18,7 +18,8 @@ from typing import Dict, Any, List, Optional
 import docker
 from docker.errors import DockerException, ImageNotFound
 
-from app.core.init_services import get_redis_cache, get_mongodb_config
+from app.core.db.mongodb_config import MongoDBConfig
+from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 
 settings = get_settings()
@@ -232,8 +233,7 @@ class OrchestratorService:
     def _get_read_only_mongo_uri(cls) -> str:
         """Get read-only MongoDB connection string for containers."""
         try:
-            mongodb_config = get_mongodb_config()
-            return mongodb_config.get_read_only_uri()
+            return MongoDBConfig.get_read_only_uri()
         except RuntimeError:
             # Fallback if MongoDB config not initialized yet
             # This might happen during testing or in special circumstances

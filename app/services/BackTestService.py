@@ -12,7 +12,7 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.init_services import get_redis_cache, get_master_db_async
+from app.core.init_services import get_redis_cache, master_db_app_async
 from app.core.pydanticConfig.settings import get_settings
 from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
 from app.services.orchestrator.OrchestratorService import OrchestratorService
@@ -100,7 +100,7 @@ class BackTestServiceV2:
     # ───────────────────────── helper methods ─────────────────────────── #
     @classmethod
     async def _get_strategy_code(cls, name: str) -> str:
-        mongo_db = await get_master_db_async()
+        mongo_db = await master_db_app_async()
         doc = await mongo_db.strategies.find_one({"name": name})
         if doc and "code" in doc:
             return doc["code"]
@@ -156,14 +156,14 @@ class BackTestServiceV2:
     # ----------------------------------------------------------- mongo -- #
     @classmethod
     async def _save_result(cls, doc: Dict[str, Any]):
-        mongo_db = await get_master_db_async()
+        mongo_db = await master_db_app_async()
         await mongo_db.backtest_results.insert_one(
             {**doc, "created_at": datetime.utcnow()}
         )
 
     @classmethod
     async def _save_error(cls, doc: Dict[str, Any]):
-        mongo_db = await get_master_db_async()
+        mongo_db = await master_db_app_async()
         await mongo_db.backtest_errors.insert_one(
             {**doc, "created_at": datetime.utcnow()}
         )
