@@ -205,7 +205,7 @@ sequenceDiagram
 ```mermaid
 graph LR
     subgraph "Client Request"
-        Query[GraphQL Query<br/>```<br/>query {<br/>  symbols(filter: {<br/>    marketCapMin: 1M<br/>  }) {<br/>    symbol<br/>    name<br/>  }<br/>}<br/>```]
+        Query["GraphQL Query<br/>query symbols with<br/>marketCapMin filter<br/>returns symbol, name"]
     end
     
     subgraph "FastAPI Layer"
@@ -215,9 +215,9 @@ graph LR
     
     subgraph "Schema Layer"
         Schema[GraphQL Schema<br/>@strawberry.type]
-        QueryType[Query Type<br/>- symbols()<br/>- strategies()<br/>- backtestResults()]
-        MutationType[Mutation Type<br/>- createStrategy()<br/>- updateMetadata()]
-        SubType[Subscription Type<br/>- symbolUpdates()<br/>- backtestProgress()]
+        QueryType["Query Type<br/>- symbols<br/>- strategies<br/>- backtestResults"]
+        MutationType["Mutation Type<br/>- createStrategy<br/>- updateMetadata"]
+        SubType["Subscription Type<br/>- symbolUpdates<br/>- backtestProgress"]
     end
     
     subgraph "Resolver Layer"
@@ -297,9 +297,9 @@ graph TB
             Slave[(MongoDB Slave<br/>:27018<br/>Secondary)]
             
             subgraph "Slave Databases"
-                SDB1[trading DB<br/>(replica)]
-                SDB2[ohlcv DB<br/>(replica)]
-                SDB3[perp DB<br/>(replica)]
+                SDB1["trading DB<br/>replica"]
+                SDB2["ohlcv DB<br/>replica"]
+                SDB3["perp DB<br/>replica"]
             end
         end
         
@@ -499,7 +499,7 @@ graph TB
     
     subgraph "Sandboxed Container"
         subgraph "Container Config"
-            ENV[Environment<br/>- MONGO_URI (read-only)<br/>- RUN_ID<br/>- PYTHONUNBUFFERED=1]
+            ENV["Environment<br/>- MONGO_URI read-only<br/>- RUN_ID<br/>- PYTHONUNBUFFERED=1"]
             RES[Resources<br/>- Memory: 2GB<br/>- CPU: 100%<br/>- Auto-remove: true]
             VOL[Volume Mount<br/>user_strategy.py (read-only)]
         end
@@ -513,15 +513,15 @@ graph TB
         
         subgraph "Permissions"
             RO[Read-Only DB Access<br/>backtest_readonly user]
-            NW[No Network<br/>(except MongoDB)]
-            FS[No Host Filesystem<br/>(except mounted strategy)]
+            NW["No Network<br/>except MongoDB"]
+            FS["No Host Filesystem<br/>except mounted strategy"]
         end
     end
     
     subgraph "Data Flow"
-        Input[Input Config<br/>(via stdin)]
-        Output[JSON Results<br/>(via stdout)]
-        Logs[Logs<br/>(stdout/stderr)]
+        Input["Input Config<br/>via stdin"]
+        Output["JSON Results<br/>via stdout"]
+        Logs["Logs<br/>stdout/stderr"]
     end
     
     OS --> TP
