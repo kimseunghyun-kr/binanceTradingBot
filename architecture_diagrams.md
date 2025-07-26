@@ -501,7 +501,7 @@ graph TB
         subgraph "Container Config"
             ENV["Environment<br/>- MONGO_URI read-only<br/>- RUN_ID<br/>- PYTHONUNBUFFERED=1"]
             RES[Resources<br/>- Memory: 2GB<br/>- CPU: 100%<br/>- Auto-remove: true]
-            VOL[Volume Mount<br/>user_strategy.py (read-only)]
+            VOL["Volume Mount<br/>user_strategy.py read-only"]
         end
         
         subgraph "Execution Environment"
