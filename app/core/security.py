@@ -2,6 +2,7 @@
 Security Configuration
 ──────────────────────────────────────────────────────────────────────────
 Implements security features including authentication, rate limiting, and CORS.
+all numerical inputs in rateLimiting is assumed to be number of accesses per minute ( 60 seconds )
 """
 
 import time
@@ -46,10 +47,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.default_limit_per_minute = default_limit_per_minute
         self.endpoint_limits = {
-            "/backtest": "10/minute",
-            "/grid-search": "5/minute",
-            "/graphql": "200/minute",
-            "/api/symbols": "1000/minute"
+            "/backtest": 10,
+            "/grid-search": 5,
+            "/graphql": 200,
+            "/api/symbols": 1000
         }
         self.request_counts = {}
 
@@ -209,6 +210,8 @@ def rate_limit(limit: str):
         async def wrapper(request: Request, *args, **kwargs):
             # Rate limiting logic would go here
             # For now, just pass through
+
+
             return await func(request, *args, **kwargs)
 
         return wrapper
@@ -305,7 +308,7 @@ class APIKeyManager:
         if api_key == cfg.API_KEY:
             return {
                 "client_id": "default",
-                "rate_limit": "1000/hour",
+                "rate_limit": 30,
                 "permissions": ["read", "write"]
             }
         return None

@@ -1,17 +1,15 @@
-# app/main.py
-
+# KwontBot.py
 import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.pydanticConfig.settings import get_settings
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import open_pools, close_pools, get_redis_cache
+from app.core.pydanticConfig.settings import get_settings
 from app.core.security import RateLimitMiddleware
-from contextlib import asynccontextmanager
-
 
 # ─── logging -----------------------------------------------------------
 os.makedirs("logs", exist_ok=True)
@@ -21,7 +19,6 @@ logging.basicConfig(
     handlers=[logging.FileHandler("logs/app.log"), logging.StreamHandler()],
 )
 log = logging.getLogger(__name__)
-
 
 def create_app() -> FastAPI:
     """
@@ -56,25 +53,27 @@ def create_app() -> FastAPI:
     )
 
     # ─── middleware ------------------------------------------------------
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cfg.ALLOWED_ORIGINS.split(",") if cfg.ALLOWED_ORIGINS else ["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    if (cfg.PROFILE != "development"):
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cfg.ALLOWED_ORIGINS.split(",") if cfg.ALLOWED_ORIGINS else ["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
-    # Rate-limit only if Redis is available
-    try:
-        if get_redis_cache():
-            app.add_middleware(
-                RateLimitMiddleware,
-                default_limit_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
-            )
-        else:
-            log.warning(" Rate-limiting disabled – Redis not reachable")
-    except Exception:
-        log.warning(" Rate-limiting setup failed")
+    # Rate-limit only if Redis is available and during prod
+
+        try:
+            if get_redis_cache():
+                app.add_middleware(
+                    RateLimitMiddleware,
+                    default_limit_per_minute=cfg.RATE_LIMIT_PER_MINUTE,
+                )
+            else:
+                log.warning(" Rate-limiting disabled – Redis not reachable")
+        except Exception:
+            log.warning(" Rate-limiting setup failed")
 
     # ─── include routers -----------------------------------------------
     from app.controller import (

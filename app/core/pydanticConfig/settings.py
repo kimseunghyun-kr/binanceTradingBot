@@ -61,6 +61,12 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = Field("*", env="ALLOWED_ORIGINS")
     RATE_LIMIT_PER_MINUTE: int = Field(100, env="RATE_LIMIT_PER_MINUTE")
 
+    # —--- Docker ---—
+    BASE_DIR : str = Field("change-me", env="SECRET_KEY")
+    ORCH_REBUILD_ON_START: bool = Field(False, env="ORCH_REBUILD_ON_START")
+
+    DOCKER_NETWORK: str | None = Field(None, env="DOCKER_NETWORK")
+
     class Config:
         env_file = DOTENV_FILE
         case_sensitive = False
@@ -90,6 +96,10 @@ class Settings(BaseSettings):
     @property
     def db_perp(self) -> str:
         return self.MONGO_DB_PERP
+
+    @property
+    def compose_network_name(self) -> str | None:
+        return self.DOCKER_NETWORK
 
     # ---- hard-fail if someone accesses removed legacy attrs --------------
     def __getattr__(self, item):

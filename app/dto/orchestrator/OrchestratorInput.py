@@ -36,8 +36,8 @@ class OrchestratorInput(BaseModel):
     num_iterations: int = 100
 
     # timing
-    start_date: Optional[datetime] = None
-    end_date:   Optional[datetime] = None
+    start_date: Optional[str] = None
+    end_date:   Optional[str] = None
 
     # portfolio
     initial_capital:    float = 10000.0

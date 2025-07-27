@@ -1,11 +1,12 @@
 # app/services/marketDataService/adapters/cmc_provider.py
 
 from __future__ import annotations
+
 from asyncio import get_running_loop
 from typing import Callable, List, Any
 
-from redis import Redis
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from redis import Redis
 
 from app.marketDataApi.coinmarketcap import fetch_coinmarketcap_coins_multi_pages
 

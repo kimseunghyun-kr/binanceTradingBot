@@ -200,7 +200,7 @@ class SymbolResolver:
     ) -> Symbol:
         """Update symbol metadata."""
         # Use master database for writes
-        db = await master_db_app_async()
+        db = master_db_app_async()
 
         update_doc = {}
         if tags is not None:
@@ -345,7 +345,7 @@ class StrategyResolver:
     ) -> Strategy:
         """Create a new custom strategy."""
         # Use master database for writes
-        db = await master_db_app_async()
+        db = master_db_app_async()
 
         # Validate strategy code (basic validation)
         if "class" not in code or "BaseStrategy" not in code:

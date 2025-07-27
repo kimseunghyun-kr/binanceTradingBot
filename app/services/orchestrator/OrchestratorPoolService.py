@@ -52,7 +52,7 @@ class OrchestratorPoolService:
     _pool_size = 5
     _max_runs_per_container = 50
     _container_ttl = 3600  # 1 hour
-    _image_name = "tradingbot_orchestrator:concurrent"
+    _image_name = "tradingbot_orchestrator:2025-07-28-01"
 
     def __new__(cls):
         if cls._instance is None:

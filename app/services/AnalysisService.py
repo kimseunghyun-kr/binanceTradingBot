@@ -2,8 +2,8 @@ import logging
 from typing import List, Tuple
 
 from app.marketDataApi.binance import fetch_candles
-from entities.strategies.BaseStrategy import BaseStrategy
-from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
+from strategyOrchestrator.entities.strategies.BaseStrategy import BaseStrategy
+from strategyOrchestrator.entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
 
 class AnalysisService:

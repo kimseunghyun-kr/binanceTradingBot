@@ -6,13 +6,15 @@ Enhanced backtest controller with streaming support and better architecture.
 import asyncio
 import json
 import logging
+from datetime import datetime
 from typing import Optional, Dict, Any, List
 
+from celery.result import AsyncResult
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.core import celery_app
+from app.controller.devmock.MockUser import mock_user
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.pydanticConfig.settings import get_settings
 from app.core.security import get_current_user
@@ -32,8 +34,8 @@ class BacktestRequestV2(BaseModel):
     symbol_filter: Optional[Dict[str, Any]] = Field(None, description="Symbol filter criteria")
     interval: str = Field("1h", description="Timeframe interval")
     num_iterations: int = Field(100, description="Number of iterations")
-    start_date: Optional[str] = Field(None, description="Start date (ISO format)")
-    end_date: Optional[str] = Field(None, description="End date (ISO format)")
+    start_date: Optional[datetime] = Field(None, description="Start date (ISO format)")
+    end_date: Optional[datetime] = Field(None, description="End date (ISO format)")
 
     # Custom strategy
     custom_strategy_code: Optional[str] = Field(None, description="Custom strategy Python code")
@@ -68,7 +70,7 @@ class BacktestResponse(BaseModel):
 @router.post("/submit", response_model=BacktestResponse)
 async def submit_backtest(
         request: BacktestRequestV2,
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user),
 ) -> BacktestResponse:
     """
     Submit a new backtest with enhanced features.
@@ -166,11 +168,11 @@ def _build_task_payload ( request: BacktestRequestV2,
 @router.get("/status/{task_id}")
 async def get_backtest_status(
         task_id: str,
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user)
 ):
     """Get status of a backtest task."""
 
-    result = celery_app.AsyncResult(task_id)
+    result = AsyncResult(task_id)
 
     if result.state == 'PENDING':
         return {
@@ -285,7 +287,7 @@ async def stream_backtest_progress(
 @router.get("/results/{task_id}")
 async def get_backtest_results(
         task_id: str,
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user)
 ):
     """Get full backtest results."""
     db = MongoDBConfig.get_master_client()[settings.MONGO_DB_APP]
@@ -303,7 +305,7 @@ async def get_backtest_results(
 
 @router.get("/pool/status")
 async def get_pool_status(
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user)
 ):
     """Get orchestrator pool status."""
     return await orchestrator_pool.get_pool_status()
@@ -312,11 +314,11 @@ async def get_pool_status(
 @router.post("/cancel/{task_id}")
 async def cancel_backtest(
         task_id: str,
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user)
 ):
     """Cancel a running backtest."""
 
-    result = celery_app.AsyncResult(task_id)
+    result = AsyncResult(task_id)
     result.revoke(terminate=True)
 
     return {
@@ -330,7 +332,7 @@ async def cancel_backtest(
 async def export_backtest_results(
         task_id: str,
         format: str = "json",
-        user: Dict[str, Any] = Depends(get_current_user)
+        user: Dict[str, Any] = Depends(get_current_user if settings.PROFILE != "development" else mock_user)
 ):
     """
     Export backtest results in various formats.

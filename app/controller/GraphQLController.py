@@ -8,10 +8,12 @@ from fastapi import APIRouter, Depends, Request
 from strawberry.fastapi import GraphQLRouter
 from strawberry.subscriptions import GRAPHQL_TRANSPORT_WS_PROTOCOL, GRAPHQL_WS_PROTOCOL
 
+from app.controller.devmock.MockUser import mock_user
+from app.core.pydanticConfig.settings import get_settings
 from app.core.security import get_current_user
 from app.graphql.schema import schema
 
-
+cfg = get_settings()
 # Create GraphQL app with authentication
 def get_context(request: Request):
     """Get context for GraphQL resolvers."""
@@ -23,7 +25,7 @@ def get_context(request: Request):
 
 async def get_context_with_auth(
     request: Request,
-    user = Depends(get_current_user)
+    user = Depends(get_current_user if cfg.PROFILE != "development" else mock_user),
 ):
     """Get context with authenticated user."""
     return {

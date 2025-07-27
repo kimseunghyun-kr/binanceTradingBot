@@ -1,13 +1,14 @@
 # app/services/marketDataService/adapters/binance_provider.py
 
 from __future__ import annotations
+
 from asyncio import get_running_loop
 from datetime import datetime
 from typing import Callable, Optional, List
 
 import pandas as pd
-from redis import Redis
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from redis import Redis
 
 from app.marketDataApi.binance import fetch_candles, get_valid_binance_symbols
 

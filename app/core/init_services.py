@@ -25,6 +25,7 @@ from app.core.pydanticConfig.settings import get_settings
 from app.services.marketDataService.DataServices import DataService
 from app.services.marketDataService.adapters.binance_provider import BinanceProvider
 from app.services.marketDataService.adapters.cmc_provider import CMCProvider
+from app.services.orchestrator import Docker_Engine
 
 log = logging.getLogger(__name__)
 cfg = get_settings()
@@ -163,6 +164,9 @@ data_service = DataService([
 
 def get_data_service() -> DataService:
     return data_service
+
+# Initialize Orchestrator Service
+Docker_Engine.initialize()
 
 # ─────────────────────────────────────────────────────────────
 # Optional pool lifecycle helpers (imported by FastAPI entrypoint)

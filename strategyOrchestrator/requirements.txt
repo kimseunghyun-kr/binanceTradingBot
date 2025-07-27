@@ -1,0 +1,39 @@
+# Core config & settings
+pydantic
+pydantic-settings
+
+# Database
+motor
+pymongo
+redis
+asyncpg
+sqlalchemy[asyncio]
+databases
+
+# Data Processing
+pandas
+numpy
+numba
+ta
+
+# Docker SDK
+docker
+
+# Plotting/Visualization (if used in result rendering)
+matplotlib
+mplfinance
+plotly~=6.1.1
+kaleido
+
+# Utilities
+python-dateutil
+pytz
+orjson
+aiofiles
+uvloop
+
+# Exchange API
+python-binance
+
+# Environment
+python-dotenv

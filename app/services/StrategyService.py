@@ -1,9 +1,9 @@
 from typing import List, Dict
 
-from entities.strategies.BaseStrategy import BaseStrategy
-from entities.strategies.concreteStrategies import EnsembleStrategy
-from entities.strategies.concreteStrategies.MomentumStrategy import MomentumStrategy
-from entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
+from strategyOrchestrator.entities.strategies.BaseStrategy import BaseStrategy
+from strategyOrchestrator.entities.strategies.concreteStrategies.EnsembleStrategy import EnsembleStrategy
+from strategyOrchestrator.entities.strategies.concreteStrategies.MomentumStrategy import MomentumStrategy
+from strategyOrchestrator.entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
 
 class StrategyService:
