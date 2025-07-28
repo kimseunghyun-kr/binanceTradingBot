@@ -17,7 +17,8 @@ services:
     ports:
       - "8000:8000"         # FastAPI served via Uvicorn
     depends_on:
-      - mongo
+      - mongo1
+      - mongo2
       - redis
       - postgres
 
@@ -34,7 +35,8 @@ services:
       REDIS_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
     depends_on:
-      - mongo
+      - mongo1
+      - mongo2
       - redis
       - postgres
 
@@ -45,14 +47,63 @@ services:
     ports:
       - "6379:6379"
 
-  mongo:
-    image: mongo:4.4
-    container_name: tradingbot_mongo
-    restart: unless-stopped
+  mongo1:
+    image: mongo:6
+    container_name: tradingbot_mongo1
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
     ports:
-      - "27017:27017"
+      - "27017:27017"           # primary exposed on host 27017
     volumes:
-      - mongo_data:/data/db
+      - mongo1_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+  mongo2:
+    image: mongo:6
+    container_name: tradingbot_mongo2
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
+    ports:
+      - "27018:27017"           # secondary exposed on host 27018
+    volumes:
+      - mongo2_data:/data/db
+    depends_on:
+      - mongo1
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+  mongo-init:
+    image: mongo:6
+    container_name: tradingbot_mongo_init
+    depends_on:
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: >
+      '
+      echo "Waiting for mongo1...";
+      until mongosh --host mongo1:27017 --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 1; done;
+      echo "Initiating replicaset...";
+      mongosh --host mongo1:27017 --eval "
+        rs.initiate({
+          _id: \"rs0\",
+          members: [
+            {_id: 0, host: \"mongo1:27017\"},
+            {_id: 1, host: \"mongo2:27017\"}
+          ]
+        });
+        while (rs.status().ok !== 1) { sleep(1000); }
+        rs.status();
+      ";
+      '
+    restart: "no"
 
   postgres:
     image: postgres:13-alpine
@@ -87,7 +138,8 @@ services:
     depends_on:
       - mongo
 volumes:
-  mongo_data:
+  mongo1_data:
+  mongo2_data:
   pg_data:
 
 

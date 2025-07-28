@@ -76,13 +76,13 @@ class OrchestratorService:
             strategy_config, symbols, interval, num_iterations, additional_params
         )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
             cls._executor,
             cls._run_container,
             strategy_code,
             input_config,
-            run_id,
+            run_id
         )
 
         cls._cache_result(run_id, result)

@@ -55,6 +55,7 @@ class MongoDBConfig:
             minPoolSize=10,
         )
 
+
     @staticmethod
     def _build_master_sync() -> MongoClient:
         return MongoClient(

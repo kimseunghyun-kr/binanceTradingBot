@@ -4,7 +4,7 @@ BackTestServiceV2.py
 FastAPI-side wrapper that spawns sandboxed orchestrator runs.
 Now *does not* embed symbol_data and forwards `parallel_symbols`.
 """
-
+import asyncio
 import hashlib
 import json
 import logging
@@ -122,7 +122,7 @@ class BackTestServiceV2:
                 "timestamp": datetime.utcnow().isoformat(),
             }
             if save_results:
-                cls.save_error_sync(err_doc)
+                await cls._save_error(err_doc)
             raise
 
     # ───────────────────────── helper methods ─────────────────────────── #
@@ -195,9 +195,6 @@ class BackTestServiceV2:
         await mongo_db.backtest_errors.insert_one(
             {**doc, "created_at": datetime.utcnow()}
         )
-
-    def save_error_sync(cls, doc: Dict[str, Any]):
-        anyio.from_thread.run(cls._save_error, doc)  # repo.save_error is async
 
     # -------------------------------------------------------- enrich ---- #
     @classmethod

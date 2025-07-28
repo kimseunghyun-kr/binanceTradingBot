@@ -112,9 +112,18 @@ def master_db_app_async() -> AsyncIOMotorDatabase:
     return mongo_db("master", "async", "app")  # type: ignore[return-value]
 
 
+def _in_async_context() -> bool:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return False  # no loop -> sync context
+    else:
+        return True  # a loop is running
+
+
 def master_db_app_sync() -> SyncDatabase:
     # Guard: prevent usage from an async context
-    if asyncio.get_running_loop().is_running():
+    if _in_async_context():
         raise RuntimeError(
             "master_db_app_sync() called inside an async context – "
             "use master_db_app_async() instead."
