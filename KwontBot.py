@@ -2,6 +2,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from app.core.debug import debug
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +11,7 @@ from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import open_pools, close_pools, get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 from app.core.security import RateLimitMiddleware
+
 
 # ─── logging -----------------------------------------------------------
 os.makedirs("logs", exist_ok=True)

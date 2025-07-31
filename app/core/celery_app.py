@@ -1,6 +1,7 @@
 # app/celery_app.py
 """Celery bootstrap that shares the same configuration pools and initializes on worker start."""
 import importlib
+from app.core.debug import debug
 # import sys
 # print("Celery sys.path:", sys.path)
 #
@@ -15,7 +16,6 @@ from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import open_pools, close_pools
 from app.core.pydanticConfig.settings import get_settings
 from app.services.orchestrator import Docker_Engine
-from app.services.orchestrator.OrchestratorService import OrchestratorService
 
 # Load settings and initialize MongoDBConfig pools (no DB connections opened yet)
 

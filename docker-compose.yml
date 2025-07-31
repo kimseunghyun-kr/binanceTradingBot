@@ -1,46 +1,89 @@
-# File: docker-compose.yml
+# docker-compose.yml
 version: "3.8"
+
 services:
+  # ───────────────────────────
+  # Core application (optional)
+  # ───────────────────────────
   app:
+    profiles: [ "app" ]
     build: .
     container_name: tradingbot_app
     restart: unless-stopped
     env_file:
-      - .env                # Contains API keys and DB URIs
+      - .env.development
     environment:
-      # Ensuring the app knows it runs in docker with these hosts:
-      MONGO_URI: "mongodb://mongo:27017/trading"
-      POSTGRES_DSN: "postgresql://postgres:postgres@postgres:5432/trading"
+      MONGO_URI_MASTER: "mongodb://mongo1:27017/?replicaSet=rs0"
+      MONGO_URI_SLAVE: "mongodb://mongo2:27017/?replicaSet=rs0&readPreference=secondaryPreferred"
       REDIS_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      # (Optionally, BINANCE_API_KEY, BINANCE_API_SECRET, COINMARKETCAP_API_KEY can be in .env)
+      POSTGRES_DSN: "postgresql://postgres:postgres@postgres:5432/trading"
+      PYCHARM_ATTACH: "1"
+    # <-- ADD the debug port here
     ports:
-      - "8000:8000"         # FastAPI served via Uvicorn
+      - "8000:8000"
+    extra_hosts: # Linux: make host.docker.internal work
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - mongo1
-      - mongo2
-      - redis
-      - postgres
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+      mongo-init:
+        condition: service_completed_successfully
+    command:
+      - python
+      - -m
+      - uvicorn
+      - KwontBot:app        # ← here’s your ASGI app import path
+      - --host
+      - 0.0.0.0
+      - --reload
 
   worker:
+    profiles: ["app"]
     build: .
     container_name: tradingbot_worker
     restart: unless-stopped
-    command: [ "python", "worker.py" ]   # Start Celery worker
+    command: [ "python", "-m", "celery", "-A", "app.core.celery_app" , "worker" ]
     env_file:
-      - .env
+      - .env.development
     environment:
-      MONGO_URI: "mongodb://mongo:27017/trading"
-      POSTGRES_DSN: "postgresql://postgres:postgres@postgres:5432/trading"
+      MONGO_URI_MASTER: "mongodb://mongo1:27017/?replicaSet=rs0"
+      MONGO_URI_SLAVE:  "mongodb://mongo2:27017/?replicaSet=rs0&readPreference=secondaryPreferred"
       REDIS_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      POSTGRES_DSN: "postgresql://postgres:postgres@postgres:5432/trading"
+      DOCKER_NETWORK: "${COMPOSE_PROJECT_NAME:-binancetradingbot}_default"
+      PYCHARM_ATTACH: "1"
+      PYCHARM_HOST: "host.docker.internal"
+      PYCHARM_PORT: "5679"
+    extra_hosts: # Linux: make host.docker.internal work
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - mongo1
-      - mongo2
-      - redis
-      - postgres
+      mongo1:
+        condition: service_healthy
+      mongo2:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+      mongo-init:
+        condition: service_completed_successfully
+    # If the worker needs to build/run docker containers on the host, uncomment:
+    # volumes:
+    #   - /var/run/docker.sock:/var/run/docker.sock
 
+  # ───────────────────────────
+  # Infrastructure
+  # ───────────────────────────
   redis:
+    profiles: ["db"]
     image: redis:6-alpine
     container_name: tradingbot_redis
     restart: unless-stopped
@@ -48,64 +91,55 @@ services:
       - "6379:6379"
 
   mongo1:
+    profiles: ["db"]
     image: mongo:6
     container_name: tradingbot_mongo1
     command: [ "--replSet", "rs0", "--bind_ip_all" ]
     ports:
-      - "27017:27017"           # primary exposed on host 27017
+      - "27017:27017"
     volumes:
       - mongo1_data:/data/db
     healthcheck:
-      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' | grep 1"]
       interval: 5s
-      timeout: 2s
+      timeout: 3s
       retries: 20
 
   mongo2:
+    profiles: ["db"]
     image: mongo:6
     container_name: tradingbot_mongo2
     command: [ "--replSet", "rs0", "--bind_ip_all" ]
     ports:
-      - "27018:27017"           # secondary exposed on host 27018
+      - "27018:27017"   # host 27018 → container 27017
     volumes:
       - mongo2_data:/data/db
     depends_on:
-      - mongo1
+      mongo1:
+        condition: service_started
     healthcheck:
-      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok' | grep 1"]
       interval: 5s
-      timeout: 2s
+      timeout: 3s
       retries: 20
 
   mongo-init:
     image: mongo:6
     container_name: tradingbot_mongo_init
+    profiles: ["db"]
     depends_on:
       mongo1:
         condition: service_healthy
       mongo2:
         condition: service_healthy
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: >
-      '
-      echo "Waiting for mongo1...";
-      until mongosh --host mongo1:27017 --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 1; done;
-      echo "Initiating replicaset...";
-      mongosh --host mongo1:27017 --eval "
-        rs.initiate({
-          _id: \"rs0\",
-          members: [
-            {_id: 0, host: \"mongo1:27017\"},
-            {_id: 1, host: \"mongo2:27017\"}
-          ]
-        });
-        while (rs.status().ok !== 1) { sleep(1000); }
-        rs.status();
-      ";
-      '
     restart: "no"
+    volumes:
+      - ./mongo_init.sh:/usr/local/bin/mongo_init.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/mongo_init.sh"]
+
 
   postgres:
+    profiles: ["db"]
     image: postgres:13-alpine
     container_name: tradingbot_postgres
     restart: unless-stopped
@@ -119,27 +153,18 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   nginx:
+    profiles: ["app"]
     image: nginx:alpine
     container_name: tradingbot_nginx
     depends_on:
-      - app
+      app:
+        condition: service_started
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-  orchestrator:
-    build:
-      context: ./orchestrator
-    container_name: tradingbot_orchestrator
-    restart: unless-stopped
-    environment:
-      MONGO_URI: "mongodb://mongo:27017/trading"
-      MONGO_DB: "trading"
-    depends_on:
-      - mongo
+
 volumes:
   mongo1_data:
   mongo2_data:
   pg_data:
-
-

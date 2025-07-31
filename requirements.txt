@@ -55,7 +55,8 @@ pytz
 orjson          # Fast JSON
 ujson
 aiofiles
-uvloop             # Fast event loop
+uvloop          # Fast event loop
+tenacity>=8.2   # For Retry
 
 # CLI Tools
 pyyaml
@@ -71,6 +72,8 @@ black
 flake8
 mypy
 pre-commit
+debugpy
+pydevd-pycharm~=251.26094.141
 
 # Monitoring
 prometheus-client

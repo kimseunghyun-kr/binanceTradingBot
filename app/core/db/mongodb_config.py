@@ -5,12 +5,14 @@ Centralised MongoDB connection manager (master / slave, read-only URI).
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from typing import Dict, Optional
-from urllib.parse import quote_plus, urlparse, urlunparse
+from urllib.parse import quote_plus, urlparse, urlunparse, urlencode, parse_qsl
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient, ReadPreference
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from app.core.pydanticConfig.settings import get_settings
 
@@ -45,6 +47,7 @@ class MongoDBConfig:
     # client builders
     # ------------------------------------------------------------------ #
     @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def _build_master_async() -> AsyncIOMotorClient:
         return AsyncIOMotorClient(
             cfg.mongo_master_uri,
@@ -57,6 +60,7 @@ class MongoDBConfig:
 
 
     @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def _build_master_sync() -> MongoClient:
         return MongoClient(
             cfg.mongo_master_uri,
@@ -69,17 +73,21 @@ class MongoDBConfig:
         )
 
     @staticmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def _build_slave_sync() -> MongoClient:
         """Secondary-preferred sync client (falls back to master URI if needed)."""
         uri = cfg.mongo_slave_uri or cfg.mongo_master_uri
         parsed = urlparse(uri)
 
-        query = parsed.query + "&" if parsed.query else ""
-        query += "readPreference=secondaryPreferred"
+        # merge query, don't duplicate readPreference
+        params = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        params.setdefault("readPreference", "secondaryPreferred")
 
-        slave_uri = urlunparse(
-            (parsed.scheme, parsed.netloc, parsed.path, parsed.params, query, parsed.fragment)
-        )
+        slave_uri = urlunparse((
+            parsed.scheme, parsed.netloc, parsed.path, parsed.params,
+            urlencode(params, doseq=True), parsed.fragment
+        ))
+
         return MongoClient(
             slave_uri,
             serverSelectionTimeoutMS=5_000,
@@ -87,20 +95,20 @@ class MongoDBConfig:
             socketTimeoutMS=10_000,
             maxPoolSize=50,
             minPoolSize=5,
-            read_preference=ReadPreference.SECONDARY_PREFERRED,
         )
 
     # ------------------------------------------------------------------ #
     # read-only user + URI
     # ------------------------------------------------------------------ #
     @classmethod
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def _setup_ro_user(cls) -> None:
         """
         Create (once) or reuse the read-only user used by back-test containers.
         Runs synchronously so `initialize()` remains sync.
         """
         admin = cls._master_sync.admin  # sync PyMongo client
-
+        logging.error(f"[MongoDB] creating ro user: {admin}")
         if admin.command("usersInfo", "backtest_readonly")["users"]:
             return  # already exists
 
@@ -119,24 +127,34 @@ class MongoDBConfig:
         )
         logging.info("[MongoDB] created read-only user")
 
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote_plus
+
     @classmethod
     def _make_ro_uri(cls, *, default_db: str = "admin") -> str:
         uri_in = cfg.mongo_slave_uri or cfg.mongo_master_uri
         parsed = urlparse(uri_in)
 
+        # build netloc (with or without auth)
         if cfg.MONGO_AUTH_ENABLED:
             user = quote_plus("backtest_readonly")
             pwd = quote_plus(cfg.MONGO_USER_PW)
-            netloc = f"{user}:{pwd}@{parsed.hostname}"
+            host = parsed.hostname or ""
+            netloc = f"{user}:{pwd}@{host}"
             if parsed.port:
                 netloc += f":{parsed.port}"
         else:
             netloc = parsed.netloc
 
-        query = (
-            "authSource=admin&readPreference=secondaryPreferred"
-            "&maxStalenessSeconds=90"
-        )
+        # merge query params, preserving replicaSet if present
+        q = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        # ensure required params
+        q.setdefault("replicaSet", "rs0")
+        q["readPreference"] = "secondaryPreferred"
+        q["maxStalenessSeconds"] = "90"
+        if cfg.MONGO_AUTH_ENABLED:
+            q["authSource"] = "admin"
+
+        query = urlencode(q, doseq=True)
         return urlunparse((parsed.scheme, netloc, f"/{default_db}", "", query, ""))
 
     # ------------------------------------------------------------------ #
@@ -159,6 +177,7 @@ class MongoDBConfig:
 
     @classmethod
     def get_read_only_uri(cls) -> str:
+        logging.info("[MongoDB] read-only uri" , cls._ro_uri)
         cls.initialize()
         return cls._ro_uri
 
@@ -216,5 +235,6 @@ class MongoDBConfig:
         logging.info("[MongoDB] pools closed")
 
 
-# Eagerly initialise for the main process; workers / sandbox can call again
-MongoDBConfig.initialize()
+# Eagerly initialise only when not sandbox
+if os.getenv("KWONTBOT_MODE", "main") != "sandbox":
+    MongoDBConfig.initialize()

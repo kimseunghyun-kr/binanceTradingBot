@@ -9,6 +9,7 @@ import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Any, List, Optional
+from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 
 from docker.types import LogConfig
 
@@ -16,10 +17,14 @@ from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 from app.services.orchestrator import Docker_Engine
-from app.services.orchestrator.Docker_Engine import _compose_network_name, _to_service_uri
+from app.services.orchestrator.Docker_Engine import _compose_network_name
 
 settings = get_settings()
 LOG_CFG = LogConfig(type="local", config={"max-size": "10m", "max-file": "3"})
+_PRIMARY_SERVICE = ("mongo1", 27017)
+_SECONDARY_SERVICE = ("mongo2", 27017)
+_PRIMARY_HOST = ("host.docker.internal", 27017)
+_SECONDARY_HOST = ("host.docker.internal", 27018)
 
 class OrchestratorService:
     """
@@ -91,51 +96,64 @@ class OrchestratorService:
     # -------------------------------
     # Internals
     # -------------------------------
-    @classmethod
     def _container_config(cls, strategy_file: str, run_id: str) -> Dict[str, Any]:
         net = _compose_network_name()
+        ro_uri = MongoDBConfig.get_read_only_uri()
 
-        master_uri = _to_service_uri(settings.MONGO_URI_MASTER, "mongo", 27017, None)
-        slave_uri = _to_service_uri(settings.MONGO_URI_SLAVE, "mongo", 27018, None)
+        if "localhost" in ro_uri :
+            ro_uri.replace("localhost", "mongo2")
+
+        master_uri = settings.MONGO_URI_MASTER
+        if "localhost" in master_uri:
+            master_uri.replace("localhost", "mongo1")
+
+        slave_uri = settings.MONGO_URI_SLAVE
+        if "localhost" in slave_uri:
+            slave_uri.replace("localhost", "mongo2")
+
+
+        env = {
+            "KWONTBOT_MODE": "sandbox",
+            "PROFILE": settings.PROFILE,
+            "SECRET_KEY": settings.SECRET_KEY,
+
+            # Mongo – pass explicit RO uri
+            "MONGO_RO_URI": ro_uri,
+
+            # Still pass full set for fallback / diagnostics
+            "MONGO_URI_MASTER": master_uri or "",
+            "MONGO_URI_SLAVE": slave_uri or "",
+            "MONGO_AUTH_ENABLED": "1" if settings.MONGO_AUTH_ENABLED else "0",
+            "MONGO_USER_PW": settings.MONGO_USER_PW or "",
+            "MONGO_DB_APP": settings.MONGO_DB_APP,
+            "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV or "",
+            "MONGO_DB_PERP": settings.MONGO_DB_PERP or "",
+        }
 
         cfg: Dict[str, Any] = {
-            "image": Docker_Engine.image_name(),  # ← changed
+            "image": Docker_Engine.image_name(),
+            "name": f"orchestrator_{run_id[:12]}",
             "command": ["python", "-m", "strategyOrchestrator.StrategyOrchestrator"],
-            "environment": {
-                "MONGO_URI_MASTER": settings.MONGO_URI_MASTER,
-                "MONGO_URI_SLAVE": settings.MONGO_URI_SLAVE or "",
-                "MONGO_AUTH_ENABLED": "1" if settings.MONGO_AUTH_ENABLED else "0",
-                "MONGO_USER_PW": settings.MONGO_USER_PW or "",
-                "MONGO_DB_APP": settings.MONGO_DB_APP,
-                "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV or "",
-                "MONGO_DB_PERP": settings.MONGO_DB_PERP or "",
-                "KWONTBOT_MODE": "sandbox",
-                "PROFILE": settings.PROFILE,
-                "SECRET_KEY": settings.SECRET_KEY,
-            },
+            "environment": env,
             "volumes": {
-                strategy_file: {
-                    "bind": "/orchestrator/user_strategies/user_strategy.py",
-                    "mode": "ro",
-                }
+                strategy_file: {"bind": "/orchestrator/user_strategies/user_strategy.py", "mode": "ro"}
             },
             "mem_limit": "2g",
             "cpu_quota": 100000,
             "log_config": LOG_CFG,
+            "tty": False,
         }
 
         if net:
             cfg["network"] = net
         else:
-            # Fallback when not on compose network: talk to host’s published ports
+            # Not on Compose net: talk to host’s published ports
             cfg.setdefault("extra_hosts", {})["host.docker.internal"] = "host-gateway"
-            cfg["environment"]["MONGO_URI_MASTER"] = settings.MONGO_URI_MASTER.replace(
-                "localhost", "host.docker.internal"
-            )
-            if settings.MONGO_URI_SLAVE:
-                cfg["environment"]["MONGO_URI_SLAVE"] = settings.MONGO_URI_SLAVE.replace(
-                    "localhost", "host.docker.internal"
-                )
+            for k in ("MONGO_URI_MASTER", "MONGO_URI_SLAVE", "MONGO_RO_URI"):
+                if cfg["environment"].get(k):
+                    cfg["environment"][k] = cfg["environment"][k].replace(
+                        "localhost", "host.docker.internal"
+                    ).replace("127.0.0.1", "host.docker.internal")
 
         return cfg
 

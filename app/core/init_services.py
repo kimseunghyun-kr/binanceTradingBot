@@ -29,6 +29,7 @@ from app.services.orchestrator import Docker_Engine
 
 log = logging.getLogger(__name__)
 cfg = get_settings()
+
 # Avoid double-initialisation under uvicorn --reload (the "reloader" process)
 if os.getenv("RUN_MAIN") == "true" or os.getenv("RUN_MAIN") is None:
     MongoDBConfig.initialize()   # make sure pools exist
