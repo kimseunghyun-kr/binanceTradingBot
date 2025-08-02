@@ -5,9 +5,9 @@ from typing import List, Callable, Union
 
 import pandas as pd
 
-from .TradeMeta import TradeMeta
-from .TradeProposal import TradeProposal
-from .orders.OrderLeg import OrderLeg
+from strategyOrchestrator.entities.tradeManager.TradeMeta import TradeMeta
+from strategyOrchestrator.entities.tradeManager.TradeProposal import TradeProposal
+from strategyOrchestrator.entities.tradeManager.orders.OrderLeg import OrderLeg
 
 PriceRef = Union[str, Callable[[pd.Series], float]]
 

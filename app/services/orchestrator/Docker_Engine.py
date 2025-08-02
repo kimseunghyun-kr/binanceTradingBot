@@ -38,7 +38,7 @@ def image_name() -> str:
     return _image_name
 
 def _compose_network_name() -> Optional[str]:
-    return getattr(_settings, "DOCKER_NETWORK", None)
+    return os.getenv("DOCKER_NETWORK") or getattr(_settings, "DOCKER_NETWORK", None)
 
 def _to_service_uri(uri: str | None, service: str, port: int, default_db: str | None = None) -> str:
     base = f"mongodb://{service}:{port}"
@@ -57,10 +57,76 @@ def initialize() -> None:
         return
     try:
         _client = docker.from_env()
+        _client.ping()  # raises if DinD not healthy
+        info = _client.version()
+        logging.info("docker_engine: connected to Docker %s (API %s)", info["Version"], info["ApiVersion"])
         logging.info("docker_engine: Docker client initialized.")
     except DockerException as e:
         logging.error(f"docker_engine: failed to initialize Docker client: {e}")
         raise
+
+def locate_project_root_with_dockerfile(start: Path,
+                                        target_subpath: str = "strategyOrchestrator/Dockerfile",
+                                        max_up_levels: int = 5,
+                                        max_down_search_depth: int = 3) -> Path:
+    """
+    Try to find the project root containing strategyOrchestrator/Dockerfile.
+    1. Walk upward up to max_up_levels looking for <dir>/strategyOrchestrator/Dockerfile.
+    2. If not found, do a limited depth downward search from start.
+    Returns the project root (the directory that contains strategyOrchestrator).
+    """
+    start = start.resolve()
+
+    # 1. Upward walk
+    current = start
+    for _ in range(max_up_levels):
+        candidate = current / "strategyOrchestrator" / "Dockerfile"
+        if candidate.is_file():
+            return current  # project root
+        if current.parent == current:
+            break
+        current = current.parent
+
+    # 2. Bounded downward search (breadth-first up to depth)
+    def walk_limited(root: Path, depth: int):
+        if depth < 0:
+            return None
+        # check if strategyOrchestrator exists here
+        so_dir = root / "strategyOrchestrator"
+        dockerfile = so_dir / "Dockerfile"
+        if dockerfile.is_file():
+            return root
+        for child in root.iterdir():
+            if child.is_dir():
+                found = walk_limited(child, depth - 1)
+                if found:
+                    return found
+        return None
+
+    found_root = walk_limited(start, max_down_search_depth)
+    if found_root:
+        return found_root
+
+    raise FileNotFoundError(f"Could not locate '{target_subpath}' from {start} (up {max_up_levels}, down {max_down_search_depth})")
+
+def resolve_service_ip(network_name: str, container_name: str) -> str | None:
+    """
+    Returns the IPv4 address (no CIDR) of container_name on network_name, looking
+    at the outer Docker daemon via the unix socket.
+    """
+    try:
+        client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+        network = client.networks.get(network_name)
+        containers = network.attrs.get("Containers", {}) or {}
+        for info in containers.values():
+            if info.get("Name") == container_name:
+                ipv4 = info.get("IPv4Address", "")
+                if ipv4:
+                    return ipv4.split("/")[0]
+        logging.warning("Container %s not found on network %s", container_name, network_name)
+    except Exception as e:
+        logging.error("Failed to resolve %s on %s: %s", container_name, network_name, e)
+    return None
 
 
 def ensure_orchestrator_image(force_rebuild: bool = False) -> Image:
@@ -84,6 +150,9 @@ def ensure_orchestrator_image(force_rebuild: bool = False) -> Image:
 
     project_root = Path(_settings.BASE_DIR)
     dockerfile_path =  project_root / "strategyOrchestrator" / "Dockerfile"
+    if not dockerfile_path.exists() and not dockerfile_path.is_file():
+        dockerfile_path = locate_project_root_with_dockerfile(project_root)
+    # fallback
     if not dockerfile_path.exists():
         raise FileNotFoundError(f"docker_engine: build path not found: {dockerfile_path}")
 
@@ -98,7 +167,7 @@ def ensure_orchestrator_image(force_rebuild: bool = False) -> Image:
         nocache=force_rebuild,
     )
 
-    logger.error("built image id: %s", img.id)
+    logger.info("built image id: %s", img.id)
 
     for log in logs:
         stream = log.get("stream")

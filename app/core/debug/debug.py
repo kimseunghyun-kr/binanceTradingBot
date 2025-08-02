@@ -1,18 +1,19 @@
 import os, time, sys
 
+
 def _attach():
     if os.getenv("PYCHARM_ATTACH") != "1":
-        print("[sitecustomize] PYCHARM_ATTACH != 1; skipping", file=sys.stderr, flush=True)
+        print("[debug] PYCHARM_ATTACH != 1; skipping", file=sys.stderr, flush=True)
         return
     try:
-        import pydevd_pycharm, pydevd
+        import pydevd_pycharm
     except Exception as e:
-        print("[sitecustomize] pydevd not available:", repr(e), file=sys.stderr, flush=True)
+        print("[debug] pydevd not available:", repr(e), file=sys.stderr, flush=True)
         return
 
     # Skip only if THIS process is already attached
-    if getattr(pydevd, "get_global_debugger", None) and pydevd.get_global_debugger() is not None:
-        print("[sitecustomize] debugger already attached; skipping", file=sys.stderr, flush=True)
+    if getattr(pydevd_pycharm, "get_global_debugger", None) is not None:
+        print("[debug] debugger already attached; skipping", file=sys.stderr, flush=True)
         return
 
     host = os.getenv("PYCHARM_HOST", "host.docker.internal")
@@ -23,18 +24,18 @@ def _attach():
 
     for i in range(retries):
         try:
-            print(f"[sitecustomize] attempting attach to {host}:{port} (try {i+1}/{retries})", file=sys.stderr, flush=True)
+            print(f"[debug] attempting attach to {host}:{port} (try {i+1}/{retries})", file=sys.stderr, flush=True)
             pydevd_pycharm.settrace(
                 host, port=port,
                 stdoutToServer=True, stderrToServer=True,
                 suspend=suspend,
                 patch_multiprocessing=True,
             )
-            print(f"[sitecustomize] Attached to PyCharm at {host}:{port}", file=sys.stderr, flush=True)
+            print(f"[debug] Attached to PyCharm at {host}:{port}", file=sys.stderr, flush=True)
             return
         except Exception as e:
-            print(f"[sitecustomize] attach failed: {repr(e)}; retrying…", file=sys.stderr, flush=True)
+            print(f"[debug] attach failed: {repr(e)}; retrying…", file=sys.stderr, flush=True)
             time.sleep(delay)
-    print(f"[sitecustomize] Failed to attach to {host}:{port}", file=sys.stderr, flush=True)
+    print(f"[debug] Failed to attach to {host}:{port}", file=sys.stderr, flush=True)
 
 _attach()

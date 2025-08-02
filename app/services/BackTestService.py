@@ -4,7 +4,6 @@ BackTestServiceV2.py
 FastAPI-side wrapper that spawns sandboxed orchestrator runs.
 Now *does not* embed symbol_data and forwards `parallel_symbols`.
 """
-import asyncio
 import hashlib
 import json
 import logging
@@ -12,7 +11,6 @@ import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-import anyio
 from celery.utils.log import get_task_logger
 
 from app.core.init_services import get_redis_cache, master_db_app_async

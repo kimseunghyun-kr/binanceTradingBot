@@ -38,7 +38,7 @@ class MongoDBConfig:
         cls._master_async = cls._build_master_async()
         cls._master_sync  = cls._build_master_sync()
         cls._slave_sync   = cls._build_slave_sync()
-        cls._setup_ro_user()
+        cls.lazy_init()
         cls._ro_uri       = cls._make_ro_uri()
 
         logging.info("[MongoDB] pools initialised")
@@ -46,6 +46,18 @@ class MongoDBConfig:
     # ------------------------------------------------------------------ #
     # client builders
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    @retry(stop=stop_after_attempt(6), wait=wait_fixed(2))  # 6×2 s
+    def _ping(uri: str):
+        MongoClient(uri, serverSelectionTimeoutMS=5000).admin.command("ping")
+
+    @staticmethod
+    def lazy_init() -> None:
+        MongoDBConfig._ping(os.getenv("MONGO_URI_MASTER"))
+        MongoDBConfig._ping(os.getenv("MONGO_URI_SLAVE"))
+        MongoDBConfig._setup_ro_user()  # now it’s safe
+
     @staticmethod
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def _build_master_async() -> AsyncIOMotorClient:
@@ -108,7 +120,7 @@ class MongoDBConfig:
         Runs synchronously so `initialize()` remains sync.
         """
         admin = cls._master_sync.admin  # sync PyMongo client
-        logging.error(f"[MongoDB] creating ro user: {admin}")
+        logging.info(f"[MongoDB] creating ro user: {admin}")
         if admin.command("usersInfo", "backtest_readonly")["users"]:
             return  # already exists
 
@@ -126,8 +138,6 @@ class MongoDBConfig:
                    ],
         )
         logging.info("[MongoDB] created read-only user")
-
-    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote_plus
 
     @classmethod
     def _make_ro_uri(cls, *, default_db: str = "admin") -> str:

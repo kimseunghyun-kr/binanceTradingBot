@@ -1,12 +1,12 @@
 # app/celery_app.py
 """Celery bootstrap that shares the same configuration pools and initializes on worker start."""
 import importlib
-from app.core.debug import debug
 # import sys
 # print("Celery sys.path:", sys.path)
 #
 import os
 import sys
+import logging, pprint
 
 import anyio
 from celery import Celery
@@ -45,6 +45,8 @@ celery.autodiscover_tasks(["app"])
 @worker_init.connect
 def on_worker_init(**kwargs):
     # Runs once in the worker master process.
+    import logging
+    from app.core.debug import debug
     logging.info("Celery worker_init: ensuring orchestrator image…")
     Docker_Engine.initialize()  # idempotent
     try:
@@ -77,6 +79,5 @@ def on_worker_shutdown(**kwargs):
 
 # Optional: log loaded tasks for debug
 if __name__ == "__main__":
-    import logging, pprint
     logging.basicConfig(level=logging.INFO)
     logging.info("Celery tasks loaded:\n%s", pprint.pformat(list(celery.tasks)))

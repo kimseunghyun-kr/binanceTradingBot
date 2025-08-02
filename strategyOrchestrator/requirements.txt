@@ -37,3 +37,6 @@ python-binance
 
 # Environment
 python-dotenv
+
+# Debug
+pydevd-pycharm~=251.26927.90

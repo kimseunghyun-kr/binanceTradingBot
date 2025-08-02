@@ -4,8 +4,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Callable, Dict, List
 
-from FillRecord import FillRecord
-from Position import Position
+from strategyOrchestrator.entities.tradeManager.FillRecord import FillRecord
+from strategyOrchestrator.entities.tradeManager.Position import Position
 from strategyOrchestrator.entities.tradeManager.TradeEvent import TradeEvent
 from strategyOrchestrator.entities.tradeManager.TradeEventType import TradeEventType
 from strategyOrchestrator.entities.tradeManager.policies.FillPolicy import FillPolicy, AggressiveMarketPolicy
@@ -13,7 +13,7 @@ from strategyOrchestrator.entities.tradeManager.policies.FillPolicy import FillP
 
 class TransactionLedger:
     """
-    Deterministic cash & position ledger with pluggable execution model.
+    Deterministic cash & position ledger with a pluggable execution model.
 
     Workflow
     --------

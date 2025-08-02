@@ -87,6 +87,14 @@ STRAT_MAP: dict[str, type[BaseStrategy]] = {
 
 _NEED_COLS = {"open_time", "open", "high", "low", "close"}
 
+# Make sure Python is unbuffered (can also be set via env at runtime)
+# In case it isn't, force flush on each log record:
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+
 
 # ────────── utilities ───────────────────────────────────────────────────
 def _new_logger() -> logging.Logger:
@@ -308,9 +316,15 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
 # ────────── CLI: stdin JSON → stdout JSON ───────────────────────────────
 if __name__ == "__main__":
     try:
-        _cfg = json.loads(sys.stdin.read())
+        raw = sys.stdin.read()
+        print("=== RAW INPUT START ===")
+        print(raw, flush = True)
+        print("=== RAW INPUT END ===", flush=True)
+        logging.info("Bytes read: %d", len(raw.encode("utf-8", "ignore")))
+        _cfg = json.loads(raw)
     except json.JSONDecodeError:
         print(json.dumps({"status": "failed", "error": "invalid JSON"}))
         sys.exit(1)
 
     print(json.dumps(run_backtest(_cfg), default=str))
+    logging.info("Parsed JSON OK. Keys: %s", list(_cfg)[:20])

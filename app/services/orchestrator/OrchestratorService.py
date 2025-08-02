@@ -1,48 +1,40 @@
+# OrchestratorService.py  (DinD-free 2025-08-01)
+
 from __future__ import annotations
 
 import asyncio
 import hashlib
+import io
 import json
 import logging
-import os
-import tempfile
+import tarfile
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, Any, List, Optional
-from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
+from typing import Any, Dict, List, Optional
 
+from celery.utils.log import get_task_logger
 from docker.types import LogConfig
 
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
-from app.services.orchestrator import Docker_Engine
-from app.services.orchestrator.Docker_Engine import _compose_network_name
+from app.services.orchestrator import Docker_Engine  # <─ host daemon only
 
 settings = get_settings()
 LOG_CFG = LogConfig(type="local", config={"max-size": "10m", "max-file": "3"})
-_PRIMARY_SERVICE = ("mongo1", 27017)
-_SECONDARY_SERVICE = ("mongo2", 27017)
-_PRIMARY_HOST = ("host.docker.internal", 27017)
-_SECONDARY_HOST = ("host.docker.internal", 27018)
+logger = get_task_logger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 class OrchestratorService:
-    """
-    Manages strategy orchestrator execution in isolated Docker containers.
-    """
+    """Runs each strategy orchestrator in a disposable Docker container (no DinD)."""
 
     _executor: Optional[ThreadPoolExecutor] = None
     _max_concurrent_runs = 5
 
-    # -------------------------------
-    # Lifecycle
-    # -------------------------------
+    # ───────────────────────── lifecycle ──────────────────────────
     @classmethod
     def initialize(cls, *, force_rebuild: bool | None = None) -> None:
-        """
-            Initialize executor and ensure docker engine/image are ready.
-            Safe to call multiple times.
-        """
         Docker_Engine.initialize()
         if force_rebuild is None:
             force_rebuild = getattr(settings, "ORCH_REBUILD_ON_START", False)
@@ -50,16 +42,14 @@ class OrchestratorService:
 
         if cls._executor is None:
             cls._executor = ThreadPoolExecutor(max_workers=cls._max_concurrent_runs)
-            logging.info("OrchestratorService: executor initialized.")
+            logger.info("OrchestratorService: executor initialized.")
 
     @classmethod
     def _ensure_ready(cls) -> None:
         if cls._executor is None:
             cls.initialize()
 
-    # -------------------------------
-    # Public API
-    # -------------------------------
+    # ───────────────────────── public API ─────────────────────────
     @classmethod
     async def run_backtest(
         cls,
@@ -73,6 +63,7 @@ class OrchestratorService:
         cls._ensure_ready()
 
         run_id = cls._generate_run_id(strategy_config, symbols, interval)
+        logger.info(f"OrchestratorService: running backtest {run_id}")
 
         if cached_result := cls._get_cached_result(run_id):
             return cached_result
@@ -83,51 +74,38 @@ class OrchestratorService:
 
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            cls._executor,
-            cls._run_container,
-            strategy_code,
-            input_config,
-            run_id
+            cls._executor, cls._run_container, strategy_code, input_config, run_id
         )
 
         cls._cache_result(run_id, result)
         return result
 
-    # -------------------------------
-    # Internals
-    # -------------------------------
-    def _container_config(cls, strategy_file: str, run_id: str) -> Dict[str, Any]:
-        net = _compose_network_name()
-        ro_uri = MongoDBConfig.get_read_only_uri()
+    # ───────────────────────── internals ──────────────────────────
+    @classmethod
+    def _container_config(cls, run_id: str) -> Dict[str, Any]:
+        """
+        Build a host-daemon container config.
+        DinD branch *removed* – we always join the outer Compose network.
+        """
+        net = Docker_Engine._compose_network_name()
+        logger.info(f"OrchestratorService: using network '{net}'")
 
-        if "localhost" in ro_uri :
-            ro_uri.replace("localhost", "mongo2")
-
-        master_uri = settings.MONGO_URI_MASTER
-        if "localhost" in master_uri:
-            master_uri.replace("localhost", "mongo1")
-
-        slave_uri = settings.MONGO_URI_SLAVE
-        if "localhost" in slave_uri:
-            slave_uri.replace("localhost", "mongo2")
-
+        # Mongo URIs rewritten to service names (mongo2 only)
+        ro_uri = MongoDBConfig.get_read_only_uri().replace("localhost", "mongo2")
+        slave_uri = settings.MONGO_URI_SLAVE.replace("localhost", "mongo2")
 
         env = {
             "KWONTBOT_MODE": "sandbox",
             "PROFILE": settings.PROFILE,
             "SECRET_KEY": settings.SECRET_KEY,
-
-            # Mongo – pass explicit RO uri
             "MONGO_RO_URI": ro_uri,
-
-            # Still pass full set for fallback / diagnostics
-            "MONGO_URI_MASTER": master_uri or "",
             "MONGO_URI_SLAVE": slave_uri or "",
             "MONGO_AUTH_ENABLED": "1" if settings.MONGO_AUTH_ENABLED else "0",
             "MONGO_USER_PW": settings.MONGO_USER_PW or "",
             "MONGO_DB_APP": settings.MONGO_DB_APP,
             "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV or "",
             "MONGO_DB_PERP": settings.MONGO_DB_PERP or "",
+            "DOCKER_NETWORK": net or "",
         }
 
         cfg: Dict[str, Any] = {
@@ -135,25 +113,15 @@ class OrchestratorService:
             "name": f"orchestrator_{run_id[:12]}",
             "command": ["python", "-m", "strategyOrchestrator.StrategyOrchestrator"],
             "environment": env,
-            "volumes": {
-                strategy_file: {"bind": "/orchestrator/user_strategies/user_strategy.py", "mode": "ro"}
-            },
             "mem_limit": "2g",
             "cpu_quota": 100000,
             "log_config": LOG_CFG,
             "tty": False,
+            "auto_remove": False,
         }
 
-        if net:
+        if net:  # always join the Compose bridge
             cfg["network"] = net
-        else:
-            # Not on Compose net: talk to host’s published ports
-            cfg.setdefault("extra_hosts", {})["host.docker.internal"] = "host-gateway"
-            for k in ("MONGO_URI_MASTER", "MONGO_URI_SLAVE", "MONGO_RO_URI"):
-                if cfg["environment"].get(k):
-                    cfg["environment"][k] = cfg["environment"][k].replace(
-                        "localhost", "host.docker.internal"
-                    ).replace("127.0.0.1", "host.docker.internal")
 
         return cfg
 
@@ -164,48 +132,69 @@ class OrchestratorService:
         input_config: Dict[str, Any],
         run_id: str,
     ) -> Dict[str, Any]:
-        client = Docker_Engine.client()  # ← get client here
+        client = Docker_Engine.client()
+        container = None
+        try:
+            container_cfg = cls._container_config(run_id)
+            container = client.containers.create(**container_cfg)
+            container.start()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            strategy_file = os.path.join(temp_dir, "user_strategy.py")
-            with open(strategy_file, "w") as f:
-                f.write(strategy_code)
+            # Upload user strategy if present
+            logger.info(f"strategy_code: {strategy_code} \ninput_config: {input_config} \nrun_id: {run_id} \n")
+            if strategy_code.strip():
+                buf = io.BytesIO()
+                with tarfile.open(fileobj=buf, mode="w") as tar:
+                    data = strategy_code.encode()
+                    info = tarfile.TarInfo("user_strategies/user_strategy.py")
+                    info.size = len(data)
+                    tar.addfile(info, io.BytesIO(data))
+                buf.seek(0)
+                container.put_archive("/orchestrator", buf.read())
+                input_config["strategy_filename"] = "user_strategy.py"
 
-            container_config = cls._container_config(strategy_file, run_id)
+            # Feed orchestrator its JSON
+            # The SocketIO object is a file-like wrapper.  Use write()/flush()
+            # or os.write() instead of socket.send().
 
-            container = None
-            try:
-                container = client.containers.create(**container_config)
-                stdin_socket = container.attach_socket(params={"stdin": 1, "stream": 1})
-                stdin_socket._sock.send(json.dumps(input_config).encode() + b"\n")
-                stdin_socket.close()
+            with container.attach_socket(params={"stdin": 1, "stream": 1}) as sock:
+                payload = (json.dumps(input_config) + "\n").encode()
 
-                container.start()
-                result = container.wait()
-                logs = container.logs(stdout=True, stderr=True).decode()
+                # Option A (high-level, buffered)
+                sock.write(payload)
+                sock.flush()  # make sure the bytes leave the buffer
 
-                if result["StatusCode"] == 0:
-                    return cls._parse_container_output(logs)
-                raise RuntimeError(f"Container exited with code {result['StatusCode']}: {logs}")
+                # Option B (low-level, unbuffered).  Uncomment if you prefer:
+                # import os
+                # os.write(sock.fileno(), payload)
 
-            except Exception as e:
-                logging.error(f"Container execution failed for run {run_id}: {e}")
-                raise
-            finally:
-                if container is not None:
-                    try:
-                        container.remove(force=True)
-                    except Exception:
-                        pass
 
+            result = container.wait()
+            logs = container.logs(stdout=True, stderr=True).decode()
+
+            if result["StatusCode"] == 0:
+                tail = container.logs(tail=200).decode("utf-8", "replace")
+                logger.info(f"OrchestratorService: backtest {run_id} finished\n{tail}")
+                return cls._parse_container_output(logs)
+
+            raise RuntimeError(f"Container exited {result['StatusCode']}: {logs}")
+
+        finally:
+            if container is not None:
+                # auto_remove=True handles happy paths; belt-and-suspenders for failures
+                try:
+                    container.remove(force=True)
+                except Exception:
+                    pass
+
+    # --------------- helpers (unchanged) ---------------
     @classmethod
     def _prepare_input_config(
-        cls,
-        strategy_config: Dict[str, Any],
-        symbols: List[str],
-        interval: str,
-        num_iterations: int,
-        additional_params: Optional[Dict[str, Any]] = None,
+            cls,
+            strategy_config: Dict[str, Any],
+            symbols: List[str],
+            interval: str,
+            num_iterations: int,
+            additional_params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         config = {
             "strategy_config": strategy_config,
@@ -219,63 +208,41 @@ class OrchestratorService:
             config["start_date"] = config["params"]["start_date"]
         return config
 
-    @classmethod
-    def _get_read_only_mongo_uri(cls) -> str:
-        try:
-            return MongoDBConfig.get_read_only_uri()
-        except RuntimeError:
-            logging.warning("MongoDB config not initialized, using fallback URI")
-            if settings.MONGO_URI_SLAVE:
-                return settings.MONGO_URI_SLAVE
-            return settings.MONGO_URI_MASTER
+    @staticmethod
+    def _parse_container_output(logs: str) -> Dict[str, Any]:
+        for line in reversed(logs.strip().split("\n")):
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    return json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+        raise ValueError("No JSON found in orchestrator logs")
 
-    @classmethod
-    def _generate_run_id(
-        cls,
-        strategy_config: Dict[str, Any],
-        symbols: List[str],
-        interval: str,
-    ) -> str:
+    @staticmethod
+    def _generate_run_id(cfg: Dict[str, Any], symbols: List[str], interval: str) -> str:
         data = {
-            "strategy": strategy_config,
+            "strategy": cfg,
             "symbols": sorted(symbols),
             "interval": interval,
-            "timestamp": int(time.time() / 3600),
+            "ts": int(time.time() / 3600),
         }
         return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
 
-    @classmethod
-    def _get_cached_result(cls, run_id: str) -> Optional[Dict[str, Any]]:
+    @staticmethod
+    def _get_cached_result(run_id: str) -> Optional[Dict[str, Any]]:
         try:
-            redis_cache = get_redis_cache()
-            cached = redis_cache.get(f"orchestrator:{run_id}")
-            if cached:
-                return json.loads(cached)
+            rc = get_redis_cache()
+            if raw := rc.get(f"orchestrator:{run_id}"):
+                return json.loads(raw)
         except Exception as e:
-            logging.warning(f"Cache retrieval failed: {e}")
+            logger.warning(f"Redis get failed: {e}")
         return None
 
-    @classmethod
-    def _cache_result(cls, run_id: str, result: Dict[str, Any]) -> None:
+    @staticmethod
+    def _cache_result(run_id: str, result: Dict[str, Any]) -> None:
         try:
-            redis_cache = get_redis_cache()
-            redis_cache.set(f"orchestrator:{run_id}", json.dumps(result), ex=3600)
+            rc = get_redis_cache()
+            rc.set(f"orchestrator:{run_id}", json.dumps(result), ex=3600)
         except Exception as e:
-            logging.warning(f"Cache storage failed: {e}")
-
-    @classmethod
-    def _parse_container_output(cls, logs: str) -> Dict[str, Any]:
-        for line in reversed(logs.strip().split("\n")):
-            s = line.strip()
-            if s.startswith("{"):
-                try:
-                    return json.loads(s)
-                except json.JSONDecodeError:
-                    continue
-        raise ValueError("No valid JSON output found in container logs")
-
-    @classmethod
-    def cleanup(cls) -> None:
-        if cls._executor:
-            cls._executor.shutdown(wait=True)
-            cls._executor = None
+            logger.warning(f"Redis set failed: {e}")

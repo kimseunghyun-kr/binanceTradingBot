@@ -72,8 +72,7 @@ black
 flake8
 mypy
 pre-commit
-debugpy
-pydevd-pycharm~=251.26094.141
+pydevd-pycharm~=251.26927.90
 
 # Monitoring
 prometheus-client
