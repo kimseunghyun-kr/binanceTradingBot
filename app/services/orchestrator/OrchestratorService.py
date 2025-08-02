@@ -10,6 +10,7 @@ import logging
 import tarfile
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from celery.utils.log import get_task_logger
@@ -72,10 +73,14 @@ class OrchestratorService:
             strategy_config, symbols, interval, num_iterations, additional_params
         )
 
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            cls._executor, cls._run_container, strategy_code, input_config, run_id
-        )
+        try:
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                cls._executor, cls._run_container, strategy_code, input_config, run_id
+            )
+        except Exception as e:
+            logger.error(f"OrchestratorService: backtest {run_id} failed: {e}")
+            raise
 
         cls._cache_result(run_id, result)
         return result
@@ -118,6 +123,7 @@ class OrchestratorService:
             "log_config": LOG_CFG,
             "tty": False,
             "auto_remove": False,
+            "stdin_open": True,
         }
 
         if net:  # always join the Compose bridge
@@ -140,7 +146,6 @@ class OrchestratorService:
             container.start()
 
             # Upload user strategy if present
-            logger.info(f"strategy_code: {strategy_code} \ninput_config: {input_config} \nrun_id: {run_id} \n")
             if strategy_code.strip():
                 buf = io.BytesIO()
                 with tarfile.open(fileobj=buf, mode="w") as tar:
@@ -153,20 +158,13 @@ class OrchestratorService:
                 input_config["strategy_filename"] = "user_strategy.py"
 
             # Feed orchestrator its JSON
-            # The SocketIO object is a file-like wrapper.  Use write()/flush()
-            # or os.write() instead of socket.send().
-
-            with container.attach_socket(params={"stdin": 1, "stream": 1}) as sock:
-                payload = (json.dumps(input_config) + "\n").encode()
-
-                # Option A (high-level, buffered)
-                sock.write(payload)
-                sock.flush()  # make sure the bytes leave the buffer
-
-                # Option B (low-level, unbuffered).  Uncomment if you prefer:
-                # import os
-                # os.write(sock.fileno(), payload)
-
+            sock = container.attach_socket(params={"stdin": 1, "stream": 1})
+            try:
+                payload = json.dumps(input_config)
+                logger.info(f"json dumped is {payload}")
+                sock._sock.send(payload.encode('utf-8') + b"\n")
+            finally:
+                sock.close()
 
             result = container.wait()
             logs = container.logs(stdout=True, stderr=True).decode()

@@ -23,7 +23,7 @@ logger = get_task_logger(__name__)
 print(logger.name)
 logger.setLevel(logging.DEBUG)
 
-
+default_strategy = ["PeakEMAReversalStrategy"]
 class BackTestServiceV2:
     # ───────────────────────── public entrypoint ─────────────────────── #
 
@@ -35,6 +35,8 @@ class BackTestServiceV2:
 
         if custom_code:
             return custom_code
+        if name in default_strategy:
+            return ""
         return await cls._get_strategy_code(name)
 
     @classmethod

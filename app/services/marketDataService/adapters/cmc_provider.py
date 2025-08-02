@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from asyncio import get_running_loop
 from typing import Callable, List, Any
 
@@ -27,9 +28,14 @@ class CMCProvider:
 
     async def list_symbols(self) -> List[str]:
         """Retrieve coin list, convert to USDT pairs, and optionally cache."""
-        loop = get_running_loop()
-        coins = await loop.run_in_executor(None, self._fetch_fn)
-        symbols = [c.get("symbol", "") + "USDT" for c in coins]
+        try:
+            loop = get_running_loop()
+            coins = await loop.run_in_executor(None, self._fetch_fn)
+            symbols = [c.get("symbol", "") + "USDT" for c in coins]
+        except Exception as e:
+            logging.info("Container run failed")
+            raise  # Celery will still mark the task as failed
+
 
         # optional Redis caching
         try:
