@@ -15,76 +15,26 @@ import json
 import logging
 import sys
 import time
-from functools import partial
 from typing import Any, Sequence, cast
 
 import pandas as pd
 
 from app.core.pydanticConfig.settings import get_settings
-from strategyOrchestrator.LoadComponent import load_component
 # ────────── domain objects & helpers ────────────────────────────────────
 from strategyOrchestrator.entities.perpetuals.portfolio import (
     PerpPortfolioManager,
 )
 from strategyOrchestrator.entities.portfolio.BasePortfolioManager import BasePortfolioManager
-from strategyOrchestrator.entities.portfolio.policies.capacity.CapacityPolicy import (
-    LegCapacity,
-    SymbolCapacity,
+from strategyOrchestrator.entities.config.registry import (
+    FEE_MAP, SLIP_MAP, FILL_MAP, CAP_MAP, SIZE_MAP, STRAT_MAP
 )
-from strategyOrchestrator.entities.portfolio.policies.fees.fees import (
-    FEE_STATIC,
-    FEE_PER_SYMBOL,
-    SLIP_RANDOM,
-    SLIP_ZERO,
-)
-from strategyOrchestrator.entities.portfolio.policies.interfaces import (
-    CapacityPolicy,
-    EventCostModel,
-    SizingModel,
-)
-from strategyOrchestrator.entities.portfolio.policies.sizingModel.SizingModel import fixed_fraction
+from strategyOrchestrator.LoadComponent import load_component
+from strategyOrchestrator.entities.portfolio.policies.interfaces import CapacityPolicy, SizingModel, EventCostModel
 from strategyOrchestrator.entities.strategies.BaseStrategy import BaseStrategy
-from strategyOrchestrator.entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
-    PeakEMAReversalStrategy,
-)
 from strategyOrchestrator.entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
-from strategyOrchestrator.entities.tradeManager.policies.FillPolicy import (
-    AggressiveMarketPolicy,
-    VWAPDepthPolicy,
-)
-from strategyOrchestrator.entities.tradeManager.policies.interfaces import FillPolicy
 from strategyOrchestrator.repository.candleRepository import CandleRepository
 
 # ────────── built-in maps (callables only) ──────────────────────────────
-FEE_MAP: dict[str, EventCostModel] = {
-    "static": FEE_STATIC,
-    "per_symbol": FEE_PER_SYMBOL,
-    "__default__": FEE_STATIC,
-}
-SLIP_MAP: dict[str, EventCostModel] = {
-    "random": SLIP_RANDOM,
-    "zero": SLIP_ZERO,
-    "__default__": SLIP_ZERO,
-}
-FILL_MAP: dict[str, type[FillPolicy]] = {
-    "AggressiveMarketPolicy": AggressiveMarketPolicy,
-    "VWAPDepthPolicy": VWAPDepthPolicy,
-    "__default__": AggressiveMarketPolicy,
-}
-CAP_MAP: dict[str, type[CapacityPolicy]] = {
-    "LegCapacity": LegCapacity,
-    "SymbolCapacity": SymbolCapacity,
-    "__default__": LegCapacity,
-}
-SIZE_MAP: dict[str, SizingModel] = {
-    "fixed_fraction": fixed_fraction,
-    "__default__": partial(fixed_fraction, 1.0),
-}
-STRAT_MAP: dict[str, type[BaseStrategy]] = {
-    "PeakEMAReversalStrategy": PeakEMAReversalStrategy,
-    "__default__": PeakEMAReversalStrategy,
-}
-
 _NEED_COLS = {"open_time", "open", "high", "low", "close"}
 
 # Make sure Python is unbuffered (can also be set via env at runtime)
@@ -199,27 +149,13 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
     market: str = cfg.get("market", "SPOT")
 
     # ─── plug-in resolution  (load_component() returns instances) ───────
-    fee_model: EventCostModel = load_component(
-        cfg.get("fee_model"), FEE_MAP, EventCostModel, "fee_model"
-    )
-    slippage_model: EventCostModel = load_component(
-        cfg.get("slippage_model"), SLIP_MAP, EventCostModel, "slippage_model"
-    )
-    fill_policy: FillPolicy = cast(
-        FillPolicy,
-        load_component(cfg.get("fill_policy"), FILL_MAP, None, "fill_policy")(
-            fee_model, slippage_model
-        ),
-    )
-    capacity_policy: CapacityPolicy = load_component(
-        cfg.get("capacity_policy"), CAP_MAP, CapacityPolicy, "capacity_policy"
-    )
-    sizing_model: SizingModel = load_component(
-        cfg.get("sizing_model"), SIZE_MAP, SizingModel, "sizing_model"
-    )
-    strategy: BaseStrategy = load_component(
-        cfg.get("strategy"), STRAT_MAP, BaseStrategy, "strategy"
-    )
+    fee_model = load_component(cfg.get("fee_model"), FEE_MAP, EventCostModel, "fee_model")()
+    slippage_model = load_component(cfg.get("slippage_model"), SLIP_MAP, EventCostModel, "slippage_model")()
+    fill_cls = load_component(cfg.get("fill_policy"), FILL_MAP, None, "fill_policy")
+    fill_policy = fill_cls(fee_model, slippage_model)
+    capacity_policy = load_component(cfg.get("capacity_policy"), CAP_MAP, CapacityPolicy, "capacity_policy")()
+    sizing_model = load_component(cfg.get("sizing_model"), SIZE_MAP, SizingModel, "sizing_model")()
+    strategy = load_component(cfg.get("strategy"), STRAT_MAP, BaseStrategy, "strategy")()
 
     # ─── data bootstrap ────────────────────────────────────────────────
     lookback = strategy.get_required_lookback()
@@ -315,16 +251,51 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
 
 # ────────── CLI: stdin JSON → stdout JSON ───────────────────────────────
 if __name__ == "__main__":
-    try:
-        raw = sys.stdin.read()
-        print("=== RAW INPUT START ===")
-        print(raw, flush = True)
-        print("=== RAW INPUT END ===", flush=True)
-        logging.info("Bytes read: %d", len(raw.encode("utf-8", "ignore")))
-        _cfg = json.loads(raw)
-    except json.JSONDecodeError:
-        print(json.dumps({"status": "failed", "error": "invalid JSON"}))
+    def read_config_from_stdin(timeout: int = 20) -> str | None:
+        import select
+
+        logging.getLogger().info(f"Waiting up to {timeout}s for config on stdin...")
+        # Wait until there's something to read (non-blocking until timeout)
+        rlist, _, _ = select.select([sys.stdin], [], [], timeout)
+        if not rlist:
+            logging.getLogger().error("Timeout waiting for stdin input.")
+            return None
+
+        # Prefer readline so we don't hang forever if EOF isn't sent.
+        raw = sys.stdin.readline()
+        if raw == "":
+            # If readline returned empty (maybe EOF already), try a full read as fallback.
+            raw = sys.stdin.read()
+        return raw
+
+    # Immediate startup heartbeat so we know entrypoint ran.
+    print("ENTRYPOINT STARTED", flush=True)
+    logging.getLogger().info("Entry point reached, attempting to read config.")
+
+    raw = read_config_from_stdin(timeout=20)
+    if raw is None:
+        error = {"status": "failed", "error": "no input received (timeout)"}
+        print(json.dumps(error), flush=True)
+        logging.getLogger().error("Exiting due to no stdin payload.")
         sys.exit(1)
 
-    print(json.dumps(run_backtest(_cfg), default=str))
-    logging.info("Parsed JSON OK. Keys: %s", list(_cfg)[:20])
+    print("=== RAW INPUT START ===", flush=True)
+    print(raw, flush=True)
+    print("=== RAW INPUT END ===", flush=True)
+    logging.getLogger().info("Bytes read: %d", len(raw.encode("utf-8", "ignore")))
+
+    try:
+        _cfg = json.loads(raw)
+    except Exception as e:
+        logging.getLogger().exception("Failed to parse JSON from stdin.")
+        err = {"status": "failed", "error": "invalid JSON", "detail": str(e)}
+        print(json.dumps(err), flush=True)
+        sys.exit(1)
+
+    logging.getLogger().info("Parsed JSON OK. Keys: %s", list(_cfg)[:20])
+
+    result = run_backtest(_cfg)
+    # Final output (flush immediately)
+    print(json.dumps(result, default=str), flush=True)
+    logging.getLogger().info("Backtest finished, result printed.")
+

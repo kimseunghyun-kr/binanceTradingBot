@@ -1,4 +1,4 @@
-# app/tasks/BackTestTask.py
+# app/tasks/\BackTestTask.py
 """
 Celery task for running backtests asynchronously.
 Uses the sandboxed OrchestratorService to execute strategies.
@@ -103,7 +103,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
                 interval=interval,
                 num_iterations=num_iterations,
                 start_date=start_date.isoformat() if start_date else None,
-                end_date=end_date.isoformat()   if end_date   else None,
+                end_date=end_date.isoformat()  if end_date   else None,
                 custom_strategy_code=custom_strategy_code,
                 parallel_symbols=parallel_symbols,
                 use_cache=use_cache,

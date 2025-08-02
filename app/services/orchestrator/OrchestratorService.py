@@ -9,12 +9,13 @@ import json
 import logging
 import tarfile
 import time
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from socket import socket
+from typing import Any, Dict, List, Optional, Container
 
 from celery.utils.log import get_task_logger
 from docker.types import LogConfig
+from docker.errors import APIError
 
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import get_redis_cache
@@ -111,6 +112,7 @@ class OrchestratorService:
             "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV or "",
             "MONGO_DB_PERP": settings.MONGO_DB_PERP or "",
             "DOCKER_NETWORK": net or "",
+            "PYTHONUNBUFFERED": 1
         }
 
         cfg: Dict[str, Any] = {
@@ -133,15 +135,34 @@ class OrchestratorService:
 
     @classmethod
     def _run_container(
-        cls,
-        strategy_code: str,
-        input_config: Dict[str, Any],
-        run_id: str,
+            cls,
+            strategy_code: str,
+            input_config: Dict[str, Any],
+            run_id: str,
     ) -> Dict[str, Any]:
         client = Docker_Engine.client()
-        container = None
+        container: Container | None = None
         try:
             container_cfg = cls._container_config(run_id)
+
+            # --- Ensure stdin is open and Python inside is unbuffered ---
+            container_cfg.setdefault("stdin_open", True)
+            container_cfg.setdefault("tty", False)
+            # Normalize environment to dict for easier mutation
+            env = container_cfg.get("environment")
+            if isinstance(env, list):
+                # convert list like ["A=1", "B=2"] into dict
+                env_dict = {}
+                for entry in env:
+                    if "=" in entry:
+                        k, v = entry.split("=", 1)
+                        env_dict[k] = v
+                env = env_dict
+            if not isinstance(env, dict):
+                env = {}
+            env.setdefault("PYTHONUNBUFFERED", "1")
+            container_cfg["environment"] = env
+
             container = client.containers.create(**container_cfg)
             container.start()
 
@@ -157,34 +178,98 @@ class OrchestratorService:
                 container.put_archive("/orchestrator", buf.read())
                 input_config["strategy_filename"] = "user_strategy.py"
 
-            # Feed orchestrator its JSON
+            # Feed orchestrator its JSON, ensuring EOF is delivered
             sock = container.attach_socket(params={"stdin": 1, "stream": 1})
             try:
-                payload = json.dumps(input_config)
-                logger.info(f"json dumped is {payload}")
-                sock._sock.send(payload.encode('utf-8') + b"\n")
+                payload = json.dumps(input_config) + "\n"
+                logger.info("json dumped is %s", payload)
+
+                # Prefer high-level write if available
+                wrote = False
+                if hasattr(sock, "write"):
+                    try:
+                        sock.write(payload.encode("utf-8"))
+                        try:
+                            sock.flush()
+                        except Exception:
+                            pass
+                        wrote = True
+                    except Exception as e:
+                        logger.warning("High-level socket write failed: %s", e)
+                if not wrote:
+                    raw_sock = getattr(sock, "_sock", None)
+                    if raw_sock is None:
+                        raise RuntimeError("Cannot find underlying socket to send payload")
+                    raw_sock.sendall(payload.encode("utf-8"))
+                    try:
+                        raw_sock.shutdown(socket.SHUT_WR)
+                    except Exception:
+                        pass
+
+                # Try to signal EOF on underlying socket if possible
+                try:
+                    if hasattr(sock, "_sock"):
+                        sock._sock.shutdown(socket.SHUT_WR)
+                except Exception:
+                    pass
+
             finally:
-                sock.close()
+                # ensure closure (double safety)
+                try:
+                    if hasattr(sock, "_sock"):
+                        sock._sock.shutdown(socket.SHUT_WR)
+                except Exception:
+                    pass
+                try:
+                    sock.close()
+                except Exception:
+                    pass
 
-            result = container.wait()
-            logs = container.logs(stdout=True, stderr=True).decode()
+            # --- Explicit wait with timeout so analyzer sees all branches ---
+            def _wait_container():
+                return container.wait()
 
-            if result["StatusCode"] == 0:
+            with ThreadPoolExecutor(1) as ex:
+                future = ex.submit(_wait_container)
+                try:
+                    wait_result = future.result(timeout=60)  # enforce 60s startup/backtest bound
+                except TimeoutError as e:
+                    partial_logs = container.logs(tail=500).decode("utf-8", "replace")
+                    raise RuntimeError(
+                        f"Container wait timed out after 60s. Partial logs:\n{partial_logs}"
+                    ) from e
+                except APIError as e:
+                    partial_logs = container.logs(tail=500).decode("utf-8", "replace")
+                    raise RuntimeError(
+                        f"Container wait API error ({e}). Partial logs:\n{partial_logs}"
+                    ) from e
+                except Exception as e:
+                    partial_logs = container.logs(tail=500).decode("utf-8", "replace")
+                    raise RuntimeError(
+                        f"Container wait failed unexpectedly ({e}). Partial logs:\n{partial_logs}"
+                    ) from e
+
+            full_logs = container.logs(stdout=True, stderr=True).decode("utf-8", "replace")
+            status = wait_result.get("StatusCode", 1)
+            if status == 0:
                 tail = container.logs(tail=200).decode("utf-8", "replace")
-                logger.info(f"OrchestratorService: backtest {run_id} finished\n{tail}")
-                return cls._parse_container_output(logs)
-
-            raise RuntimeError(f"Container exited {result['StatusCode']}: {logs}")
+                logger.info(
+                    "OrchestratorService: backtest %s finished\n%s", run_id, tail
+                )
+                return cls._parse_container_output(full_logs)
+            else:
+                raise RuntimeError(f"Container exited {status}: {full_logs}")
 
         finally:
             if container is not None:
-                # auto_remove=True handles happy paths; belt-and-suspenders for failures
                 try:
                     container.remove(force=True)
                 except Exception:
                     pass
 
-    # --------------- helpers (unchanged) ---------------
+    import time
+    from typing import Any, Dict, List, Optional
+
     @classmethod
     def _prepare_input_config(
             cls,
@@ -194,16 +279,26 @@ class OrchestratorService:
             num_iterations: int,
             additional_params: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        config = {
+
+        # 1. Merge any additional params up front.
+        flat_params = (additional_params or {}).copy()
+
+        # 2. Build the top-level payload.
+        config: Dict[str, Any] = {
             "strategy_config": strategy_config,
             "symbols": symbols,
             "interval": interval,
             "num_iterations": num_iterations,
             "timestamp": str(int(time.time())),
-            "params": additional_params or {},
+            **flat_params,  # ← everything flattened here
         }
-        if "start_date" in config["params"]:
-            config["start_date"] = config["params"]["start_date"]
+
+        # 3. Convenience: hoist start_date / end_date separately if provided.
+        if "start_date" in flat_params:
+            config["start_date"] = flat_params["start_date"]
+        if "end_date" in flat_params:
+            config["end_date"] = flat_params["end_date"]
+
         return config
 
     @staticmethod

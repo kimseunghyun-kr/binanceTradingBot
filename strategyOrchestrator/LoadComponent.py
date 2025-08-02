@@ -1,43 +1,28 @@
+# strategyOrchestrator/LoadComponent.py
 import importlib
-from typing import Callable, Any, Type, Dict
+
+from strategyOrchestrator.entities.config.defaults import DEFAULT_TOKEN
 
 
-def load_component(
-    spec: Any,
-    builtin: Dict[str, Any],
-    base_cls: Type | None,
-    label: str,
-) -> Callable:
-    """
-        Returns a **callable** ready for injection.
-
-        Accepts shorthands:
-          • scalar (0.0005)                    -> builtin lookup
-          • {"builtin":"token",   "params":{}} -> builtin entry
-          • {"module":"x.y", "class":"Cls", "params":{}} -> dynamic import
-        """
-
-    # 1 — resolve obj ----------------------------------------------------
-    if spec is None or spec == {}:
-        obj = builtin["__default__"]
-
+def load_component(spec, builtin, base_cls, label):
+    # 1 — resolve object -------------------------------------------------
+    if spec in (None, {}, ""):
+        obj = builtin[DEFAULT_TOKEN[label]]
     elif isinstance(spec, (int, float, str)):
-        obj = builtin.get(str(spec))
-        if obj is None:
-            raise ValueError(f"{label}: unknown shorthand '{spec}'")
-
-    elif "builtin" in spec:
+        obj = builtin[str(spec)]
+    elif isinstance(spec, dict) and "builtin" in spec:
         obj = builtin[spec["builtin"]]
-
     else:
         mod = importlib.import_module(spec["module"])
         obj = getattr(mod, spec["class"])
 
-    # 2 — instantiate class ---------------------------------------------
+    # 2 — class handling -------------------------------------------------
     if isinstance(obj, type):
         if base_cls and not issubclass(obj, base_cls):
             raise TypeError(f"{label}: {obj} must subclass {base_cls.__name__}")
-        return obj(**spec.get("params", {}))
+        if isinstance(spec, dict) and spec.get("params"):   # instantiate only if params
+            return obj(**spec["params"])
+        return obj                                          # return class as-is
 
     # 3 — already callable ----------------------------------------------
     if callable(obj):

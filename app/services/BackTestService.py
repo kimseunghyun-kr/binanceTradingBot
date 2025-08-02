@@ -4,6 +4,7 @@ BackTestServiceV2.py
 FastAPI-side wrapper that spawns sandboxed orchestrator runs.
 Now *does not* embed symbol_data and forwards `parallel_symbols`.
 """
+import asyncio
 import hashlib
 import json
 import logging
@@ -78,11 +79,27 @@ class BackTestServiceV2:
             num_iterations, start_date, custom_strategy_code
         )
 
+        # ───────────── warm OHLCV cache for every symbol ───────────── #
+        from app.core.init_services import get_data_service
+        data_service = get_data_service()
+
+        warm_tasks = [
+            data_service.ensure_ohlcv(
+                s, interval,
+                start=start_date,
+                end=end_date,
+                provider="Binance"
+            ) for s in symbols
+        ]
+        await asyncio.gather(*warm_tasks)
+
         if use_cache:
             cached = await cls._cache_get(cache_key)
             if cached:
                 logger.info(f"Cache hit [{cache_key[:16]}]")
                 return cached
+
+
 
         logger.info(f"Cache miss [{cache_key[:16]}] and the orchestrator input is reached")
         orchestrator_input = OrchestratorInput(

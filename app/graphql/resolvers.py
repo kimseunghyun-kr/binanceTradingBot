@@ -19,8 +19,6 @@ from app.graphql.types import (
     MarketMetrics
 )
 
-
-
 class SymbolResolver:
     """Resolver for symbol-related queries."""
 
