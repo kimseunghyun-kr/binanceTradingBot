@@ -3,23 +3,22 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import io
 import json
 import logging
 import tarfile
-import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from socket import socket
-from typing import Any, Dict, List, Optional, Container
+from typing import Any, Dict, Optional, Container
 
 from celery.utils.log import get_task_logger
-from docker.types import LogConfig
 from docker.errors import APIError
+from docker.types import LogConfig
 
 from app.core.db.mongodb_config import MongoDBConfig
 from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
+from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
 from app.services.orchestrator import Docker_Engine  # <─ host daemon only
 
 settings = get_settings()
@@ -54,33 +53,31 @@ class OrchestratorService:
     # ───────────────────────── public API ─────────────────────────
     @classmethod
     async def run_backtest(
-        cls,
-        strategy_code: str,
-        strategy_config: Dict[str, Any],
-        symbols: List[str],
-        interval: str,
-        num_iterations: int,
-        additional_params: Optional[Dict[str, Any]] = None,
+            cls,
+            cfg: OrchestratorInput,  # the model
+            strategy_code: str,
     ) -> Dict[str, Any]:
         cls._ensure_ready()
 
-        run_id = cls._generate_run_id(strategy_config, symbols, interval)
-        logger.info(f"OrchestratorService: running backtest {run_id}")
+        run_id = cls._generate_run_id(cfg)  # uses signature_json()
+        logger.info("OrchestratorService: running backtest %s", run_id)
 
-        if cached_result := cls._get_cached_result(run_id):
-            return cached_result
+        if cached := cls._get_cached_result(run_id):
+            return cached
 
-        input_config = cls._prepare_input_config(
-            strategy_config, symbols, interval, num_iterations, additional_params
-        )
+        input_config = cfg.to_container_payload()  # <-- single place we serialise
 
+        loop = asyncio.get_running_loop()
         try:
-            loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
-                cls._executor, cls._run_container, strategy_code, input_config, run_id
+                cls._executor,
+                cls._run_container,
+                strategy_code,
+                input_config,
+                run_id,
             )
-        except Exception as e:
-            logger.error(f"OrchestratorService: backtest {run_id} failed: {e}")
+        except Exception:
+            logger.exception("OrchestratorService: backtest %s failed", run_id)
             raise
 
         cls._cache_result(run_id, result)
@@ -267,40 +264,6 @@ class OrchestratorService:
                 except Exception:
                     pass
 
-    import time
-    from typing import Any, Dict, List, Optional
-
-    @classmethod
-    def _prepare_input_config(
-            cls,
-            strategy_config: Dict[str, Any],
-            symbols: List[str],
-            interval: str,
-            num_iterations: int,
-            additional_params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-
-        # 1. Merge any additional params up front.
-        flat_params = (additional_params or {}).copy()
-
-        # 2. Build the top-level payload.
-        config: Dict[str, Any] = {
-            "strategy_config": strategy_config,
-            "symbols": symbols,
-            "interval": interval,
-            "num_iterations": num_iterations,
-            "timestamp": str(int(time.time())),
-            **flat_params,  # ← everything flattened here
-        }
-
-        # 3. Convenience: hoist start_date / end_date separately if provided.
-        if "start_date" in flat_params:
-            config["start_date"] = flat_params["start_date"]
-        if "end_date" in flat_params:
-            config["end_date"] = flat_params["end_date"]
-
-        return config
-
     @staticmethod
     def _parse_container_output(logs: str) -> Dict[str, Any]:
         for line in reversed(logs.strip().split("\n")):
@@ -313,14 +276,9 @@ class OrchestratorService:
         raise ValueError("No JSON found in orchestrator logs")
 
     @staticmethod
-    def _generate_run_id(cfg: Dict[str, Any], symbols: List[str], interval: str) -> str:
-        data = {
-            "strategy": cfg,
-            "symbols": sorted(symbols),
-            "interval": interval,
-            "ts": int(time.time() / 3600),
-        }
-        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+    def _generate_run_id(cfg: OrchestratorInput) -> str:
+        import hashlib
+        return hashlib.sha256(cfg.signature_json().encode()).hexdigest()[:16]
 
     @staticmethod
     def _get_cached_result(run_id: str) -> Optional[Dict[str, Any]]:

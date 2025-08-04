@@ -1,11 +1,11 @@
-from typing import Protocol, List
+from typing import Protocol, List, runtime_checkable
 
 from strategyOrchestrator.entities.tradeManager.FillRecord import FillRecord
 from strategyOrchestrator.entities.tradeManager.TradeEvent import TradeEvent
 
 
 # ───────────────────────────────── fill policy ───────────────────────── #
-
+@runtime_checkable
 class FillPolicy(Protocol):
     """
         Decide how an incoming TradeEvent is filled against the order-book.

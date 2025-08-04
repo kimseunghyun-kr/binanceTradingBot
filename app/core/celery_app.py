@@ -10,12 +10,11 @@ import logging, pprint
 
 import anyio
 from celery import Celery
-from celery.signals import worker_process_init, worker_shutdown, worker_init
+from celery.signals import worker_process_init, worker_shutdown, worker_init, worker_process_shutdown
 
-from app.core.db.mongodb_config import MongoDBConfig
-from app.core.init_services import open_pools, close_pools
 from app.core.pydanticConfig.settings import get_settings
 from app.services.orchestrator import Docker_Engine
+from app.services.orchestrator.OrchestratorService import OrchestratorService
 
 # Load settings and initialize MongoDBConfig pools (no DB connections opened yet)
 
@@ -27,7 +26,7 @@ print("   full sys.path =", sys.path, "\n")
 
 
 cfg = get_settings()
-MongoDBConfig.initialize()
+# MongoDBConfig.initialize()
 
 # Create Celery app
 celery: Celery = Celery(
@@ -63,6 +62,9 @@ def on_worker_init(**kwargs):
 @worker_process_init.connect
 def on_worker_process_init(**kwargs):
     # Connect Postgres, Redis, and MongoDB in this worker process
+    from app.core.db.mongodb_config import MongoDBConfig
+    from app.core.init_services import open_pools
+    MongoDBConfig.initialize()  # builds clients in this child
     anyio.run(open_pools)
     print("▶️  WORKER_PROCESS_INIT")
     print("    CWD         =", os.getcwd())
@@ -74,8 +76,14 @@ def on_worker_process_init(**kwargs):
 # ─── Close pools when worker shuts down ────────────────────────────────
 @worker_shutdown.connect
 def on_worker_shutdown(**kwargs):
+    from app.core.init_services import close_pools
     # Gracefully close all pools
     close_pools()
+
+@worker_process_shutdown.connect
+def _close_orchestrator_executor(**_):
+    if OrchestratorService._executor is not None:
+        OrchestratorService._executor.shutdown(wait=False)
 
 # Optional: log loaded tasks for debug
 if __name__ == "__main__":

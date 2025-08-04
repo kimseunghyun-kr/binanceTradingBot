@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 import pandas as pd
-from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient, ReadPreference
 
 from app.core.pydanticConfig.settings import get_settings
 
@@ -34,7 +34,7 @@ class CandleRepository:
         # Enforce secondaryPreferred even if caller passed a primary URI
         self._client = MongoClient(
             uri,
-            read_preference="secondaryPreferred",
+            read_preference=ReadPreference.SECONDARY_PREFERRED,
             serverSelectionTimeoutMS=5_000,
             connectTimeoutMS=10_000,
             socketTimeoutMS=10_000,

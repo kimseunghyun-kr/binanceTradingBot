@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing_extensions import runtime_checkable
+
 from strategyOrchestrator.entities.portfolio.policies.interfaces import CapacityPolicy
 
 
 # ------------------------------------------------------------------ #
+
 class LegCapacity(CapacityPolicy):
     """Classic limit on total *entry legs*."""
     def __init__(self, max_legs: int = 5):

@@ -28,5 +28,5 @@ FILL_MAP = {
     "VWAPDepthPolicy":        VWAPDepthPolicy,
 }
 CAP_MAP  = {"LegCapacity": LegCapacity, "SymbolCapacity": SymbolCapacity}
-SIZE_MAP = {"fixed_fraction": fixed_fraction}
+SIZE_MAP = {"fixed_fraction": partial(fixed_fraction, 1.0),}
 STRAT_MAP= {"PeakEMAReversalStrategy": PeakEMAReversalStrategy}

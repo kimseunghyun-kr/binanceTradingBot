@@ -95,8 +95,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         )
 
         # Run backtest using the service
-        with asyncio.Runner() as runner:
-            result = runner.run(BackTestServiceV2.run_backtest(
+        result = asyncio.run(BackTestServiceV2.run_backtest(
                 strategy_name=strategy_name,
                 strategy_params=strategy_params,
                 symbols=symbols,

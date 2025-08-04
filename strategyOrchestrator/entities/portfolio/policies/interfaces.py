@@ -9,21 +9,21 @@ signature is as good as a subclass.
 
 from __future__ import annotations
 
-from typing import Protocol, List, Set
+from typing import Protocol, List, Set, runtime_checkable
 
 from strategyOrchestrator.entities.tradeManager.TradeEvent import TradeEvent
 from strategyOrchestrator.entities.tradeManager.TradeMeta import TradeMeta
 
 
 # ───────────────────────────────── cost models ───────────────────────── #
-
+@runtime_checkable
 class EventCostModel(Protocol):
     """fee / slippage : pct = f(event)"""
     def __call__(self, event: TradeEvent) -> float: ...
 
 
 # ───────────────────────────────── sizing model ──────────────────────── #
-
+@runtime_checkable
 class SizingModel(Protocol):
     """
     Return a multiplicative scale for entry qty (1.0 = no change).
@@ -35,7 +35,7 @@ class SizingModel(Protocol):
 
 
 # ───────────────────────────────── capacity policy ───────────────────── #
-
+@runtime_checkable
 class CapacityPolicy(Protocol):
     def admit(
         self,

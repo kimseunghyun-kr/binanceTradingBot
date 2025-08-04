@@ -154,6 +154,8 @@ volumes:
   mongo1_data:
   mongo2_data:
   pg_data:
+  binancetradingbot_docker_data: { }
+
 
 # default bridge network only
 networks:

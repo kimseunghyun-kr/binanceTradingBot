@@ -45,16 +45,9 @@ class BackTestServiceV2:
             cls, cfg: OrchestratorInput, code: str
     ) -> Dict[str, Any]:
         """Execute orchestrator and return raw result."""
-
         return await OrchestratorService.run_backtest(
+            cfg=cfg,          # pass the model, not dicts
             strategy_code=code,
-            strategy_config=cfg.strategy.dict(),
-            symbols=cfg.symbols,
-            interval=cfg.interval,
-            num_iterations=cfg.num_iterations,
-            additional_params=cfg.dict(
-                exclude={"strategy", "symbols", "interval", "num_iterations"}
-            ),
         )
 
     @classmethod
@@ -83,15 +76,21 @@ class BackTestServiceV2:
         from app.core.init_services import get_data_service
         data_service = get_data_service()
 
-        warm_tasks = [
-            data_service.ensure_ohlcv(
-                s, interval,
-                start=start_date,
-                end=end_date,
-                provider="Binance"
-            ) for s in symbols
-        ]
-        await asyncio.gather(*warm_tasks)
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for s in symbols:
+                    tg.create_task(
+                        data_service.ensure_ohlcv(
+                            s, interval,
+                            start=start_date,
+                            end=end_date,
+                            provider="Binance",
+                        )
+                    )
+        except* Exception as excs:  # PEP 654 exception group
+            for exc in excs.exceptions:
+                logger.error(f"Warm-up failed: {exc}")
+            raise
 
         if use_cache:
             cached = await cls._cache_get(cache_key)
@@ -118,7 +117,7 @@ class BackTestServiceV2:
 
         try:
             raw_result = await cls._run_orchestrator(orchestrator_input, strategy_code)
-            logger.error(f"Backtest finished [{raw_result}]")
+            logger.info(f"Backtest finished [{raw_result}]")
 
             result = await cls._enrich(raw_result, orchestrator_input)
 
@@ -189,11 +188,15 @@ class BackTestServiceV2:
     @classmethod
     async def _cache_set(cls, key: str, value: Dict[str, Any]):
         try:
-            redis_cache = get_redis_cache()
-            await redis_cache.set(
-                f"backtest:v2:{key}",
-                json.dumps(value, default=str),
-                ex=7200,
+            redis_cache = get_redis_cache()  # sync client
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: redis_cache.set(
+                    f"backtest:v2:{key}",
+                    json.dumps(value, default=str),
+                    ex=7200,
+                )
             )
         except Exception as e:
             logger.warning(f"Redis set failed: {e}")
@@ -227,5 +230,5 @@ class BackTestServiceV2:
                 "end_date": cfg.end_date.isoformat()   if cfg.end_date   else None,
                 "timestamp": datetime.utcnow().isoformat(),
             },
-            "input_config": cfg.dict(),
+            "input_config": cfg.model_dump(mode="json", exclude_none=True),
         }

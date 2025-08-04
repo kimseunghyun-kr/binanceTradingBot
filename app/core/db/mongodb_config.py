@@ -4,8 +4,10 @@ Centralised MongoDB connection manager (master / slave, read-only URI).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+from contextvars import ContextVar
 from datetime import datetime
 from typing import Dict, Optional
 from urllib.parse import quote_plus, urlparse, urlunparse, urlencode, parse_qsl
@@ -20,28 +22,59 @@ cfg = get_settings()
 
 
 class MongoDBConfig:
-    """Singleton pool provider."""
+    """
+    Pool provider.
 
-    _master_async: Optional[AsyncIOMotorClient] = None
-    _master_sync:  Optional[MongoClient]        = None
-    _slave_sync:   Optional[MongoClient]        = None
-    _ro_uri:       Optional[str]                = None
+    * Sync `MongoClient`s remain **process-wide singletons**.
+    * Async `AsyncIOMotorClient`s are now **event-loop scoped**: one per
+      `asyncio.run()` loop ⇒ never reused after that loop is closed.
+    """
+
+    # process-wide sync pools
+    _master_sync: Optional[MongoClient] = None
+    _slave_sync:  Optional[MongoClient] = None
+    _ro_uri:      Optional[str]         = None
+
+    # per-loop async pools
+    _async_clients: ContextVar[Dict[int, AsyncIOMotorClient]] = ContextVar(
+        "_async_clients", default={}
+    )
+
 
     # ------------------------------------------------------------------ #
     # bootstrap
     # ------------------------------------------------------------------ #
+    # ───────────────────────── bootstrap (sync only) ───────────────────
     @classmethod
     def initialize(cls) -> None:
-        if cls._master_async:          # already initialised
+        """Build sync pools & RO user; async pools created lazily per loop."""
+        if cls._master_sync:  # already initialised in this worker
             return
 
-        cls._master_async = cls._build_master_async()
-        cls._master_sync  = cls._build_master_sync()
-        cls._slave_sync   = cls._build_slave_sync()
-        cls.lazy_init()
-        cls._ro_uri       = cls._make_ro_uri()
+        cls._master_sync = cls._build_master_sync()
+        cls._slave_sync = cls._build_slave_sync()
+        cls.lazy_init()  # ping, RO user, etc.
+        cls._ro_uri = cls._make_ro_uri()
+        logging.info("[MongoDB] sync pools initialised")
 
-        logging.info("[MongoDB] pools initialised")
+        # ─────────────────── per-loop async client helper ──────────────────
+    @staticmethod
+    def _get_async_client_for_loop() -> AsyncIOMotorClient:
+        loop_id = id(asyncio.get_running_loop())
+        cache = MongoDBConfig._async_clients.get()
+        if loop_id in cache:
+            return cache[loop_id]
+
+        client = AsyncIOMotorClient(
+            cfg.mongo_master_uri,
+            serverSelectionTimeoutMS=5_000,
+            connectTimeoutMS=10_000,
+            socketTimeoutMS=10_000,
+            maxPoolSize=100,
+            minPoolSize=10,
+        )
+        cache[loop_id] = client
+        return client
 
     # ------------------------------------------------------------------ #
     # client builders
@@ -173,7 +206,7 @@ class MongoDBConfig:
     @classmethod
     def get_master_client(cls) -> AsyncIOMotorClient:
         cls.initialize()
-        return cls._master_async
+        return cls._get_async_client_for_loop()
 
     @classmethod
     def get_master_client_sync(cls) -> MongoClient:
@@ -187,7 +220,7 @@ class MongoDBConfig:
 
     @classmethod
     def get_read_only_uri(cls) -> str:
-        logging.info("[MongoDB] read-only uri" , cls._ro_uri)
+        logging.info("[MongoDB] read-only uri %s" , cls._ro_uri)
         cls.initialize()
         return cls._ro_uri
 
@@ -216,14 +249,21 @@ class MongoDBConfig:
     async def validate_connections(cls) -> Dict[str, bool]:
         """Ping master, slave and RO endpoints; return bool map."""
         cls.initialize()
-        result = dict(master_write=False, master_read=False, slave_read=False, read_only_uri=False)
+        result = dict(
+            master_write = False,
+            master_read = False,
+            slave_read = False,
+            read_only_uri = False,
+        )
 
         try:
             test = {"_id": "conn_test", "ts": datetime.utcnow()}
-            await cls._master_async[cfg.db_app].test.replace_one({"_id": "conn_test"}, test, upsert=True)
+            db_async = cls.get_master_client()[cfg.db_app]  # async client for *this* loop
+            await db_async.test.replace_one({"_id": "conn_test"}, test, upsert=True)
             result["master_write"] = True
-            result["master_read"]  = await cls._master_async[cfg.db_app].test.find_one({"_id": "conn_test"}) is not None
-
+            result["master_read"] = (
+                await db_async.test.find_one({"_id": "conn_test"}) is not None
+            )
             result["slave_read"] = cls._slave_sync[cfg.db_app].test.find_one({"_id": "conn_test"}) is not None  # type: ignore[index]
 
             MongoClient(cls._ro_uri, serverSelectionTimeoutMS=5_000).server_info()
@@ -236,15 +276,20 @@ class MongoDBConfig:
     @classmethod
     def close(cls) -> None:
         """Close all pools (safe to call multiple times)."""
-        for cli in (cls._master_async, cls._master_sync, cls._slave_sync):
+        # close loop-scoped async clients
+        for cli in cls._async_clients.get().values():
             try:
-                cli.close()  # type: ignore[attr-defined]
+                cli.close()
             except Exception:
                 pass
-        cls._master_async = cls._master_sync = cls._slave_sync = None
+        cls._async_clients.set({})
+
+        # close process-wide sync clients
+        for cli in (cls._master_sync, cls._slave_sync):
+            try:
+                cli.close()
+            except Exception:
+                pass
+        cls._master_sync = cls._slave_sync = None
         logging.info("[MongoDB] pools closed")
 
-
-# Eagerly initialise only when not sandbox
-if os.getenv("KWONTBOT_MODE", "main") != "sandbox":
-    MongoDBConfig.initialize()
