@@ -56,7 +56,7 @@ class OrchestratorService:
             cls,
             cfg: OrchestratorInput,  # the model
             strategy_code: str,
-    ) -> Dict[str, Any]:
+    ) -> tuple[str, Dict[str, Any]]:
         cls._ensure_ready()
 
         run_id = cls._generate_run_id(cfg)  # uses signature_json()
@@ -81,7 +81,7 @@ class OrchestratorService:
             raise
 
         cls._cache_result(run_id, result)
-        return result
+        return run_id, result
 
     # ───────────────────────── internals ──────────────────────────
     @classmethod

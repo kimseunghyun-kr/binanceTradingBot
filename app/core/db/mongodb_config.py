@@ -231,7 +231,7 @@ class MongoDBConfig:
     async def ensure_indexes(cls) -> None:
         """Create indexes on the primary DBs (idempotent)."""
         db = cls.get_master_client()[cfg.db_app]  # type: ignore[index]
-
+        await db.backtest_results.create_index("task_id", unique=True)
         await db.symbols.create_index([("symbol", 1)], unique=True)
         await db.candles.create_index(
             [("symbol", 1), ("interval", 1), ("timestamp", -1)], unique=True

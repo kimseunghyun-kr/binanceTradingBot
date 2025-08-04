@@ -43,7 +43,7 @@ class BackTestServiceV2:
     @classmethod
     async def _run_orchestrator(
             cls, cfg: OrchestratorInput, code: str
-    ) -> Dict[str, Any]:
+    ) -> tuple[str, Dict[str, Any]]:
         """Execute orchestrator and return raw result."""
         return await OrchestratorService.run_backtest(
             cfg=cfg,          # pass the model, not dicts
@@ -53,6 +53,7 @@ class BackTestServiceV2:
     @classmethod
     async def run_backtest(
         cls,
+        task_id: str,
         strategy_name: str,
         strategy_params: Dict[str, Any],
         symbols: List[str],
@@ -116,11 +117,12 @@ class BackTestServiceV2:
         strategy_code = await cls._fetch_strategy_code(strategy_name, custom_strategy_code)
 
         try:
-            raw_result = await cls._run_orchestrator(orchestrator_input, strategy_code)
+            run_id, raw_result = await cls._run_orchestrator(orchestrator_input, strategy_code)
             logger.info(f"Backtest finished [{raw_result}]")
 
             result = await cls._enrich(raw_result, orchestrator_input)
-
+            result["task_id"] = task_id
+            result["run_id"] = run_id
             if use_cache:
                 await cls._cache_set(cache_key, result)
             if save_results:

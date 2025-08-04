@@ -96,6 +96,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
 
         # Run backtest using the service
         result = asyncio.run(BackTestServiceV2.run_backtest(
+                task_id=task_id,
                 strategy_name=strategy_name,
                 strategy_params=strategy_params,
                 symbols=symbols,
@@ -106,7 +107,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
                 custom_strategy_code=custom_strategy_code,
                 parallel_symbols=parallel_symbols,
                 use_cache=use_cache,
-                save_results=save_results
+                save_results=save_results,
             ))
 
         # Update progress
@@ -123,6 +124,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
                     "task_id": task_id,
                     "type": "backtest",
                     "config": config,
+                    "run_id": result.get("run_id"),
                     "result_id": result.get("id"),
                     "status": "completed",
                     "created_at": datetime.utcnow(),
@@ -136,6 +138,7 @@ def run_backtest_task(self, config: Dict[str, Any]) -> Dict[str, Any]:
         summary = {
             "task_id": task_id,
             "status": "completed",
+            "run_id": result.get("run_id"),
             "result_id": result.get("id"),
             "total_trades": len(result.get("trades", [])),
             "win_rate": result.get("win_rate"),
