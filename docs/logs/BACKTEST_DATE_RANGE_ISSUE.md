@@ -4,7 +4,7 @@
 
 백테스트 API에서 날짜 범위 설정(`start_date`, `end_date`)과 캔들 개수 설정(`num_iterations`)이 중복되어 있으며, 실제 구현에서는 날짜 범위가 완전히 무시되고 있습니다.
 
-## 발견 내용
+## 발견 내용 (업데이트: 추가 코드 분석 완료)
 
 ### 1. API 인터페이스의 혼란
 
@@ -32,7 +32,13 @@ class OrchestratorInput(BaseModel):
 
 ### 2. 실제 구현의 문제
 
-코드 분석 결과, `StrategyOrchestrator.py`에서는 날짜 범위를 전혀 사용하지 않습니다:
+코드 분석 결과, `StrategyOrchestrator.py`에서는 날짜 범위를 전혀 사용하지 않습니다.
+
+**추가 발견사항**:
+- `OrchestratorInput.to_container_payload()`는 `start_date`와 `end_date`를 **전달하고 있습니다** (exclude 리스트에 없음)
+- 하지만 `StrategyOrchestrator.py`의 `run_backtest()`에서는 이 날짜들을 **전혀 사용하지 않습니다**
+
+이는 더욱 문제가 심각함을 시사합니다:
 
 ```python
 # strategyOrchestrator/StrategyOrchestrator.py
@@ -55,7 +61,25 @@ def _proposals_for_job(...):
 - 특정 과거 기간(예: 2023년 1월~3월) 백테스트 불가능
 - 사용자가 날짜를 지정해도 완전히 무시됨
 
-### 3. 사용자 경험 문제
+### 3. 날짜 처리 인프라는 존재하지만 사용되지 않음
+
+추가 조사 결과, 날짜 기반 데이터 처리를 위한 인프라는 이미 구축되어 있습니다:
+
+1. **BinanceProvider**:
+   - `fetch_ohlcv()` 메서드는 `start` 파라미터를 받아 처리
+   - 날짜를 캔들 경계에 맞춰 정렬하는 로직 포함
+
+2. **CandleRepository**:
+   - `fetch_candles()` 메서드는 `start_time` 파라미터 지원
+   - MongoDB 쿼리에서 날짜 필터링 가능
+
+3. **DataService**:
+   - `ensure_ohlcv()` 메서드는 `start`와 `end` 날짜 범위 지원
+   - 날짜 범위의 gap을 찾아 필요한 데이터만 가져오는 효율적인 로직
+
+**문제는 StrategyOrchestrator가 이 기능들을 활용하지 않는다는 것입니다.**
+
+### 4. 사용자 경험 문제
 
 USER_GUIDE.md의 예시들을 보면:
 ```json
@@ -95,21 +119,40 @@ if start_date or end_date:
 
 ### 중장기 개선안
 
-#### 1. 날짜 기반 백테스트 구현
+#### 1. 날짜 기반 백테스트 구현 (인프라는 이미 준비됨)
 
 ```python
 # StrategyOrchestrator.py 수정안
-def _fetch_candles_for_period(repo, symbol, interval, start_date, end_date, num_iterations):
-    if start_date or end_date:
-        # 날짜 범위로 조회
-        return repo.fetch_candles_by_date_range(
-            symbol, interval, 
-            start_time=start_date, 
-            end_time=end_date
-        )
-    else:
-        # 기존 방식: 최근 N개
-        return repo.fetch_candles(symbol, interval, num_iterations, newest_first=True)
+def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
+    # 기존 코드
+    iterations: int = cfg.get("num_iterations", 60)
+    
+    # 추가할 코드
+    start_date = cfg.get("start_date")  # ISO-8601 string
+    end_date = cfg.get("end_date")      # ISO-8601 string
+    
+    # ...
+
+def _merge_symbol_frames(
+    repo: CandleRepository,
+    symbols: Sequence[str],
+    interval: str,
+    n_rows: int,
+    lookback: int,
+    start_date: str | None = None,  # 추가
+    end_date: str | None = None,     # 추가
+) -> pd.DataFrame | None:
+    """Fetch and horizontally merge OHLCV frames for the given basket."""
+    frames: list[pd.DataFrame] = []
+    for sym in symbols:
+        if start_date:
+            # 날짜 기반 조회 (이미 CandleRepository에 구현되어 있음!)
+            start_ms = int(datetime.fromisoformat(start_date).timestamp() * 1000)
+            df = repo.fetch_candles(sym, interval, n_rows, start_time=start_ms)
+        else:
+            # 기존 방식: 최근 N개
+            df = repo.fetch_candles(sym, interval, n_rows, newest_first=True)
+        # ...
 ```
 
 #### 2. 파라미터 우선순위 명확화
@@ -141,21 +184,25 @@ class OrchestratorInput(BaseModel):
 - **Phase 3**: `num_iterations` deprecated 공지
 - **Phase 4**: `num_iterations` 제거, 날짜 범위만 사용
 
-## 영향도 평가
+## 영향도 평가 (업데이트)
 
 - **기능적 영향**: 낮음 (현재 기능은 정상 작동)
-- **사용자 경험**: 중간 (혼란 가능성)
-- **구현 복잡도**: 중간 (데이터 조회 로직 수정 필요)
+- **사용자 경험**: 높음 (날짜 파라미터가 무시되는 것은 심각한 UX 문제)
+- **구현 복잡도**: **낮음** (인프라가 이미 구축되어 있어 StrategyOrchestrator만 수정하면 됨)
 - **하위 호환성**: 주의 필요 (기존 API 사용자 고려)
 
 ## 결론
 
-현재 백테스트 시스템은 기능적으로는 작동하지만, API 설계와 실제 구현 간의 불일치로 인해 사용자에게 혼란을 줄 수 있습니다. 
+현재 백테스트 시스템은 기능적으로는 작동하지만, API 설계와 실제 구현 간의 불일치로 인해 사용자에게 혼란을 줄 수 있습니다.
+
+**중요한 발견**: 날짜 기반 백테스트를 위한 모든 인프라(BinanceProvider, CandleRepository, DataService)는 이미 구축되어 있으며, 단지 StrategyOrchestrator에서 이를 활용하지 않고 있을 뿐입니다.
 
 **권장 사항**:
 1. 즉시: 문서에 현재 제한사항 명시
 2. 단기: API 응답에 경고 메시지 추가
-3. 중기: 날짜 기반 백테스트 구현
+3. **중기: 날짜 기반 백테스트 구현 (예상보다 구현이 쉬움)**
+   - StrategyOrchestrator에서 날짜 파라미터를 받아 CandleRepository에 전달하기만 하면 됨
+   - 예상 작업량: 50-100줄 미만의 코드 수정
 4. 장기: API 인터페이스 정리 및 간소화
 
 이를 통해 더 직관적이고 유연한 백테스트 시스템을 구축할 수 있을 것입니다.
