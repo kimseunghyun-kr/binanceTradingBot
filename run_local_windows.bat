@@ -1,33 +1,49 @@
 @echo off
-REM Start the required services
-docker-compose up -d mongo postgres redis
+setlocal enabledelayedexpansion
 
-REM Wait for MongoDB to be ready
+echo Starting Binance Trading Bot services...
+
+REM Start DB services in the background (if not already running)
+docker compose up -d mongo postgres redis
+
+echo Waiting for services to be ready...
+
+REM Wait for MongoDB on port 27017
 :wait_mongo
-powershell -Command "(New-Object Net.Sockets.TcpClient).Connect('localhost', 27017)" 2>NUL
-if errorlevel 1 (
+echo Checking MongoDB on port 27017...
+powershell -Command "Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet" >nul 2>&1
+if %errorlevel% neq 0 (
     echo Waiting for MongoDB...
-    timeout /t 1 > NUL
+    timeout /t 1 /nobreak >nul
     goto wait_mongo
 )
+echo MongoDB is ready!
 
-REM Wait for Postgres to be ready
+REM Wait for PostgreSQL on port 5432
 :wait_postgres
-powershell -Command "(New-Object Net.Sockets.TcpClient).Connect('localhost', 5432)" 2>NUL
-if errorlevel 1 (
-    echo Waiting for Postgres...
-    timeout /t 1 > NUL
+echo Checking PostgreSQL on port 5432...
+powershell -Command "Test-NetConnection -ComputerName localhost -Port 5432 -InformationLevel Quiet" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Waiting for PostgreSQL...
+    timeout /t 1 /nobreak >nul
     goto wait_postgres
 )
+echo PostgreSQL is ready!
 
-REM Wait for Redis to be ready
+REM Wait for Redis on port 6379
 :wait_redis
-powershell -Command "(New-Object Net.Sockets.TcpClient).Connect('localhost', 6379)" 2>NUL
-if errorlevel 1 (
+echo Checking Redis on port 6379...
+powershell -Command "Test-NetConnection -ComputerName localhost -Port 6379 -InformationLevel Quiet" >nul 2>&1
+if %errorlevel% neq 0 (
     echo Waiting for Redis...
-    timeout /t 1 > NUL
+    timeout /t 1 /nobreak >nul
     goto wait_redis
 )
+echo Redis is ready!
+
+echo All services are ready! Starting FastAPI application...
 
 REM Start FastAPI app
 python run_local.py
+
+endlocal
