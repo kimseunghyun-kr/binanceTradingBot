@@ -88,32 +88,37 @@ RATE_LIMIT_PER_MINUTE=100
 
 ## 실행 방법
 
-### 방법 1: 자동 실행 (권장)
+### 방법 1: Docker Compose로 전체 실행 (권장) ⭐
 
-#### 1단계: 데이터베이스 서비스 시작
+가장 간단하고 권장되는 방법입니다. 모든 서비스를 한 번에 시작합니다:
+
 ```cmd
 # 프로젝트 루트에서
-run_local_windows.bat
-```
-이 스크립트는:
-- Docker로 MongoDB, PostgreSQL, Redis 시작
-- 모든 서비스가 준비될 때까지 대기
-- FastAPI 애플리케이션 자동 시작
-
-#### 2단계: Celery Worker 시작 (새 터미널)
-```cmd
-# 새 명령 프롬프트 창을 열고
-cd binanceTradingBot
-venv\Scripts\activate
-start_worker_windows.bat
+start_with_docker_compose_windows.bat
 ```
 
-### 방법 2: 수동 실행
+이 명령은 다음을 자동으로 실행합니다:
+- MongoDB 마스터/슬레이브 (레플리카 셋)
+- Redis
+- PostgreSQL
+- FastAPI 애플리케이션
+- Celery Worker
+- Nginx 프록시
+- mongo_init.sh를 통한 레플리카 셋 초기화
 
-#### 1단계: Docker 서비스 시작
+서비스 중지:
 ```cmd
-# MongoDB, PostgreSQL, Redis 시작
-docker compose up -d mongo postgres redis
+stop_docker_compose_windows.bat
+```
+
+### 방법 2: 로컬 개발 모드 (Python 직접 실행)
+
+Docker로 DB만 실행하고 Python 앱은 로컬에서 실행:
+
+#### 1단계: 데이터베이스 서비스만 시작
+```cmd
+# DB 서비스만 시작 (profile: db)
+docker compose --profile db up -d
 
 # 서비스 상태 확인
 docker ps
@@ -137,18 +142,18 @@ python run_local.py
 python KwontBot.py
 ```
 
-### 방법 3: 디버그 모드 (MongoDB 레플리카 셋 포함)
+### 방법 3: 기존 스크립트 사용 (레거시)
 
-MongoDB 마스터-슬레이브 구조로 실행하려면:
+이전 버전과의 호환성을 위한 방법:
 ```cmd
-# 레플리카 셋 초기화 포함
+# 기본 실행
+run_local_windows.bat
+
+# 디버그 모드
 run_local_debug_windows.bat
 
-# 새 터미널에서 Worker 시작
+# Worker 시작
 start_worker_windows.bat
-
-# 또 다른 터미널에서 FastAPI 시작
-python run_local.py
 ```
 
 ## 서비스 접속
@@ -311,27 +316,41 @@ celery -A app.core.celery_app inspect active
 
 ## 유용한 명령어 모음
 
-### Docker 명령어
+### Docker Compose 명령어 (권장)
+```cmd
+# Profile을 사용한 서비스 관리
+docker compose --profile db --profile app up -d --build  # 전체 시작
+docker compose --profile db up -d                        # DB만 시작
+docker compose --profile app up -d                       # 앱만 시작
+docker compose --profile db --profile app down           # 전체 중지
+
+# 서비스 상태 확인
+docker compose ps
+docker compose --profile db --profile app ps
+
+# 로그 보기
+docker compose logs -f                    # 전체 로그
+docker compose logs -f app               # FastAPI 로그
+docker compose logs -f worker            # Celery 로그
+docker compose logs -f mongo1 mongo2     # MongoDB 로그
+```
+
+### Docker 일반 명령어
 ```cmd
 # 실행 중인 컨테이너 보기
 docker ps
 
-# 모든 컨테이너 보기
-docker ps -a
-
 # 컨테이너 로그 보기
-docker logs binancetradingbot-mongo-1
-docker logs binancetradingbot-redis-1
+docker logs tradingbot_app
+docker logs tradingbot_worker
+docker logs tradingbot_mongo1
 
 # 컨테이너 내부 접속
-docker exec -it binancetradingbot-mongo-1 mongosh
-docker exec -it binancetradingbot-redis-1 redis-cli
-
-# 모든 서비스 중지
-docker compose down
+docker exec -it tradingbot_mongo1 mongosh
+docker exec -it tradingbot_redis redis-cli
 
 # 서비스 재시작
-docker compose restart
+docker restart tradingbot_app
 ```
 
 ### 테스트 명령어
