@@ -16,7 +16,8 @@ class StrategyInfo(BaseModel):
     description: str
 
 
-mongo_sync_db = master_db_app_async()
+# Lazy initialization to avoid event loop issues
+mongo_sync_db = None
 
 @router.get("", response_model=List[StrategyInfo])
 async def list_strategies():
@@ -26,15 +27,21 @@ async def list_strategies():
     global rows
     built_ins = [StrategyInfo(**s) for s in StrategyService.BUILT_IN_STRATEGIES]
     custom_strats = []
-    if mongo_sync_db:
-        # Fetch custom strategies from Postgres (if configured)
-        query = "SELECT id, name, description FROM strategies"
-        try:
-            rows = await mongo_sync_db.fetch_all(query)
-            custom_strats = [StrategyInfo(id=row["id"], name=row["name"], description=row["description"]) for row in
-                             rows]
-        except Exception as e:
-            logging.error(f"Database error fetching strategies: {e}")
+    
+    # Initialize database connection if needed
+    try:
+        db = master_db_app_async()
+        if db:
+            # Fetch custom strategies from Postgres (if configured)
+            query = "SELECT id, name, description FROM strategies"
+            try:
+                rows = await db.fetch_all(query)
+                custom_strats = [StrategyInfo(id=row["id"], name=row["name"], description=row["description"]) for row in rows]
+            except Exception as e:
+                logging.error(f"Database error fetching strategies: {e}")
+    except Exception as e:
+        logging.error(f"Database connection error: {e}")
+    
     return built_ins + custom_strats
 
 

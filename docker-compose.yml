@@ -42,7 +42,7 @@ services:
     build: .
     container_name: tradingbot_worker
     restart: unless-stopped
-    command: ["python", "-m", "celery", "-A", "app.core.celery_app", "worker"]
+    command: ["python", "-m", "celery", "-A", "app.core.celery_app", "worker", "--concurrency=4"]
     user: "celery"
     group_add:
       - "0"               # ← gives celery rw on /var/run/docker.sock
@@ -119,8 +119,8 @@ services:
       mongo2: {condition: service_healthy}
     restart: "no"
     volumes:
-      - ./mongo_init.sh:/usr/local/bin/mongo_init.sh:ro
-    entrypoint: ["/bin/bash", "/usr/local/bin/mongo_init.sh"]
+      - ./mongo_init_simple.sh:/usr/local/bin/mongo_init_simple.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/mongo_init_simple.sh"]
     networks: [default]
 
   postgres:
@@ -134,6 +134,7 @@ services:
       POSTGRES_DB: "trading"
     ports: ["5432:5432"]
     volumes: [pg_data:/var/lib/postgresql/data]
+    command: ["postgres", "-c", "max_connections=200", "-c", "shared_buffers=256MB"]
     networks: [default]
 
   nginx:

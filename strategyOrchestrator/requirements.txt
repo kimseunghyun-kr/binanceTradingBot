@@ -30,7 +30,6 @@ python-dateutil
 pytz
 orjson
 aiofiles
-uvloop
 
 # Exchange API
 python-binance

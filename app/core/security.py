@@ -33,8 +33,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-# Rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Rate limiter - temporarily disable for Windows encoding issue
+try:
+    limiter = Limiter(key_func=get_remote_address)
+except UnicodeDecodeError:
+    # Fallback for Windows encoding issues
+    import os
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    limiter = Limiter(key_func=get_remote_address)
 
 
 

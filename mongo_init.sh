@@ -2,8 +2,22 @@
 set -euo pipefail
 
 echo "Waiting for mongo1 and mongo2..."
-until mongosh --host mongo1:27017 --quiet --eval 'db.adminCommand("ping").ok' | grep 1 >/dev/null; do sleep 1; done
-until mongosh --host mongo2:27017 --quiet --eval 'db.adminCommand("ping").ok' | grep 1 >/dev/null; do sleep 1; done
+
+# Wait for mongo1
+echo "Connecting to mongo1..."
+until mongosh --host mongo1:27017 --quiet --eval 'db.adminCommand("ping").ok' 2>/dev/null | grep -q 1; do 
+    echo "Waiting for mongo1..."
+    sleep 2
+done
+echo "mongo1 is ready!"
+
+# Wait for mongo2  
+echo "Connecting to mongo2..."
+until mongosh --host mongo2:27017 --quiet --eval 'db.adminCommand("ping").ok' 2>/dev/null | grep -q 1; do 
+    echo "Waiting for mongo2..."
+    sleep 2
+done
+echo "mongo2 is ready!"
 
 echo "Initiating replica set if needed..."
 mongosh --host mongo1:27017 --quiet <<'JS'
