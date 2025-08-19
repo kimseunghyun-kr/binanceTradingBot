@@ -15,6 +15,7 @@ from strategyOrchestrator.entities.tradeManager.TradeEventType import TradeEvent
 class PerpLedger:
     def __init__(self, fee_model, slippage_model):
         self.positions: Dict[str, Position] = defaultdict(Position)
+        self.fills: List[FillRecord] = []
         self.cash_changes: List[Tuple[int, float]] = []
         self.fee_model = fee_model
         self.slippage_model = slippage_model
@@ -33,7 +34,15 @@ class PerpLedger:
             notional = px * ev.qty * -1
             self.cash_changes.append((ev.ts, notional))
             self.positions[ev.meta["symbol"]].apply(ev)
+            side = "BUY" if ev.qty > 0 else "SELL"
+            fee_cash = abs(ev.price * ev.qty * fee)
+            self.fills.append(
+                FillRecord(ev.ts, ev.meta["symbol"], side, ev.qty, ev.price, float(px), float(fee_cash), ev.event,
+                           ev.meta))
 
+    def get_fills(self) -> List[FillRecord]:
+        return self.fills
+    
     def pop_cash_delta(self) -> float:
         total = sum(c for _, c in self.cash_changes)
         self.cash_changes.clear()

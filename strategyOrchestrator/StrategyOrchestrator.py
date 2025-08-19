@@ -104,22 +104,26 @@ def _proposals_for_job(
 
     for i in range(last_idx, first_idx - 1, -1):
         window = merged.iloc[max(0, i - lookback + 1): i + 1]
-
         try:
             decision = strategy.decide(window, interval, tp_ratio=tp, sl_ratio=sl)
         except Exception:
             continue
-
-        if decision.get("signal") != "BUY":
+        sig = decision.get("signal")
+        if sig not in ("BUY", "SELL"):
             continue
+        # use actual timestamp from data instead of index as entry time
+        sym0 = symbols[0]
+        try:
+            entry_ts = int(window[(sym0, "open_time")].iloc[-1])
+        except Exception:
+            entry_ts = int(window["open_time"].iloc[-1]) if "open_time" in window.columns else int(window.index[-1])
 
-        entry_ts = int(window.index[-1])
         det_df = repo.fetch_candles(symbols[0], detail_int, 2000, start_time=entry_ts)
         if det_df.empty:
             continue
 
         proposals.append(
-            TradeProposalBuilder(symbols[0], size=1.0, direction="LONG")
+            TradeProposalBuilder(symbols[0], size=1.0, direction= "LONG" if sig == "BUY" else "SHORT")
             .scale_in(1, 0.0, 0.0, "open")
             .bracket_exit(tp=tp, sl=sl)
             .set_entry_params(
@@ -194,7 +198,7 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
         PerpPortfolioManager if market.upper() == "PERP" else BasePortfolioManager
     )
     pm = PM(
-        initial_cash=100_000,
+        initial_cash=cfg.get("initial_cash", 100_000),
         fee_model=fee_model,
         slippage_model=slippage_model,
         fill_policy=fill_policy,
@@ -233,8 +237,28 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
         }
         pm.on_bar(ts, prices)
 
+    # Ensure all open positions are closed at final time
     if timeline:
-        pm.on_bar(timeline[-1] + 1, {})  # final flush
+        final_ts = timeline[-1]
+        final_prices = {s: price_map.get((s, final_ts), 0.0) for s in symbols}
+        for sym, pos in pm.tm.positions.items():
+            if pos.qty != 0:
+                close_ts = final_ts + 1
+                close_ev = TradeEvent(
+                    ts=close_ts,
+                    price=float(final_prices.get(sym, 0.0)),
+                    qty=-pos.qty,
+                    event=TradeEventType.CLOSE,
+                    meta={
+                        "symbol": sym,
+                        "exit": "FINAL",
+                        "direction": "LONG" if pos.qty > 0 else "SHORT",
+                        "orig_entry_px": float(getattr(pos, "avg_px", 0.0)),
+                        "orig_entry_ts": final_ts,
+                    }
+                )
+                heapq.heappush(pm._event_q, close_ev)
+        pm.on_bar(final_ts + 1, {}) # final flush
 
     # ─── results ────────────────────────────────────────────────────────
     res = pm.get_results()

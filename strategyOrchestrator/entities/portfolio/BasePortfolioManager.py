@@ -36,7 +36,6 @@ class BasePortfolioManager:
     ):
         self.cash           = initial_cash
         self.capacity = capacity_policy or LegCapacity(max_legs=5)
-        self.sizer = sizing_model or (lambda *_: 1.0)
         self.sizing_model   = sizing_model   or (lambda meta, act: 1.0)
         self.fee_model      = fee_model      or static_fee_model
         self.slip_model     = slippage_model or (lambda ev: 0.0)
@@ -109,7 +108,7 @@ class BasePortfolioManager:
             return False
 
         # apply portfolio-level sizing
-        scale = self.sizer(proposal.meta, "entry") or 1.0
+        scale = self.sizing_model(proposal.meta, "entry") or 1.0
         if scale != 1.0:
             events = [
                 TradeEvent(e.ts, e.price, e.qty * scale, e.event, dict(e.meta))
