@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import concurrent.futures as fut
 import hashlib
+import importlib.util
 import json
 import logging
 import sys
 import time
+from pathlib import Path
 from typing import Any, Sequence, cast
 
 import pandas as pd
@@ -59,6 +61,42 @@ def _new_logger() -> logging.Logger:
     logger.addHandler(handler)
     logger.propagate = False
     return logger
+
+
+def _normalize_strategy_spec(spec: Any) -> Any:
+    if spec is None:
+        return None
+    if isinstance(spec, dict) and not {"builtin", "module", "class"}.intersection(spec):
+        name = spec.get("name")
+        params = spec.get("params") or {}
+        if name:
+            return {"builtin": name, "params": params}
+    return spec
+
+
+def _load_strategy_from_file(
+    strategy_filename: str,
+    class_name: str,
+    params: dict[str, Any],
+) -> BaseStrategy:
+    base_dir = Path(__file__).resolve().parents[1]
+    strategy_path = base_dir / "user_strategies" / strategy_filename
+    if not strategy_path.exists():
+        raise FileNotFoundError(f"Custom strategy file not found: {strategy_path}")
+
+    module_name = f"user_strategy_{strategy_path.stem}"
+    spec = importlib.util.spec_from_file_location(module_name, strategy_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Failed to load custom strategy module: {strategy_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    cls = getattr(module, class_name, None)
+    if cls is None:
+        raise AttributeError(f"Custom strategy class '{class_name}' not found in {strategy_path}")
+    if not isinstance(cls, type) or not issubclass(cls, BaseStrategy):
+        raise TypeError(f"Custom strategy '{class_name}' must subclass BaseStrategy")
+    return cls(**params) if params else cls()
 
 
 def _merge_symbol_frames(
@@ -159,7 +197,32 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
     fill_policy = fill_cls(fee_model, slippage_model)
     capacity_policy = load_component(cfg.get("capacity_policy"), CAP_MAP, CapacityPolicy, "capacity_policy")()
     sizing_model = load_component(cfg.get("sizing_model"), SIZE_MAP, SizingModel, "sizing_model")()
-    strategy = load_component(cfg.get("strategy"), STRAT_MAP, BaseStrategy, "strategy")()
+    strategy_spec = _normalize_strategy_spec(
+        cfg.get("strategy") or cfg.get("strategy_config")
+    )
+    strategy_filename = cfg.get("strategy_filename")
+    if strategy_filename:
+        if not isinstance(strategy_spec, dict):
+            raise ValueError("Custom strategy requires a strategy_config dict")
+        class_name = (
+            strategy_spec.get("class")
+            or strategy_spec.get("builtin")
+            or strategy_spec.get("name")
+        )
+        if not class_name:
+            raise ValueError("Custom strategy class name is missing from strategy_config")
+        params = strategy_spec.get("params") or {}
+        strategy = _load_strategy_from_file(strategy_filename, class_name, params)
+    else:
+        resolved = load_component(strategy_spec, STRAT_MAP, BaseStrategy, "strategy")
+        if isinstance(resolved, BaseStrategy):
+            strategy = resolved
+        elif isinstance(resolved, type):
+            strategy = resolved()
+        elif callable(resolved):
+            strategy = resolved()
+        else:
+            raise TypeError("strategy: resolved object is neither a class nor an instance")
 
     # ─── data bootstrap ────────────────────────────────────────────────
     lookback = strategy.get_required_lookback()
@@ -322,4 +385,3 @@ if __name__ == "__main__":
     # Final output (flush immediately)
     print(json.dumps(result, default=str), flush=True)
     logging.getLogger().info("Backtest finished, result printed.")
-

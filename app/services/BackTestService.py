@@ -24,7 +24,14 @@ logger = get_task_logger(__name__)
 print(logger.name)
 logger.setLevel(logging.DEBUG)
 
-default_strategy = ["PeakEMAReversalStrategy"]
+default_strategy = [
+    "PeakEMAReversalStrategy",
+    "peak_ema_reversal",
+    "MomentumStrategy",
+    "momentum",
+    "FundingFibRetracementStrategy",
+    "funding_fib_retracement",
+]
 class BackTestServiceV2:
     # ───────────────────────── public entrypoint ─────────────────────── #
 

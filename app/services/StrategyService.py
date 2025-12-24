@@ -2,6 +2,9 @@ from typing import List, Dict
 
 from strategyOrchestrator.entities.strategies.BaseStrategy import BaseStrategy
 from strategyOrchestrator.entities.strategies.concreteStrategies.EnsembleStrategy import EnsembleStrategy
+from strategyOrchestrator.entities.strategies.concreteStrategies.FundingFibRetracementStrategy import (
+    FundingFibRetracementStrategy
+)
 from strategyOrchestrator.entities.strategies.concreteStrategies.MomentumStrategy import MomentumStrategy
 from strategyOrchestrator.entities.strategies.concreteStrategies.PeakEmaReversalStrategy import PeakEMAReversalStrategy
 
@@ -13,7 +16,9 @@ class StrategyService:
         {"name": "peak_ema_reversal",
          "description": "Single-peak detection with EMA pullback (PeakEMAReversalStrategy)"},
         {"name": "momentum", "description": "Simple momentum strategy based on price window (MomentumStrategy)"},
-        {"name": "ensemble", "description": "Ensemble of multiple strategies (combined signal)"}
+        {"name": "ensemble", "description": "Ensemble of multiple strategies (combined signal)"},
+        {"name": "funding_fib_retracement",
+         "description": "Funding negative + Fibonacci retracement with low-volume pullback"}
     ]
 
     @staticmethod
@@ -43,6 +48,8 @@ class StrategyService:
                 sub_strategies.append(StrategyService.get_strategy_instance(sub_name, sub_params))
                 weights.append(weight)
             return EnsembleStrategy(sub_strategies, weights=weights)
+        elif name == "funding_fib_retracement":
+            return FundingFibRetracementStrategy(**params)
         else:
             # Unknown strategy
             raise ValueError(f"Unknown strategy name: {name}")
