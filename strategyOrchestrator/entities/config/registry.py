@@ -17,6 +17,12 @@ from strategyOrchestrator.entities.portfolio.policies.sizingModel.SizingModel im
 from strategyOrchestrator.entities.strategies.concreteStrategies.PeakEmaReversalStrategy import (
     PeakEMAReversalStrategy
 )
+from strategyOrchestrator.entities.strategies.concreteStrategies.MomentumStrategy import (
+    MomentumStrategy
+)
+from strategyOrchestrator.entities.strategies.concreteStrategies.FundingFibRetracementStrategy import (
+    FundingFibRetracementStrategy
+)
 
 ################################################################################
 # Maps **contain only callables** (classes, lambdas, partials) – never instances
@@ -29,4 +35,11 @@ FILL_MAP = {
 }
 CAP_MAP  = {"LegCapacity": LegCapacity, "SymbolCapacity": SymbolCapacity}
 SIZE_MAP = {"fixed_fraction": partial(fixed_fraction, 1.0),}
-STRAT_MAP= {"PeakEMAReversalStrategy": PeakEMAReversalStrategy}
+STRAT_MAP = {
+    "PeakEMAReversalStrategy": PeakEMAReversalStrategy,
+    "peak_ema_reversal": PeakEMAReversalStrategy,
+    "MomentumStrategy": MomentumStrategy,
+    "momentum": MomentumStrategy,
+    "FundingFibRetracementStrategy": FundingFibRetracementStrategy,
+    "funding_fib_retracement": FundingFibRetracementStrategy,
+}

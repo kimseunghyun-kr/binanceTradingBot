@@ -16,7 +16,7 @@ class FundingProvider(Protocol):
 
 class MongoFundingProvider:
     def __init__(self):
-        cli = MongoClient(settings.MONGO_URI_MASTER)
+        cli = MongoClient(settings.mongo_uri)
         self.col = cli[settings.MONGO_DB_PERP]["funding_rates"]
 
     def get_rate(self, symbol: str, ts: int) -> float:
