@@ -5,3 +5,17 @@ YES_charts
 *.png
 *.env.*
 .env.development
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Direnv
+.direnv/

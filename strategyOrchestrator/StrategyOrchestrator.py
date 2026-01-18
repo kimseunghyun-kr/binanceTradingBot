@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import concurrent.futures as fut
 import hashlib
+import heapq
 import json
 import logging
 import sys
 import time
-from typing import Any, Sequence, cast
+from typing import Any, Sequence, cast, Dict, List, Optional
 
 import pandas as pd
 
@@ -32,7 +33,9 @@ from strategyOrchestrator.LoadComponent import load_component
 from strategyOrchestrator.entities.portfolio.policies.interfaces import CapacityPolicy, SizingModel, EventCostModel
 from strategyOrchestrator.entities.strategies.BaseStrategy import BaseStrategy
 from strategyOrchestrator.entities.tradeManager.TradeProposalBuilder import TradeProposalBuilder
-from strategyOrchestrator.repository.candleRepository import CandleRepository
+from strategyOrchestrator.entities.tradeManager.TradeEvent import TradeEvent
+from strategyOrchestrator.entities.tradeManager.TradeEventType import TradeEventType
+from strategyOrchestrator.repository.candleRepository import CandleRepository  # Only for fallback
 
 # ────────── built-in maps (callables only) ──────────────────────────────
 _NEED_COLS = {"open_time", "open", "high", "low", "close"}
@@ -48,21 +51,108 @@ logging.basicConfig(
 
 # ────────── utilities ───────────────────────────────────────────────────
 def _new_logger() -> logging.Logger:
-    """Return a tagged, non-propagating logger for a single back-test run."""
+    """Return a tagged logger for a single back-test run."""
     tag = hashlib.sha256(str(time.time()).encode()).hexdigest()[:8]
     logger = logging.getLogger(f"Backtest_{tag}")
     logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s [" + tag + "] %(levelname)s: %(message)s")
-    )
-    logger.addHandler(handler)
-    logger.propagate = False
+
+    # Only add handler if not already present (avoid duplicate handlers in tests)
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s [" + tag + "] %(levelname)s: %(message)s")
+        )
+        logger.addHandler(handler)
+
+    # Allow propagation so pytest's caplog can capture logs
+    logger.propagate = True
     return logger
 
 
+class PrefetchedDataSource:
+    """
+    Data source that uses pre-fetched OHLCV data instead of database.
+    This is the PURE FUNCTION approach - no I/O, no side effects.
+    """
+
+    def __init__(self, ohlcv_data: Dict[str, Dict[str, List[Dict]]]):
+        """
+        Initialize with pre-fetched OHLCV data.
+
+        Args:
+            ohlcv_data: Dictionary with structure:
+                {
+                    "main": {symbol: [candle_dicts]},
+                    "detailed": {symbol: [candle_dicts]}
+                }
+        """
+        self.main_data = ohlcv_data.get("main", {})
+        self.detailed_data = ohlcv_data.get("detailed", {})
+        self._cache = {}  # Cache converted DataFrames
+
+    def fetch_candles(
+        self,
+        symbol: str,
+        interval: str,
+        limit: int,
+        *,
+        start_time: Optional[int] = None,
+        newest_first: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Fetch candles from pre-fetched data.
+
+        This mimics CandleRepository.fetch_candles() but uses in-memory data.
+        """
+        # Determine which data source to use
+        # For now, we'll use main data for strategy intervals and detailed for timeline
+        cache_key = f"{symbol}:{interval}:{limit}:{start_time}:{newest_first}"
+
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Get the appropriate data source
+        if interval in {"1h", "15m"}:
+            data_dict = self.detailed_data.get(symbol, [])
+        else:
+            data_dict = self.main_data.get(symbol, [])
+
+        if not data_dict:
+            logging.getLogger().warning(f"No pre-fetched data for {symbol} at {interval}")
+            return pd.DataFrame()
+
+        # Convert to DataFrame
+        df = pd.DataFrame(data_dict)
+
+        if df.empty:
+            return df
+
+        # Apply filters
+        if start_time and "open_time" in df.columns:
+            df = df[df["open_time"] <= start_time]
+
+        # Sort
+        if "open_time" in df.columns:
+            df = df.sort_values("open_time", ascending=not newest_first)
+
+        # Limit
+        if len(df) > limit:
+            df = df.head(limit) if not newest_first else df.tail(limit)
+
+        # When newest_first=True, reverse back to ascending order after limiting
+        # This matches the behavior of CandleRepository which returns data in ascending order
+        if newest_first and "open_time" in df.columns:
+            df = df.sort_values("open_time", ascending=True)
+
+        df = df.reset_index(drop=True)
+
+        # Cache result
+        self._cache[cache_key] = df
+        return df
+
+
 def _merge_symbol_frames(
-    repo: CandleRepository,
+    repo,  # Can be CandleRepository or PrefetchedDataSource
     symbols: Sequence[str],
     interval: str,
     n_rows: int,
@@ -85,7 +175,7 @@ def _merge_symbol_frames(
 def _proposals_for_job(
     job: dict[str, Any],
     interval: str,
-    repo: CandleRepository,
+    repo,  # Can be CandleRepository or PrefetchedDataSource
     strategy: BaseStrategy,
     lookback: int,
     num_iter: int,
@@ -163,8 +253,18 @@ def run_backtest(cfg: dict[str, Any]) -> dict[str, Any]:
 
     # ─── data bootstrap ────────────────────────────────────────────────
     lookback = strategy.get_required_lookback()
-    settings = get_settings()
-    repo = CandleRepository(settings.mongo_slave_uri, settings.MONGO_DB_OHLCV)  # always slave / read-only
+
+    # ═══ PURE FUNCTION APPROACH: Use pre-fetched data if available ═══
+    ohlcv_data = cfg.get("ohlcv_data")
+    if ohlcv_data:
+        log.info("Using pre-fetched OHLCV data (pure function mode)")
+        repo = PrefetchedDataSource(ohlcv_data)
+    else:
+        # Fallback to database (legacy mode)
+        log.warning("No pre-fetched data found, falling back to database access")
+        settings = get_settings()
+        repo = CandleRepository(settings.mongo_slave_uri, settings.MONGO_DB_OHLCV)
+
     jobs = strategy.work_units(symbols)
 
     # ─── parallel proposal generation ───────────────────────────────────
