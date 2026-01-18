@@ -101,8 +101,18 @@ class OrchestratorInput(BaseModel):
         json_encoders={datetime: lambda dt: dt.isoformat()}
     )
 
-    def to_container_payload(self) -> Dict[str, Any]:
-        """Return a JSON-safe dict the orchestrator script expects."""
+    def to_container_payload(self, ohlcv_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Return a JSON-safe dict the orchestrator script expects.
+
+        Args:
+            ohlcv_data: Pre-fetched OHLCV data dictionary (optional).
+                       Format: {"main": {symbol: [candles]}, "detailed": {symbol: [candles]}}
+                       If provided, container will use this instead of fetching from DB.
+
+        Returns:
+            Complete payload for container execution
+        """
         flat = self.model_dump(
             mode="json",  # datetimes → ISO-8601 strings
             exclude={
@@ -113,7 +123,7 @@ class OrchestratorInput(BaseModel):
             },
             exclude_none=True,
         )
-        return {
+        payload = {
             **flat,
             "strategy_config": self.strategy.model_dump(mode="json"),
             "symbols": self.symbols,
@@ -121,6 +131,12 @@ class OrchestratorInput(BaseModel):
             "num_iterations": self.num_iterations,
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),  # ISO-8601 UTC,
         }
+
+        # Include pre-fetched OHLCV data if provided (pure function approach)
+        if ohlcv_data is not None:
+            payload["ohlcv_data"] = ohlcv_data
+
+        return payload
 
     def signature_json(self) -> str:
         """Deterministic JSON used to derive cache / run-id."""

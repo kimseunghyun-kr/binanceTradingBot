@@ -20,6 +20,7 @@ from app.core.init_services import get_redis_cache
 from app.core.pydanticConfig.settings import get_settings
 from app.dto.orchestrator.OrchestratorInput import OrchestratorInput
 from app.services.orchestrator import Docker_Engine  # <─ host daemon only
+from app.services.orchestrator.DataPrefetchService import DataPrefetchService
 
 settings = get_settings()
 LOG_CFG = LogConfig(type="local", config={"max-size": "10m", "max-file": "3"})
@@ -65,9 +66,48 @@ class OrchestratorService:
         if cached := cls._get_cached_result(run_id):
             return cached
 
-        input_config = cfg.to_container_payload()  # <-- single place we serialise
-
+        # ═══ PRE-FETCH OHLCV DATA (Pure Function Approach) ═══
+        # Fetch all required data on HOST side, so container doesn't need DB access
+        logger.info("Pre-fetching OHLCV data for %d symbols", len(cfg.symbols))
         loop = asyncio.get_running_loop()
+
+        # Get strategy lookback requirement
+        # We need to load the strategy to get its lookback, but do it safely
+        try:
+            from strategyOrchestrator.entities.config.registry import STRAT_MAP
+            strategy_cfg = cfg.strategy.model_dump()
+            strategy_name = strategy_cfg.get("name")
+            if strategy_name in STRAT_MAP:
+                strategy_cls = STRAT_MAP[strategy_name]
+                strategy_instance = strategy_cls()
+                lookback = strategy_instance.get_required_lookback()
+            else:
+                lookback = 200  # Default fallback
+        except Exception as e:
+            logger.warning(f"Could not determine strategy lookback: {e}, using default 200")
+            lookback = 200
+
+        # Pre-fetch data using DataPrefetchService
+        prefetch_service = DataPrefetchService(
+            mongo_uri=settings.MONGO_URI_SLAVE or MongoDBConfig.get_read_only_uri(),
+            db_name=settings.MONGO_DB_OHLCV
+        )
+
+        ohlcv_data = await loop.run_in_executor(
+            cls._executor,
+            prefetch_service.prefetch_ohlcv_data,
+            cfg.symbols,
+            cfg.interval,
+            cfg.num_iterations,
+            lookback,
+            cfg.start_date,
+            cfg.end_date,
+            True,  # include_detailed
+        )
+
+        logger.info("Pre-fetch complete, assembling container payload")
+        input_config = cfg.to_container_payload(ohlcv_data=ohlcv_data)  # Include pre-fetched data
+
         try:
             result = await loop.run_in_executor(
                 cls._executor,
@@ -88,28 +128,21 @@ class OrchestratorService:
     def _container_config(cls, run_id: str) -> Dict[str, Any]:
         """
         Build a host-daemon container config.
-        DinD branch *removed* – we always join the outer Compose network.
+
+        IMPORTANT: This is now a PURE FUNCTION container config.
+        - NO database credentials
+        - NO network access (network_mode: none)
+        - All data is passed via stdin
+        - Container is truly sandboxed
         """
-        net = Docker_Engine._compose_network_name()
-        logger.info(f"OrchestratorService: using network '{net}'")
+        logger.info(f"OrchestratorService: creating sandboxed container (no DB access)")
 
-        # Mongo URIs rewritten to service names (mongo2 only)
-        ro_uri = MongoDBConfig.get_read_only_uri().replace("localhost", "mongo2")
-        slave_uri = settings.MONGO_URI_SLAVE.replace("localhost", "mongo2")
-
+        # ═══ PURE FUNCTION ENVIRONMENT (minimal) ═══
+        # No database URIs, no credentials, no secrets
         env = {
-            "KWONTBOT_MODE": "sandbox",
-            "PROFILE": settings.PROFILE,
-            "SECRET_KEY": settings.SECRET_KEY,
-            "MONGO_RO_URI": ro_uri,
-            "MONGO_URI_SLAVE": slave_uri or "",
-            "MONGO_AUTH_ENABLED": "1" if settings.MONGO_AUTH_ENABLED else "0",
-            "MONGO_USER_PW": settings.MONGO_USER_PW or "",
-            "MONGO_DB_APP": settings.MONGO_DB_APP,
-            "MONGO_DB_OHLCV": settings.MONGO_DB_OHLCV or "",
-            "MONGO_DB_PERP": settings.MONGO_DB_PERP or "",
-            "DOCKER_NETWORK": net or "",
-            "PYTHONUNBUFFERED": 1
+            "KWONTBOT_MODE": "sandbox_pure",  # New mode for pure function execution
+            "PROFILE": "sandbox",
+            "PYTHONUNBUFFERED": "1",
         }
 
         cfg: Dict[str, Any] = {
@@ -117,6 +150,7 @@ class OrchestratorService:
             "name": f"orchestrator_{run_id[:12]}",
             "command": ["python", "-m", "strategyOrchestrator.StrategyOrchestrator"],
             "environment": env,
+            "network_mode": "none",  # ← NO NETWORK ACCESS (fully isolated)
             "mem_limit": "2g",
             "cpu_quota": 100000,
             "log_config": LOG_CFG,
@@ -124,9 +158,6 @@ class OrchestratorService:
             "auto_remove": False,
             "stdin_open": True,
         }
-
-        if net:  # always join the Compose bridge
-            cfg["network"] = net
 
         return cfg
 
