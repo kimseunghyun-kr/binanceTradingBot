@@ -8,12 +8,41 @@ import pytest
 # 1) Keep pytest hermetic: don't auto-load random global plugins
 os.environ.setdefault("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
 
+# 2) Mock MongoDB modules early to prevent connection attempts during import
+def _mock_pymongo():
+    """Mock pymongo to prevent actual database connections during tests."""
+    class FakeCollection:
+        def find(self, *args, **kwargs):
+            return iter([])  # Return empty iterator
+        def find_one(self, *args, **kwargs):
+            return None
+
+    class FakeDatabase:
+        def __getitem__(self, name):
+            return FakeCollection()
+
+    class FakeMongoClient:
+        def __init__(self, *args, **kwargs):
+            pass
+        def __getitem__(self, name):
+            return FakeDatabase()
+
+    # Patch pymongo.MongoClient early
+    import pymongo
+    pymongo.MongoClient = FakeMongoClient
+
+# Apply MongoDB mocking immediately
+_mock_pymongo()
+
 
 # ---- Strategy A: Patch get_settings() to a light dummy object ----
 class _DummySettings:
     # Minimal surface used by the orchestrator path:
     mongo_slave_uri = "mongodb://localhost:27017"
+    MONGO_URI_SLAVE = "mongodb://localhost:27017"
+    MONGO_URI_MASTER = "mongodb://localhost:27017"
     MONGO_DB_OHLCV = "TEST_DB"
+    MONGO_DB_PERP = "TEST_DB"
 
 
 def _install_fake_get_settings(monkeypatch):
@@ -78,6 +107,19 @@ def orchestrator_mod(monkeypatch, orchestrator_import_strategy):
         _install_fake_get_settings(monkeypatch)
     else:
         _install_env_for_pydantic(monkeypatch)
+
+    # Mock perp_specs to avoid MongoDB connection
+    fake_perp_specs = types.ModuleType("strategyOrchestrator.entities.perpetuals.contracts.perp_specs")
+    fake_perp_specs.PERP_SPECS = {}  # Empty dict for testing
+    sys.modules["strategyOrchestrator.entities.perpetuals.contracts.perp_specs"] = fake_perp_specs
+
+    # Mock funding_provider to avoid MongoDB connection
+    class FakeFundingProvider:
+        def get_funding_rate(self, symbol, timestamp):
+            return 0.0
+    fake_funding_repo = types.ModuleType("strategyOrchestrator.entities.perpetuals.portfolio.Funding_repository")
+    fake_funding_repo.funding_provider = FakeFundingProvider()
+    sys.modules["strategyOrchestrator.entities.perpetuals.portfolio.Funding_repository"] = fake_funding_repo
 
     # Now import the orchestrator module safely
     mod = importlib.import_module("strategyOrchestrator.StrategyOrchestrator")

@@ -51,16 +51,21 @@ logging.basicConfig(
 
 # ────────── utilities ───────────────────────────────────────────────────
 def _new_logger() -> logging.Logger:
-    """Return a tagged, non-propagating logger for a single back-test run."""
+    """Return a tagged logger for a single back-test run."""
     tag = hashlib.sha256(str(time.time()).encode()).hexdigest()[:8]
     logger = logging.getLogger(f"Backtest_{tag}")
     logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s [" + tag + "] %(levelname)s: %(message)s")
-    )
-    logger.addHandler(handler)
-    logger.propagate = False
+
+    # Only add handler if not already present (avoid duplicate handlers in tests)
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s [" + tag + "] %(levelname)s: %(message)s")
+        )
+        logger.addHandler(handler)
+
+    # Allow propagation so pytest's caplog can capture logs
+    logger.propagate = True
     return logger
 
 
@@ -133,6 +138,11 @@ class PrefetchedDataSource:
         # Limit
         if len(df) > limit:
             df = df.head(limit) if not newest_first else df.tail(limit)
+
+        # When newest_first=True, reverse back to ascending order after limiting
+        # This matches the behavior of CandleRepository which returns data in ascending order
+        if newest_first and "open_time" in df.columns:
+            df = df.sort_values("open_time", ascending=True)
 
         df = df.reset_index(drop=True)
 
