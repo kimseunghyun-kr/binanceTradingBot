@@ -24,8 +24,8 @@
             python312
 
             # Python package managers
-            # uv  # Fast Python package installer (handles everything pip does)
-            # python312Packages.virtualenv
+            uv  # Fast Python package installer (handles everything pip does)
+            python312Packages.virtualenv
           ];
 
           shellHook = ''
@@ -33,23 +33,23 @@
             echo "================================================"
             echo ""
             echo "Python version: $(python --version)"
-            # echo "uv version: $(uv --version)"
+            echo "uv version: $(uv --version)"
             echo ""
 
             # Create virtual environment if it doesn't exist
-            # if [ ! -d .venv ]; then
-            #   echo "📦 Creating virtual environment with uv..."
-            #   uv venv .venv
-            # fi
+            if [ ! -d .venv ]; then
+              echo "📦 Creating virtual environment with uv..."
+              uv venv .venv
+            fi
 
             # Activate virtual environment
-            # source .venv/bin/activate
+            source .venv/bin/activate
 
             # Install all requirements using uv (much faster than pip)
-            # if [ -f requirements.txt ]; then
-            #   echo "📦 Installing Python packages with uv..."
-            #   uv pip install -r requirements.txt
-            # fi
+            if [ -f requirements.txt ]; then
+              echo "📦 Installing Python packages with uv..."
+              uv pip install -r requirements.txt
+            fi
 
             echo ""
             echo "✅ Environment ready!"
@@ -62,8 +62,8 @@
             echo "  python worker.py                  - Start Celery worker"
             echo "  docker-compose up -d              - Start databases"
             echo ""
-            # echo "Python packages managed by uv (fast!)"
-            # echo "Virtual environment: .venv/"
+            echo "Python packages managed by uv (fast!)"
+            echo "Virtual environment: .venv/"
             echo ""
 
             # Set PYTHONPATH
