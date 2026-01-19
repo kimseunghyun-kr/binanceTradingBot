@@ -19,3 +19,6 @@ env/
 
 # Direnv
 .direnv/
+
+# macOS
+.DS_Store
