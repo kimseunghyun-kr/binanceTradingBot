@@ -5,3 +5,5 @@ YES_charts
 *.png
 *.env.*
 .env.development
+
+.direnv
