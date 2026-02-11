@@ -2,6 +2,7 @@ import logging
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.controller import (SymbolController as symbols,
                             BacktestController as backtest,
@@ -17,6 +18,15 @@ app = FastAPI(
     title="Trading Bot API",
     description="FastAPI service for trading bot backtesting and analysis",
     version="1.0.0"
+)
+
+# Add CORS middleware for local development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Logging configuration: write logs to file (and console if needed)

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtest API Tester</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 { color: #00d4ff; margin-bottom: 5px; }
+        .subtitle { color: #888; margin-bottom: 20px; }
+        h2 { color: #7b68ee; margin-top: 0; margin-bottom: 15px; font-size: 18px; }
+        .card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        label { display: block; margin: 10px 0 5px; font-weight: 500; font-size: 14px; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #0f0f23;
+            color: #eee;
+            font-size: 14px;
+        }
+        input:focus, select:focus { border-color: #00d4ff; outline: none; }
+        button {
+            background: #00d4ff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #00a8cc; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        button.secondary { background: #7b68ee; color: #fff; }
+        button.secondary:hover { background: #6a5acd; }
+        button.small { padding: 8px 16px; font-size: 13px; margin-top: 0; }
+        .response {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #f39c12; color: #000; }
+        .status-success { background: #27ae60; color: #fff; }
+        .status-failure { background: #e74c3c; color: #fff; }
+        .status-started { background: #3498db; color: #fff; }
+        .row { display: flex; gap: 15px; }
+        .row > * { flex: 1; }
+        .checkbox-row { display: flex; gap: 20px; margin: 15px 0; }
+        .checkbox-row label { display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer; }
+        .checkbox-row input[type="checkbox"] { width: auto; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .stat-card {
+            background: #0f0f23;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 700; color: #00d4ff; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
+        .task-history { margin-top: 15px; }
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #0f0f23;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .task-item:hover { background: #1a1a3e; }
+        .task-id { font-family: monospace; color: #00d4ff; cursor: pointer; }
+        .task-id:hover { text-decoration: underline; }
+        .polling-indicator { display: inline-block; margin-left: 10px; }
+        .polling-indicator.active::after {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #f39c12;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .hidden { display: none; }
+        .error { color: #e74c3c; }
+        .btn-group { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Backtest API Tester</h1>
+    <p class="subtitle">Test your trading strategies against historical data</p>
+
+    <div class="row">
+        <div style="flex: 1.2;">
+            <div class="card">
+                <h2>Configure Backtest</h2>
+                <form id="backtestForm">
+                    <div class="row">
+                        <div>
+                            <label for="strategy">Strategy</label>
+                            <select id="strategy">
+                                <option value="peak_ema_reversal">Peak EMA Reversal</option>
+                                <option value="momentum">Momentum</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="timeframe">Timeframe</label>
+                            <select id="timeframe">
+                                <option value="1d">1d (Daily)</option>
+                                <option value="1w">1w (Weekly)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label for="symbols">Symbols</label>
+                    <input type="text" id="symbols" value="BTCUSDT" placeholder="BTCUSDT, ETHUSDT, BNBUSDT">
+
+                    <div class="row">
+                        <div>
+                            <label for="numIterations">Iterations</label>
+                            <input type="number" id="numIterations" value="100" min="1">
+                        </div>
+                        <div>
+                            <label for="addBuyPct">Add Buy %</label>
+                            <input type="number" id="addBuyPct" value="5.0" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="checkbox-row">
+                        <label><input type="checkbox" id="useCache"> Use Cache</label>
+                        <label><input type="checkbox" id="saveCharts"> Save Charts</label>
+                    </div>
+
+                    <label for="startDate">Start Date (optional)</label>
+                    <input type="date" id="startDate">
+
+                    <button type="submit" id="submitBtn">Run Backtest</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Request Preview</h2>
+                <div id="requestPreview" class="response" style="max-height: 150px;">{}</div>
+            </div>
+        </div>
+
+        <div style="flex: 1;">
+            <div class="card">
+                <div class="result-header">
+                    <h2>Result</h2>
+                    <span id="statusBadge" class="status-badge hidden"></span>
+                    <span id="pollingIndicator" class="polling-indicator"></span>
+                </div>
+
+                <div id="resultStats" class="result-stats hidden">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTrades">-</div>
+                        <div class="stat-label">Total Trades</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="winRate">-</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalReturn">-</div>
+                        <div class="stat-label">Total Return</div>
+                    </div>
+                </div>
+
+                <div id="resultResponse" class="response" style="margin-top: 15px;">Submit a backtest to see results...</div>
+            </div>
+
+            <div class="card">
+                <div class="result-header">
+                    <h2>Task History</h2>
+                    <button class="small secondary" onclick="clearHistory()">Clear</button>
+                </div>
+                <div id="taskHistory" class="task-history">
+                    <div style="color: #666; font-size: 13px;">No tasks yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000';
+        let pollingInterval = null;
+        let taskHistory = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+
+        function buildRequest() {
+            const symbols = document.getElementById('symbols').value
+                .split(',')
+                .map(s => s.trim().toUpperCase())
+                .filter(s => s);
+
+            const request = {
+                strategy: {
+                    name: document.getElementById('strategy').value,
+                    params: {}
+                },
+                symbols: symbols,
+                timeframe: document.getElementById('timeframe').value,
+                num_iterations: parseInt(document.getElementById('numIterations').value),
+                use_cache: document.getElementById('useCache').checked,
+                save_charts: document.getElementById('saveCharts').checked,
+                add_buy_pct: parseFloat(document.getElementById('addBuyPct').value)
+            };
+
+            const startDate = document.getElementById('startDate').value;
+            if (startDate) request.start_date = startDate;
+
+            return request;
+        }
+
+        function updatePreview() {
+            document.getElementById('requestPreview').textContent = JSON.stringify(buildRequest(), null, 2);
+        }
+
+        function updateStatusBadge(status) {
+            const badge = document.getElementById('statusBadge');
+            badge.textContent = status;
+            badge.className = 'status-badge status-' + status.toLowerCase();
+            badge.classList.remove('hidden');
+        }
+
+        function updateStats(result) {
+            const statsDiv = document.getElementById('resultStats');
+            if (result && typeof result === 'object') {
+                document.getElementById('totalTrades').textContent = result.total_trades ?? '-';
+                document.getElementById('winRate').textContent =
+                    result.win_rate !== undefined ? (result.win_rate * 100).toFixed(1) + '%' : '-';
+                document.getElementById('totalReturn').textContent =
+                    result.total_return_pct !== undefined ? result.total_return_pct.toFixed(2) + '%' : '-';
+                statsDiv.classList.remove('hidden');
+            } else {
+                statsDiv.classList.add('hidden');
+            }
+        }
+
+        function startPolling(taskId) {
+            stopPolling();
+            document.getElementById('pollingIndicator').classList.add('active');
+
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/tasks/${taskId}`);
+                    const data = await response.json();
+
+                    updateStatusBadge(data.status);
+                    document.getElementById('resultResponse').textContent = JSON.stringify(data, null, 2);
+
+                    if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
+                        stopPolling();
+                        updateStats(data.result);
+                        updateTaskHistory(taskId, data.status);
+                    }
+                } catch (err) {
+                    document.getElementById('resultResponse').innerHTML =
+                        `<span class="error">Error: ${err.message}</span>`;
+                    stopPolling();
+                }
+            }, 1000);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            document.getElementById('pollingIndicator').classList.remove('active');
+        }
+
+        function addToHistory(taskId, strategy, status = 'PENDING') {
+            taskHistory.unshift({ taskId, strategy, status, time: new Date().toLocaleTimeString() });
+            if (taskHistory.length > 10) taskHistory.pop();
+            localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
+            renderHistory();
+        }
+
+        function updateTaskHistory(taskId, status) {
+            const task = taskHistory.find(t => t.taskId === taskId);
+            if (task) {
+                task.status = status;
+                localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('taskHistory');
+            if (taskHistory.length === 0) {
+                container.innerHTML = '<div style="color: #666; font-size: 13px;">No tasks yet</div>';
+                return;
+            }
+            container.innerHTML = taskHistory.map(t => `
+                <div class="task-item">
+                    <span class="task-id" onclick="loadTask('${t.taskId}')">${t.taskId.slice(0, 8)}...</span>
+                    <span>${t.strategy}</span>
+                    <span class="status-badge status-${t.status.toLowerCase()}">${t.status}</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadTask(taskId) {
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${taskId}`);
+                const data = await response.json();
+                updateStatusBadge(data.status);
+                updateStats(data.result);
+                document.getElementById('resultResponse').textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                document.getElementById('resultResponse').innerHTML =
+                    `<span class="error">Error: ${err.message}</span>`;
+            }
+        }
+
+        function clearHistory() {
+            taskHistory = [];
+            localStorage.removeItem('taskHistory');
+            renderHistory();
+        }
+
+        // Event listeners
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('change', updatePreview);
+            el.addEventListener('input', updatePreview);
+        });
+
+        document.getElementById('backtestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const responseDiv = document.getElementById('resultResponse');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            responseDiv.textContent = 'Submitting backtest...';
+            updateStats(null);
+
+            try {
+                const request = buildRequest();
+                const response = await fetch(`${API_BASE}/backtest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+
+                const data = await response.json();
+
+                if (data.task_id) {
+                    updateStatusBadge('PENDING');
+                    addToHistory(data.task_id, request.strategy.name);
+                    responseDiv.textContent = JSON.stringify(data, null, 2);
+                    startPolling(data.task_id);
+                } else {
+                    responseDiv.innerHTML = `<span class="error">${JSON.stringify(data, null, 2)}</span>`;
+                }
+            } catch (err) {
+                responseDiv.innerHTML = `<span class="error">Error: ${err.message}\n\nMake sure the API server is running at ${API_BASE}</span>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Run Backtest';
+            }
+        });
+
+        // Initialize
+        updatePreview();
+        renderHistory();
+    </script>
+</body>
+</html>
