@@ -119,11 +119,40 @@
         .hidden { display: none; }
         .error { color: #e74c3c; }
         .btn-group { display: flex; gap: 10px; }
+        .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .preset-btn {
+            background: #0f0f23;
+            border: 1px solid #333;
+            color: #eee;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover { border-color: #00d4ff; background: #1a1a3e; }
+        .preset-btn.active { border-color: #00d4ff; background: #00d4ff20; }
+        .preset-label { font-size: 12px; color: #888; margin-bottom: 8px; }
     </style>
 </head>
 <body>
     <h1>Backtest API Tester</h1>
     <p class="subtitle">Test your trading strategies against historical data</p>
+
+    <div class="card">
+        <h2>Quick Presets</h2>
+        <div class="preset-label">Click a preset to load configuration:</div>
+        <div class="presets">
+            <button class="preset-btn" onclick="loadPreset('btc_weekly')">BTC Weekly</button>
+            <button class="preset-btn" onclick="loadPreset('eth_daily')">ETH Daily</button>
+            <button class="preset-btn" onclick="loadPreset('top5_daily')">Top 5 Daily</button>
+            <button class="preset-btn" onclick="loadPreset('top5_weekly')">Top 5 Weekly</button>
+            <button class="preset-btn" onclick="loadPreset('altcoins_daily')">Altcoins Daily</button>
+            <button class="preset-btn" onclick="loadPreset('defi_weekly')">DeFi Weekly</button>
+            <button class="preset-btn" onclick="loadPreset('meme_daily')">Meme Coins</button>
+            <button class="preset-btn" onclick="loadPreset('full_scan')">Full Market Scan</button>
+        </div>
+    </div>
 
     <div class="row">
         <div style="flex: 1.2;">
@@ -218,9 +247,95 @@
     </div>
 
     <script>
-        const API_BASE = 'http://127.0.0.1:8000';
+        // Use relative paths when served from FastAPI, or fallback to localhost for development
+        const API_BASE = window.location.port === '8080' ? 'http://127.0.0.1:8000' : '';
         let pollingInterval = null;
         let taskHistory = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+
+        // Preset configurations
+        const PRESETS = {
+            btc_weekly: {
+                name: 'BTC Weekly',
+                strategy: 'peak_ema_reversal',
+                symbols: 'BTCUSDT',
+                timeframe: '1w',
+                iterations: 200,
+                addBuyPct: 5.0
+            },
+            eth_daily: {
+                name: 'ETH Daily',
+                strategy: 'peak_ema_reversal',
+                symbols: 'ETHUSDT',
+                timeframe: '1d',
+                iterations: 150,
+                addBuyPct: 5.0
+            },
+            top5_daily: {
+                name: 'Top 5 Daily',
+                strategy: 'peak_ema_reversal',
+                symbols: 'BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT',
+                timeframe: '1d',
+                iterations: 100,
+                addBuyPct: 5.0
+            },
+            top5_weekly: {
+                name: 'Top 5 Weekly',
+                strategy: 'peak_ema_reversal',
+                symbols: 'BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT',
+                timeframe: '1w',
+                iterations: 150,
+                addBuyPct: 5.0
+            },
+            altcoins_daily: {
+                name: 'Altcoins Daily',
+                strategy: 'peak_ema_reversal',
+                symbols: 'ADAUSDT, DOTUSDT, LINKUSDT, AVAXUSDT, MATICUSDT',
+                timeframe: '1d',
+                iterations: 100,
+                addBuyPct: 7.0
+            },
+            defi_weekly: {
+                name: 'DeFi Weekly',
+                strategy: 'peak_ema_reversal',
+                symbols: 'UNIUSDT, AAVEUSDT, MKRUSDT, COMPUSDT, SUSHIUSDT',
+                timeframe: '1w',
+                iterations: 100,
+                addBuyPct: 10.0
+            },
+            meme_daily: {
+                name: 'Meme Coins',
+                strategy: 'peak_ema_reversal',
+                symbols: 'DOGEUSDT, SHIBUSDT, PEPEUSDT, FLOKIUSDT',
+                timeframe: '1d',
+                iterations: 100,
+                addBuyPct: 10.0
+            },
+            full_scan: {
+                name: 'Full Market Scan',
+                strategy: 'peak_ema_reversal',
+                symbols: 'BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOTUSDT, LINKUSDT, AVAXUSDT, MATICUSDT',
+                timeframe: '1d',
+                iterations: 50,
+                addBuyPct: 5.0
+            }
+        };
+
+        function loadPreset(presetKey) {
+            const preset = PRESETS[presetKey];
+            if (!preset) return;
+
+            document.getElementById('strategy').value = preset.strategy;
+            document.getElementById('symbols').value = preset.symbols;
+            document.getElementById('timeframe').value = preset.timeframe;
+            document.getElementById('numIterations').value = preset.iterations;
+            document.getElementById('addBuyPct').value = preset.addBuyPct;
+
+            // Update active button
+            document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            updatePreview();
+        }
 
         function buildRequest() {
             const symbols = document.getElementById('symbols').value

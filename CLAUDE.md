@@ -57,6 +57,7 @@ This starts all services:
 
 | Endpoint | Description |
 |----------|-------------|
+| http://127.0.0.1:8000/ | Backtest UI (Frontend) |
 | http://127.0.0.1:8000/docs | API Documentation (Swagger UI) |
 | POST `/backtest` | Submit a backtest |
 | GET `/tasks/{task_id}` | Check task status |
@@ -116,7 +117,8 @@ curl http://127.0.0.1:8000/tasks/{task_id}
 ├── KwontBot.py              # Main FastAPI app entry point
 ├── run_local.py             # Local server launcher
 ├── worker.py                # Celery worker launcher
-├── test-index.html          # UI for testing backtests
+├── static/
+│   └── index.html           # Backtest UI (served at /)
 ├── app/
 │   ├── controller/          # API endpoints (FastAPI routers)
 │   ├── services/            # Business logic

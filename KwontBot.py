@@ -1,8 +1,11 @@
 import logging
 import os
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.controller import (SymbolController as symbols,
                             BacktestController as backtest,
@@ -43,6 +46,16 @@ app.include_router(symbols.router)
 app.include_router(gridSearch.router)
 
 app.include_router(tasks.router)
+
+# Serve static files (frontend UI)
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_frontend():
+        """Serve the frontend UI at root path."""
+        return FileResponse(static_dir / "index.html")
 
 
 # Startup and shutdown events for DB connections
